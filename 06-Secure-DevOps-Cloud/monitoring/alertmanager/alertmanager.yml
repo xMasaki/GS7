@@ -1,0 +1,16 @@
+# =====================================================================
+# Alertmanager — AcessaCidade (uso local / demonstração)
+# Os alertas ficam visíveis em http://127.0.0.1:9093 . Nenhum envio externo
+# está configurado (sem e-mail/Slack/Teams => nenhum segredo neste arquivo).
+# Para notificar um canal real, adicione um receiver usando arquivos de
+# segredo (ex.: url_file em webhook_configs) — NUNCA a URL/token direto aqui.
+# =====================================================================
+route:
+  receiver: painel-local
+  group_by: ["alertname", "job"]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+
+receivers:
+  - name: painel-local

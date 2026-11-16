@@ -1,0 +1,128 @@
+{
+  "produto": "AcessaCidade",
+  "subtitulo": "Denúncias de acessibilidade em calçadas e espaços públicos, com triagem por foto e acompanhamento por protocolo",
+  "versao": "1.0 (consolidação para a Global Solution 2026.2)",
+  "data_referencia": "2026-11",
+  "equipe": "[PREENCHER: nome da equipe / startup]",
+  "status_padrao": "HIPÓTESE (não validada)",
+  "nota_rodape": "Todos os blocos estão marcados como HIPÓTESE até que a equipe registre, no campo de validação, o que foi confirmado no CP1, nas entrevistas e nos testes com usuários. Valores de preço e custo são hipóteses declaradas (ver ESTRATEGIA_DE_PRECO.md). O AcessaCidade não é serviço oficial do governo.",
+  "blocos": [
+    {
+      "id": "problema",
+      "titulo": "1. Problema",
+      "itens": [
+        "Buracos, calçadas quebradas, rampas irregulares e obstáculos impedem ou tornam arriscado o deslocamento a pé de cadeirantes, pessoas cegas, idosos e pessoas com mobilidade reduzida.",
+        "Registrar o problema nos canais atuais tende a ser demorado, pouco acessível e sem retorno claro sobre o andamento.",
+        "Quem recebe as denúncias (prefeitura, concessionária, administradora) recebe relatos sem padrão, sem foto organizada e sem prioridade por impacto na acessibilidade, e faz a triagem à mão."
+      ],
+      "secundario_titulo": "Alternativas existentes",
+      "secundario_itens": [
+        "Central 156, ouvidorias e protocolos municipais",
+        "Aplicativos genéricos de zeladoria",
+        "Redes sociais, imprensa local, contato com vereador",
+        "Desistir e mudar o trajeto"
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: o que foi validado no CP1/entrevistas sobre a dor (quantas pessoas, perfis, frases marcantes) e o que mudou]"
+    },
+    {
+      "id": "solucao",
+      "titulo": "4. Solução",
+      "itens": [
+        "Site responsivo e acessível (sem instalar app): denúncia com foto opcional e protocolo AC-AAAA-NNNNNN.",
+        "Triagem automática da foto com visão computacional clássica (OpenCV), explicável e sempre revisada por uma pessoa.",
+        "Acompanhamento por protocolo com histórico de status e assistente em linguagem simples (AcessaCidade Helper).",
+        "Painel de indicadores (tempo real + camada analítica do pipeline de dados) e robô RPA para lançar denúncias recebidas fora do site."
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: o que foi testado no protótipo/MVP 0/MVP 1 e com quem; o que mudou na solução desde o CP1]"
+    },
+    {
+      "id": "metricas",
+      "titulo": "8. Métricas-chave",
+      "itens": [
+        "Produto: denúncias registradas; % com foto analisada; % revisadas por humano; tempo médio de triagem automática.",
+        "Operação: tempo até encaminhamento; denúncias por bairro e por categoria.",
+        "Cidadão: tempo para registrar um problema (antes × depois); taxa de conclusão no teste de usabilidade; usuários ativos (proxy).",
+        "Negócio: clientes pagantes, receita recorrente mensal (MRR), cancelamentos (churn)."
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: quais métricas já foram medidas de verdade (ex.: teste de usabilidade) e quais ainda são só definições]"
+    },
+    {
+      "id": "proposta_valor",
+      "titulo": "3. Proposta única de valor",
+      "itens": [
+        "Para o cidadão: registrar uma barreira de acessibilidade em poucos minutos, de qualquer celular, e acompanhar o que aconteceu com ela pelo protocolo.",
+        "Para quem resolve: denúncias padronizadas, com foto triada e explicada, priorizáveis por impacto e visíveis em painel."
+      ],
+      "secundario_titulo": "Conceito de alto nível",
+      "secundario_itens": [
+        "Zeladoria colaborativa focada em acessibilidade, com triagem por foto e transparência por protocolo."
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: reação de cidadãos e de possíveis clientes à proposta de valor; frases das entrevistas]"
+    },
+    {
+      "id": "vantagem_injusta",
+      "titulo": "9. Vantagem injusta",
+      "itens": [
+        "Honestamente: ainda não consolidada. Não há parcerias firmadas.",
+        "Candidatas a construir: base histórica padronizada de barreiras de acessibilidade por bairro (cresce com o uso); comunidade de pessoas com deficiência envolvida no desenho; produto integrado ponta a ponta (foto + triagem + protocolo + painel + automação) com triagem explicável e auditável."
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: algum ativo que a equipe realmente já tenha (ex.: rede de contatos com associações) — somente se for verdadeiro]"
+    },
+    {
+      "id": "canais",
+      "titulo": "5. Canais",
+      "itens": [
+        "Usuários: site responsivo, associações e coletivos de pessoas com deficiência, redes sociais, QR Code em pontos de grande circulação (a testar).",
+        "Pagantes (B2G): chamamentos públicos e programas de inovação aberta; CPSI do Marco Legal das Startups (LC 182/2021) como caminho possível; eventos de cidades inteligentes.",
+        "Pagantes (B2B): venda consultiva a concessionárias e administradoras de grandes áreas; piloto com indicadores."
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: canais já testados (ex.: divulgação em grupo de associação) e resultado real]"
+    },
+    {
+      "id": "segmentos",
+      "titulo": "2. Segmentos de clientes",
+      "itens": [
+        "Pagantes: prefeituras e secretarias de zeladoria, obras e mobilidade; concessionárias de serviços (água, energia, gás, telecom); administradoras de grandes áreas (shoppings, campi, condomínios); ONGs e associações (plano institucional).",
+        "Usuários (nunca pagam): pessoas com deficiência, cadeirantes, pessoas cegas ou com baixa visão, idosos, pessoas com mobilidade reduzida, cuidadores e acompanhantes."
+      ],
+      "secundario_titulo": "Early adopters (hipótese)",
+      "secundario_itens": [
+        "Municípios de pequeno e médio porte com programa de inovação aberta",
+        "Associações locais de pessoas com deficiência que já mapeiam problemas à mão",
+        "Campi universitários e condomínios horizontais"
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: segmentos entrevistados no CP1 e o que mudou (ex.: priorização entre prefeitura e administradoras)]"
+    },
+    {
+      "id": "custos",
+      "titulo": "7. Estrutura de custos",
+      "itens": [
+        "Equipe (desenvolvimento, suporte e comercial B2G) — maior custo.",
+        "Nuvem: container, registro de imagens, armazenamento de fotos e banco, monitoramento.",
+        "IA generativa por uso (LLM via OpenRouter); o modo por regras reduz custo quando necessário.",
+        "Implantação e treinamento por cliente; jurídico, contabilidade e adequação à LGPD; eventos e prospecção."
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: custo real observado da nuvem/LLM durante o MVP, se medido, e premissas revistas]"
+    },
+    {
+      "id": "receitas",
+      "titulo": "6. Fontes de receita",
+      "itens": [
+        "Assinatura SaaS anual por município, por faixa de população (valores hipotéticos a validar).",
+        "Módulo de painel/BI avançado; taxa de implantação e treinamento.",
+        "API e integração para concessionárias e administradoras (assinatura por volume).",
+        "Plano institucional simbólico ou patrocinado para ONGs. O cidadão nunca paga."
+      ],
+      "status": "HIPÓTESE (não validada)",
+      "validacao": "[PREENCHER: disposição a pagar ouvida em entrevistas (se houver) e o que mudou no modelo de receita]"
+    }
+  ]
+}

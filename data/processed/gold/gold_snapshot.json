@@ -1,0 +1,246 @@
+{
+  "disponivel": true,
+  "gerado_em": "2026-11-15T06:27:02Z",
+  "execucao_id": "manual__2026-11-15T06:27:02",
+  "inclui_simulados": true,
+  "fontes": [
+    {
+      "nome": "denuncias_simuladas.csv",
+      "linhas": 271
+    },
+    {
+      "nome": "api_export",
+      "linhas": 0
+    }
+  ],
+  "denuncias_por_bairro": [
+    {
+      "bairro": "Centro",
+      "total": 39,
+      "possiveis_buracos": 6
+    },
+    {
+      "bairro": "Jardim das Flores",
+      "total": 36,
+      "possiveis_buracos": 11
+    },
+    {
+      "bairro": "São José",
+      "total": 36,
+      "possiveis_buracos": 6
+    },
+    {
+      "bairro": "Bela Vista",
+      "total": 24,
+      "possiveis_buracos": 5
+    },
+    {
+      "bairro": "Parque das Árvores",
+      "total": 21,
+      "possiveis_buracos": 4
+    },
+    {
+      "bairro": "Vila Nova",
+      "total": 19,
+      "possiveis_buracos": 2
+    },
+    {
+      "bairro": "Santa Luzia",
+      "total": 18,
+      "possiveis_buracos": 4
+    },
+    {
+      "bairro": "Nova Esperança",
+      "total": 17,
+      "possiveis_buracos": 2
+    },
+    {
+      "bairro": "Recanto Verde",
+      "total": 1,
+      "possiveis_buracos": 0
+    }
+  ],
+  "denuncias_por_categoria": [
+    {
+      "categoria": "BURACO_CALCADA",
+      "rotulo": "Buraco na calçada",
+      "total": 53
+    },
+    {
+      "categoria": "CALCADA_DANIFICADA",
+      "rotulo": "Calçada quebrada ou desnivelada",
+      "total": 51
+    },
+    {
+      "categoria": "RAMPA_IRREGULAR",
+      "rotulo": "Rampa ausente ou irregular",
+      "total": 29
+    },
+    {
+      "categoria": "OBSTACULO_TEMPORARIO",
+      "rotulo": "Obstáculo temporário (entulho, veículo, obra)",
+      "total": 27
+    },
+    {
+      "categoria": "OBSTACULO_FIXO",
+      "rotulo": "Obstáculo fixo (poste, lixeira, placa)",
+      "total": 20
+    },
+    {
+      "categoria": "BURACO_VIA",
+      "rotulo": "Buraco na via ou travessia",
+      "total": 15
+    },
+    {
+      "categoria": "PISO_TATIL",
+      "rotulo": "Piso tátil ausente ou danificado",
+      "total": 9
+    },
+    {
+      "categoria": "OUTRO",
+      "rotulo": "Outro",
+      "total": 7
+    }
+  ],
+  "denuncias_por_periodo": [
+    {
+      "periodo": "2026-08",
+      "total": 57
+    },
+    {
+      "periodo": "2026-09",
+      "total": 66
+    },
+    {
+      "periodo": "2026-10",
+      "total": 61
+    },
+    {
+      "periodo": "2026-11",
+      "total": 27
+    }
+  ],
+  "denuncias_por_status": [
+    {
+      "status": "RECEBIDA",
+      "rotulo": "Recebida",
+      "total": 69
+    },
+    {
+      "status": "EM_ANALISE",
+      "rotulo": "Em análise",
+      "total": 70
+    },
+    {
+      "status": "AGUARDANDO_REVISAO",
+      "rotulo": "Aguardando revisão",
+      "total": 72
+    },
+    {
+      "status": "ENCAMINHADA",
+      "rotulo": "Encaminhada",
+      "total": 0
+    },
+    {
+      "status": "RESOLVIDA",
+      "rotulo": "Resolvida",
+      "total": 0
+    }
+  ],
+  "resultado_visao": [
+    {
+      "classificacao": "POSSIBLE_POTHOLE",
+      "rotulo": "Possível buraco identificado",
+      "total": 40
+    },
+    {
+      "classificacao": "NOT_IDENTIFIED",
+      "rotulo": "Nenhum indício suficiente de buraco",
+      "total": 44
+    },
+    {
+      "classificacao": "INCONCLUSIVE",
+      "rotulo": "Análise inconclusiva",
+      "total": 37
+    },
+    {
+      "classificacao": null,
+      "rotulo": "Sem fotografia (não analisada)",
+      "total": 90
+    }
+  ],
+  "qualidade": {
+    "linhas_raw": 271,
+    "linhas_bronze": 260,
+    "duplicatas_removidas": 11,
+    "datas_invalidas": 12,
+    "coordenadas_invalidas": 11,
+    "campos_obrigatorios_ausentes": 25,
+    "percentual_registros_validos": 84.4,
+    "linhas_silver": 250,
+    "duplicatas_negocio_removidas": 10,
+    "registros_validos": 211
+  },
+  "denuncias_por_semana": [
+    {
+      "periodo": "2026-W32",
+      "total": 10
+    },
+    {
+      "periodo": "2026-W33",
+      "total": 17
+    },
+    {
+      "periodo": "2026-W34",
+      "total": 11
+    },
+    {
+      "periodo": "2026-W35",
+      "total": 19
+    },
+    {
+      "periodo": "2026-W36",
+      "total": 10
+    },
+    {
+      "periodo": "2026-W37",
+      "total": 26
+    },
+    {
+      "periodo": "2026-W38",
+      "total": 13
+    },
+    {
+      "periodo": "2026-W39",
+      "total": 16
+    },
+    {
+      "periodo": "2026-W40",
+      "total": 7
+    },
+    {
+      "periodo": "2026-W41",
+      "total": 12
+    },
+    {
+      "periodo": "2026-W42",
+      "total": 11
+    },
+    {
+      "periodo": "2026-W43",
+      "total": 15
+    },
+    {
+      "periodo": "2026-W44",
+      "total": 19
+    },
+    {
+      "periodo": "2026-W45",
+      "total": 13
+    },
+    {
+      "periodo": "2026-W46",
+      "total": 12
+    }
+  ]
+}

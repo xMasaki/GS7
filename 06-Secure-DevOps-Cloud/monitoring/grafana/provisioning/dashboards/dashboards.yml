@@ -1,0 +1,13 @@
+# Provisionamento dos dashboards do AcessaCidade (pasta montada pelo docker compose)
+apiVersion: 1
+providers:
+  - name: acessacidade
+    orgId: 1
+    folder: AcessaCidade
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards
+      foldersFromFilesStructure: false

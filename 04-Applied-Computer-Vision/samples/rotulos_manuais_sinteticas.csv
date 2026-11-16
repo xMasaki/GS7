@@ -1,0 +1,26 @@
+arquivo,rotulo_manual,cenario,descricao,origem,metodo_rotulagem
+sintetica_buraco_01.jpg,POSSIBLE_POTHOLE,buraco,"Buraco médio no centro, calçada de concreto.",SINTETICA,esperado_por_construcao
+sintetica_buraco_02.jpg,POSSIBLE_POTHOLE,buraco,Buraco grande em asfalto de travessia.,SINTETICA,esperado_por_construcao
+sintetica_buraco_03.jpg,POSSIBLE_POTHOLE,buraco,Buraco em calçada de bloquetes.,SINTETICA,esperado_por_construcao
+sintetica_buraco_04.jpg,POSSIBLE_POTHOLE,buraco,"Buraco pequeno fora do centro, concreto com juntas.",SINTETICA,esperado_por_construcao
+sintetica_buraco_05.jpg,POSSIBLE_POTHOLE,buraco_com_sombra,Buraco com sombra suave de árvore em outra parte da foto.,SINTETICA,esperado_por_construcao
+sintetica_buraco_06.jpg,POSSIBLE_POTHOLE,buraco,"Buraco alongado pela perspectiva (foto oblíqua), asfalto, foto em pé.",SINTETICA,esperado_por_construcao
+sintetica_buraco_07.jpg,POSSIBLE_POTHOLE,buraco_com_mancha,Buraco com uma mancha escura próxima.,SINTETICA,esperado_por_construcao
+sintetica_buraco_raso_01.jpg,POSSIBLE_POTHOLE,buraco_dificil,"Buraco raso, pouco mais escuro que o piso (caso difícil).",SINTETICA,esperado_por_construcao
+sintetica_buraco_com_agua_01.jpg,POSSIBLE_POTHOLE,buraco_dificil,Buraco cheio de água: fundo liso e escuro (caso difícil).,SINTETICA,esperado_por_construcao
+sintetica_calcada_lisa_01.jpg,NOT_IDENTIFIED,calcada_lisa,"Calçada de concreto sem defeitos, com juntas.",SINTETICA,esperado_por_construcao
+sintetica_calcada_lisa_02.jpg,NOT_IDENTIFIED,calcada_lisa,Asfalto sem defeitos.,SINTETICA,esperado_por_construcao
+sintetica_calcada_lisa_03.jpg,NOT_IDENTIFIED,calcada_lisa,Calçada de bloquetes sem defeitos.,SINTETICA,esperado_por_construcao
+sintetica_sombra_01.jpg,NOT_IDENTIFIED,sombra,"Sombra de edifício com borda nítida, encostada na lateral.",SINTETICA,esperado_por_construcao
+sintetica_sombra_02.jpg,NOT_IDENTIFIED,sombra,Sombra de poste atravessando o asfalto.,SINTETICA,esperado_por_construcao
+sintetica_sombra_03.jpg,NOT_IDENTIFIED,sombra,Sombra arredondada de copa de árvore no meio da calçada.,SINTETICA,esperado_por_construcao
+sintetica_mancha_01.jpg,NOT_IDENTIFIED,mancha,Mancha de óleo escura (mais concentrada no centro).,SINTETICA,esperado_por_construcao
+sintetica_mancha_02.jpg,NOT_IDENTIFIED,mancha,Mancha de umidade grande e suave em bloquetes.,SINTETICA,esperado_por_construcao
+sintetica_rachadura_01.jpg,NOT_IDENTIFIED,rachadura,Rachadura fina atravessando o concreto.,SINTETICA,esperado_por_construcao
+sintetica_rachadura_02.jpg,NOT_IDENTIFIED,rachadura,Rede de rachaduras no asfalto.,SINTETICA,esperado_por_construcao
+sintetica_tampa_bueiro_01.jpg,NOT_IDENTIFIED,tampa_bueiro,Tampa de bueiro escura com relevo em grade (não é buraco).,SINTETICA,esperado_por_construcao
+sintetica_poca_01.jpg,NOT_IDENTIFIED,poca,Poça d'água rasa sobre asfalto (sem buraco desenhado).,SINTETICA,esperado_por_construcao
+sintetica_escura_01.jpg,INCONCLUSIVE,foto_escura,Cena com buraco fotografada quase sem luz.,SINTETICA,esperado_por_construcao
+sintetica_clara_01.jpg,INCONCLUSIVE,foto_estourada,Cena com buraco superexposta (estourada).,SINTETICA,esperado_por_construcao
+sintetica_borrada_01.jpg,INCONCLUSIVE,foto_borrada,Cena com buraco fora de foco (borrada).,SINTETICA,esperado_por_construcao
+sintetica_baixo_contraste_01.jpg,INCONCLUSIVE,foto_baixo_contraste,Cena com buraco e contraste muito baixo (neblina/lente suja).,SINTETICA,esperado_por_construcao

@@ -1,0 +1,60 @@
+{
+  "name": "AcessaCidade.RPA",
+  "projectId": "682f710f-df40-46c1-9f6a-c28a83f74c27",
+  "description": "AcessaCidade - robo que le uma planilha de denuncias SIMULADAS e cadastra cada linha no formulario web (#/registrar?canal=rpa), captura o protocolo e registra o resultado na planilha de saida.",
+  "main": "Main.xaml",
+  "dependencies": {
+    "UiPath.Excel.Activities": "2.22.0",
+    "UiPath.System.Activities": "23.10.0",
+    "UiPath.UIAutomation.Activities": "23.10.0"
+  },
+  "webServices": [],
+  "entitiesStores": [],
+  "schemaVersion": "4.0",
+  "studioVersion": "23.10.0.0",
+  "projectVersion": "1.0.0",
+  "runtimeOptions": {
+    "autoDispose": false,
+    "netFrameworkLazyLoading": false,
+    "isPausable": true,
+    "isAttended": false,
+    "requiresUserInteraction": true,
+    "supportsPersistence": false,
+    "workflowSerialization": "DataContract",
+    "excludedLoggedData": [
+      "Private:*",
+      "*password*"
+    ],
+    "executionType": "Workflow",
+    "readyForPiP": false,
+    "startsInPiP": false,
+    "mustRestoreAllDependencies": true,
+    "pipType": "ChildSession"
+  },
+  "designOptions": {
+    "projectProfile": "Developement",
+    "outputType": "Process",
+    "libraryOptions": {
+      "includeOriginalXaml": false,
+      "privateWorkflows": []
+    },
+    "processOptions": {
+      "ignoredFiles": []
+    },
+    "fileInfoCollection": [],
+    "modernBehavior": false
+  },
+  "expressionLanguage": "VisualBasic",
+  "entryPoints": [
+    {
+      "filePath": "Main.xaml",
+      "uniqueId": "502f7e9a-c213-4e8c-81fd-932b6d17d414",
+      "input": [],
+      "output": []
+    }
+  ],
+  "isTemplate": false,
+  "templateProjectData": {},
+  "publishData": {},
+  "targetFramework": "Windows"
+}

@@ -1,0 +1,53 @@
+COLETA E ROTULAGEM DE FOTOS REAIS — AcessaCidade (Applied Computer Vision)
+==========================================================================
+
+Situação atual: NENHUMA foto real foi coletada até agora. Esta pasta contém apenas o
+modelo de rótulos (rotulos_manuais_reais_TEMPLATE.csv) e estas instruções.
+Toda a avaliação existente foi feita com imagens SINTÉTICAS (data/samples/fotos/).
+
+1. Regras de segurança, ética e LGPD (obrigatórias)
+---------------------------------------------------
+- Fotografe SOMENTE o piso (calçada, travessia, rampa). Enquadre de cima ou levemente inclinado.
+- NÃO fotografe pessoas, rostos, placas de veículos, fachadas com número de casa, documentos
+  ou qualquer coisa que identifique alguém. Se aparecer, descarte a foto.
+- Fotografe apenas em local público, sem se colocar em risco (não pare no meio da rua, não
+  fotografe com trânsito vindo, prefira horários de pouco movimento e vá acompanhado).
+- Se fotografar em área privada (condomínio, estacionamento, campus), peça autorização ao
+  responsável e registre "sim" na coluna autorizacao_uso.
+- Não registre o endereço exato no CSV: use apenas o tipo de local (calçada, travessia, rampa).
+  Nos materiais da GS, use sempre a cidade fictícia "Cidade Exemplo".
+- Antes de copiar as fotos para o repositório, rode o sanitizador (remove EXIF/GPS, reduz e
+  borra rostos) e confira visualmente o resultado:
+    .venv\Scripts\python.exe 04-Applied-Computer-Vision\scripts\sanitizar_fotos.py --entrada C:\caminho\fotos_brutas --saida 04-Applied-Computer-Vision\samples\real\fotos
+- Nunca versione as fotos brutas (com EXIF/GPS).
+
+2. O que fotografar (meta sugerida: 20 a 40 fotos)
+--------------------------------------------------
+- Buracos reais em calçadas/travessias (vários tamanhos, secos e com água).
+- Calçadas sem defeito (concreto, bloquete, pedra portuguesa, asfalto).
+- Situações que confundem: sombras de poste/árvore, manchas de óleo/umidade, rachaduras,
+  poças, tampas de bueiro, juntas de dilatação, piso tátil.
+- Algumas fotos de baixa qualidade de propósito (contra a luz, tremida, à noite) para
+  verificar o resultado INCONCLUSIVE.
+- Nome dos arquivos: real_001.jpg, real_002.jpg, ...
+
+3. Como rotular (rótulo manual)
+-------------------------------
+- Copie rotulos_manuais_reais_TEMPLATE.csv para rotulos_manuais_reais.csv (mesma pasta) e
+  apague as linhas de exemplo.
+- Rotule OLHANDO A FOTO, ANTES de rodar a análise automática (para não ser influenciado).
+- rotulo_manual deve ser exatamente um destes valores:
+    POSSIBLE_POTHOLE  -> há um buraco visível na foto
+    NOT_IDENTIFIED    -> não há buraco (mesmo que haja sombra, mancha, rachadura etc.)
+    INCONCLUSIVE      -> a própria pessoa não consegue decidir pela foto (escura, borrada...)
+- cenario: buraco | calcada_lisa | sombra | mancha | rachadura | poca | tampa_bueiro | foto_escura | foto_borrada | outro
+- Recomendado: uma segunda pessoa rotula sem ver o primeiro rótulo (colunas segundo_rotulador
+  e rotulo_segundo_rotulador). Em caso de discordância, discutam e registrem em observacao.
+
+4. Como rodar a comparação com as fotos reais
+---------------------------------------------
+Na raiz do repositório (PowerShell):
+  .venv\Scripts\python.exe 04-Applied-Computer-Vision\scripts\analisar_pasta.py --entrada 04-Applied-Computer-Vision\samples\real\fotos --saida 04-Applied-Computer-Vision\results_reais
+  .venv\Scripts\python.exe 04-Applied-Computer-Vision\scripts\avaliar_comparacao.py --dados 04-Applied-Computer-Vision\results_reais\dados_extraidos.csv --rotulos 04-Applied-Computer-Vision\samples\real\rotulos_manuais_reais.csv --saida 04-Applied-Computer-Vision\results_reais --base REAL
+Resultado: results_reais\RELATORIO_COMPARACAO.md com a matriz de confusão da base real.
+Relate os números como "nesta amostra de N fotos", sem generalizar.

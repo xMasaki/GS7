@@ -1,0 +1,8 @@
+# Artefatos locais do UiPath Studio (gerados ao abrir/executar o projeto)
+.local/
+.objects/
+.project/
+.screenshots/
+.tmh/
+# Planilhas temporarias do Excel
+~$*.xlsx

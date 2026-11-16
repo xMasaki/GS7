@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AcessaCidade.RPA - Main.xaml (ponto de entrada)
+  Carregar configuracao -> ler planilha de entrada -> abrir navegador -> For Each Row (Try/Catch por linha)
+  -> ProcessarDenuncia.xaml -> RegistrarResultado.xaml -> log -> resumo com totais.
+  Estrutura escrita fora do UiPath Studio: ao abrir, confira o painel "Error List", reindique os seletores
+  se necessario e salve (o Studio completa o ViewState). Ver docs/INSTRUCOES_UIPATH_STUDIO.md.
+-->
+<Activity mc:Ignorable="sap sap2010" x:Class="Main" mva:VisualBasic.Settings="{x:Null}"
+ sap2010:WorkflowViewState.IdRef="ActivityBuilder_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+ xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common"
+ xmlns:ui="http://schemas.uipath.com/workflow/activities"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text.RegularExpressions</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Main - AcessaCidade.RPA" sap2010:WorkflowViewState.IdRef="Sequence_1"
+   sap2010:Annotation.AnnotationText="Robô AcessaCidade: cadastra no formulário web (#/registrar?canal=rpa, origem=RPA) as denúncias SIMULADAS de uma planilha Excel, captura o protocolo e registra SUCESSO/FALHA por linha na planilha de saída. O operador trata apenas as exceções.">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="scg:Dictionary(x:String, x:Object)" Name="dicConfig" />
+      <Variable x:TypeArguments="sd:DataTable" Name="dtDenuncias" />
+      <Variable x:TypeArguments="ui:Browser" Name="navegador" />
+      <Variable x:TypeArguments="x:String" Name="urlBase" />
+      <Variable x:TypeArguments="x:String" Name="caminhoEntrada" />
+      <Variable x:TypeArguments="x:String" Name="caminhoSaida" />
+      <Variable x:TypeArguments="x:String" Name="abaEntrada" />
+      <Variable x:TypeArguments="x:String" Name="abaSaida" />
+      <Variable x:TypeArguments="s:String[]" Name="colunasFaltantes" />
+      <Variable x:TypeArguments="x:Int32" Name="indiceLinha" />
+      <Variable x:TypeArguments="x:String" Name="statusRobo" />
+      <Variable x:TypeArguments="x:String" Name="protocolo" />
+      <Variable x:TypeArguments="x:String" Name="mensagem" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="totalSucesso" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="totalFalhaNegocio" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="totalFalhaSistema" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="totalIgnoradas" />
+      <Variable x:TypeArguments="s:DateTime" Name="inicio" />
+    </Sequence.Variables>
+    <Assign DisplayName="inicio = agora" sap2010:WorkflowViewState.IdRef="Assign_1">
+      <Assign.To><OutArgument x:TypeArguments="s:DateTime">[inicio]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="s:DateTime">[DateTime.Now]</InArgument></Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log - início" Level="Info" Message="[&quot;AcessaCidade.RPA iniciado. Dados de entrada são SIMULADOS (teste).&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1" />
+
+    <!-- ===================== 1. Configuração ===================== -->
+    <ui:InvokeWorkflowFile DisplayName="1. Invoke - CarregarConfiguracao.xaml" UnSafe="False" WorkflowFileName="Workflows\CarregarConfiguracao.xaml" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_1"
+     sap2010:Annotation.AnnotationText="Lê Data\Config.xlsx (aba Settings) para o dicionário dicConfig.">
+      <ui:InvokeWorkflowFile.Arguments>
+        <InArgument x:TypeArguments="x:String" x:Key="in_CaminhoConfig">Data\Config.xlsx</InArgument>
+        <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="out_Config">[dicConfig]</OutArgument>
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
+    <Assign DisplayName="urlBase" sap2010:WorkflowViewState.IdRef="Assign_2"
+     sap2010:Annotation.AnnotationText="http://localhost:8000 em teste; URL pública da Azure em produção (alterar só no Config.xlsx).">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[urlBase]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[dicConfig("URL_ACESSACIDADE").ToString.Trim.TrimEnd("/"c)]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="caminhoEntrada (absoluto)" sap2010:WorkflowViewState.IdRef="Assign_3">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[caminhoEntrada]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[Path.GetFullPath(dicConfig("CAMINHO_PLANILHA_ENTRADA").ToString)]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="caminhoSaida (absoluto)" sap2010:WorkflowViewState.IdRef="Assign_4">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[caminhoSaida]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[Path.GetFullPath(dicConfig("CAMINHO_PLANILHA_SAIDA").ToString)]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="abaEntrada" sap2010:WorkflowViewState.IdRef="Assign_5">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[abaEntrada]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[If(dicConfig.ContainsKey("ABA_ENTRADA"), dicConfig("ABA_ENTRADA").ToString, "Denuncias")]</InArgument></Assign.Value>
+    </Assign>
+    <Assign DisplayName="abaSaida" sap2010:WorkflowViewState.IdRef="Assign_6">
+      <Assign.To><OutArgument x:TypeArguments="x:String">[abaSaida]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:String">[If(dicConfig.ContainsKey("ABA_SAIDA"), dicConfig("ABA_SAIDA").ToString, "Resultado")]</InArgument></Assign.Value>
+    </Assign>
+
+    <!-- ===================== 2. Planilha de entrada ===================== -->
+    <If Condition="[Not File.Exists(caminhoEntrada)]" DisplayName="Planilha de entrada existe?" sap2010:WorkflowViewState.IdRef="If_1">
+      <If.Then>
+        <Throw DisplayName="Throw - planilha de entrada não encontrada" sap2010:WorkflowViewState.IdRef="Throw_1">
+          <Throw.Exception>
+            <InArgument x:TypeArguments="s:Exception">[New FileNotFoundException("Planilha de entrada não encontrada: " + caminhoEntrada)]</InArgument>
+          </Throw.Exception>
+        </Throw>
+      </If.Then>
+    </If>
+    <ui:ReadRange AddHeaders="True" DataTable="[dtDenuncias]" DisplayName="2. Read Range Workbook - planilha de denúncias" Range="A1" SheetName="[abaEntrada]" WorkbookPath="[caminhoEntrada]"
+     sap2010:WorkflowViewState.IdRef="ReadRange_1"
+     sap2010:Annotation.AnnotationText="Workbook Read Range (sem precisar do Excel instalado). Alternativa equivalente no modo moderno: Use Excel File + Read Range. A planilha deve estar FECHADA." />
+    <Assign DisplayName="colunasFaltantes (entrada)" sap2010:WorkflowViewState.IdRef="Assign_7"
+     sap2010:Annotation.AnnotationText="Confere se o cabeçalho tem todas as colunas de entrada esperadas.">
+      <Assign.To><OutArgument x:TypeArguments="s:String[]">[colunasFaltantes]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="s:String[]">[New String() {"Nome", "Logradouro", "Numero", "Bairro", "Cidade", "Ponto_Referencia", "Tipo_Obstaculo", "Descricao", "Impacto", "Caminho_Imagem"}.Where(Function(c) Not dtDenuncias.Columns.Contains(c)).ToArray()]</InArgument></Assign.Value>
+    </Assign>
+    <If Condition="[colunasFaltantes.Length &gt; 0]" DisplayName="Faltam colunas?" sap2010:WorkflowViewState.IdRef="If_2">
+      <If.Then>
+        <Throw DisplayName="Throw - colunas ausentes" sap2010:WorkflowViewState.IdRef="Throw_2">
+          <Throw.Exception>
+            <InArgument x:TypeArguments="s:Exception">[New Exception("A planilha de entrada não tem as colunas: " + String.Join(", ", colunasFaltantes))]</InArgument>
+          </Throw.Exception>
+        </Throw>
+      </If.Then>
+    </If>
+    <ForEach x:TypeArguments="x:String" DisplayName="Garantir colunas de saída" Values="[New String() {&quot;Status_Robo&quot;, &quot;Protocolo&quot;, &quot;Mensagem&quot;, &quot;Data_Hora_Processamento&quot;}]" sap2010:WorkflowViewState.IdRef="ForEach`1_1"
+     sap2010:Annotation.AnnotationText="Se a planilha não tiver as colunas de saída, elas são criadas na DataTable (serão gravadas na planilha de saída).">
+      <ForEach.Body>
+        <ActivityAction x:TypeArguments="x:String">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="x:String" Name="coluna" />
+          </ActivityAction.Argument>
+          <If Condition="[Not dtDenuncias.Columns.Contains(coluna)]" DisplayName="Coluna existe?" sap2010:WorkflowViewState.IdRef="If_3">
+            <If.Then>
+              <InvokeMethod DisplayName="Columns.Add(coluna)" MethodName="Add" sap2010:WorkflowViewState.IdRef="InvokeMethod_1">
+                <InvokeMethod.TargetObject>
+                  <InArgument x:TypeArguments="sd:DataColumnCollection">[dtDenuncias.Columns]</InArgument>
+                </InvokeMethod.TargetObject>
+                <InArgument x:TypeArguments="x:String">[coluna]</InArgument>
+              </InvokeMethod>
+            </If.Then>
+          </If>
+        </ActivityAction>
+      </ForEach.Body>
+    </ForEach>
+    <ui:LogMessage DisplayName="Log - linhas lidas" Level="Info" Message="[dtDenuncias.Rows.Count.ToString + &quot; linha(s) lida(s) de &quot; + caminhoEntrada]" sap2010:WorkflowViewState.IdRef="LogMessage_2" />
+
+    <!-- ===================== 3. Navegador ===================== -->
+    <ui:OpenBrowser BrowserType="[If(dicConfig(&quot;NAVEGADOR&quot;).ToString.Trim.ToUpper = &quot;CHROME&quot;, BrowserType.Chrome, BrowserType.Edge)]" UiBrowser="[navegador]" Url="[urlBase + &quot;/#/&quot;]"
+     DisplayName="3. Open Browser - AcessaCidade" sap2010:WorkflowViewState.IdRef="OpenBrowser_1"
+     sap2010:Annotation.AnnotationText="Abre o Edge (padrão) ou o Chrome (NAVEGADOR no Config) na página inicial. A extensão UiPath do navegador precisa estar instalada e ativada. A referência fica em 'navegador' e é reutilizada por todas as linhas.">
+      <ui:OpenBrowser.Body>
+        <ActivityAction x:TypeArguments="x:Object">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="x:Object" Name="ContextTarget" />
+          </ActivityAction.Argument>
+          <ui:LogMessage DisplayName="Log - navegador aberto" Level="Info" Message="[&quot;Navegador aberto em &quot; + urlBase]" sap2010:WorkflowViewState.IdRef="LogMessage_3" />
+        </ActivityAction>
+      </ui:OpenBrowser.Body>
+    </ui:OpenBrowser>
+
+    <!-- ===================== 4. Uma transação por linha ===================== -->
+    <ui:ForEachRow CurrentIndex="[indiceLinha]" DataTable="[dtDenuncias]" DisplayName="4. For Each Row - denúncias" sap2010:WorkflowViewState.IdRef="ForEachRow_1"
+     sap2010:Annotation.AnnotationText="Cada linha é uma transação independente: uma falha em uma linha não interrompe as demais.">
+      <ui:ForEachRow.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="row" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Processar linha" sap2010:WorkflowViewState.IdRef="Sequence_2">
+            <Assign DisplayName="statusRobo = vazio" sap2010:WorkflowViewState.IdRef="Assign_8">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[statusRobo]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="protocolo = vazio" sap2010:WorkflowViewState.IdRef="Assign_9">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[protocolo]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="mensagem = vazio" sap2010:WorkflowViewState.IdRef="Assign_10">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[mensagem]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
+            </Assign>
+            <If Condition="[row(&quot;Status_Robo&quot;).ToString.Trim.ToUpper = &quot;SUCESSO&quot;]" DisplayName="Linha já cadastrada antes?" sap2010:WorkflowViewState.IdRef="If_4"
+             sap2010:Annotation.AnnotationText="Idempotência: se a planilha usada como entrada já tiver Status_Robo = SUCESSO (ex.: reprocessar a planilha de saída), a linha é ignorada para não duplicar a denúncia.">
+              <If.Then>
+                <Sequence DisplayName="Ignorar linha" sap2010:WorkflowViewState.IdRef="Sequence_3">
+                  <Assign DisplayName="totalIgnoradas += 1" sap2010:WorkflowViewState.IdRef="Assign_11">
+                    <Assign.To><OutArgument x:TypeArguments="x:Int32">[totalIgnoradas]</OutArgument></Assign.To>
+                    <Assign.Value><InArgument x:TypeArguments="x:Int32">[totalIgnoradas + 1]</InArgument></Assign.Value>
+                  </Assign>
+                  <ui:LogMessage DisplayName="Log - linha ignorada" Level="Info" Message="[&quot;Linha &quot; + (indiceLinha + 1).ToString + &quot; já tem SUCESSO (protocolo &quot; + row(&quot;Protocolo&quot;).ToString + &quot;); ignorada.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_4" />
+                </Sequence>
+              </If.Then>
+              <If.Else>
+                <Sequence DisplayName="Cadastrar e registrar" sap2010:WorkflowViewState.IdRef="Sequence_4">
+                  <TryCatch DisplayName="Try Catch - transação da linha" sap2010:WorkflowViewState.IdRef="TryCatch_1"
+                   sap2010:Annotation.AnnotationText="BusinessRuleException = dado inválido ou recusado pelo AcessaCidade (FALHA_NEGOCIO). Qualquer outra exceção = problema técnico (FALHA_SISTEMA). Nos dois casos o robô segue para a próxima linha.">
+                    <TryCatch.Try>
+                      <Sequence DisplayName="Try" sap2010:WorkflowViewState.IdRef="Sequence_5">
+                        <ui:LogMessage DisplayName="Log - processando" Level="Info" Message="[&quot;Processando linha &quot; + (indiceLinha + 1).ToString + &quot; de &quot; + dtDenuncias.Rows.Count.ToString + &quot;: &quot; + row(&quot;Nome&quot;).ToString]" sap2010:WorkflowViewState.IdRef="LogMessage_5" />
+                        <ui:InvokeWorkflowFile DisplayName="Invoke - ProcessarDenuncia.xaml" UnSafe="False" WorkflowFileName="Workflows\ProcessarDenuncia.xaml" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_2"
+                         sap2010:Annotation.AnnotationText="Preenche e envia o formulário; devolve o protocolo AC-AAAA-NNNNNN.">
+                          <ui:InvokeWorkflowFile.Arguments>
+                            <InArgument x:TypeArguments="sd:DataRow" x:Key="in_Linha">[row]</InArgument>
+                            <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="in_Config">[dicConfig]</InArgument>
+                            <InArgument x:TypeArguments="ui:Browser" x:Key="in_Navegador">[navegador]</InArgument>
+                            <OutArgument x:TypeArguments="x:String" x:Key="out_Protocolo">[protocolo]</OutArgument>
+                          </ui:InvokeWorkflowFile.Arguments>
+                        </ui:InvokeWorkflowFile>
+                        <Assign DisplayName="statusRobo = SUCESSO" sap2010:WorkflowViewState.IdRef="Assign_12">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[statusRobo]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">SUCESSO</InArgument></Assign.Value>
+                        </Assign>
+                        <Assign DisplayName="mensagem (sucesso)" sap2010:WorkflowViewState.IdRef="Assign_13">
+                          <Assign.To><OutArgument x:TypeArguments="x:String">[mensagem]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:String">[&quot;Denúncia cadastrada no AcessaCidade (origem RPA). Acompanhe em &quot; + urlBase + &quot;/#/denuncia/&quot; + protocolo]</InArgument></Assign.Value>
+                        </Assign>
+                        <Assign DisplayName="totalSucesso += 1" sap2010:WorkflowViewState.IdRef="Assign_14">
+                          <Assign.To><OutArgument x:TypeArguments="x:Int32">[totalSucesso]</OutArgument></Assign.To>
+                          <Assign.Value><InArgument x:TypeArguments="x:Int32">[totalSucesso + 1]</InArgument></Assign.Value>
+                        </Assign>
+                      </Sequence>
+                    </TryCatch.Try>
+                    <TryCatch.Catches>
+                      <Catch x:TypeArguments="ui:BusinessRuleException" sap2010:WorkflowViewState.IdRef="Catch`1_1">
+                        <ActivityAction x:TypeArguments="ui:BusinessRuleException">
+                          <ActivityAction.Argument>
+                            <DelegateInArgument x:TypeArguments="ui:BusinessRuleException" Name="excecaoNegocio" />
+                          </ActivityAction.Argument>
+                          <Sequence DisplayName="Falha de negócio" sap2010:WorkflowViewState.IdRef="Sequence_6">
+                            <Assign DisplayName="statusRobo = FALHA_NEGOCIO" sap2010:WorkflowViewState.IdRef="Assign_15">
+                              <Assign.To><OutArgument x:TypeArguments="x:String">[statusRobo]</OutArgument></Assign.To>
+                              <Assign.Value><InArgument x:TypeArguments="x:String">FALHA_NEGOCIO</InArgument></Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="mensagem (negócio)" sap2010:WorkflowViewState.IdRef="Assign_16">
+                              <Assign.To><OutArgument x:TypeArguments="x:String">[mensagem]</OutArgument></Assign.To>
+                              <Assign.Value><InArgument x:TypeArguments="x:String">[excecaoNegocio.Message]</InArgument></Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="totalFalhaNegocio += 1" sap2010:WorkflowViewState.IdRef="Assign_17">
+                              <Assign.To><OutArgument x:TypeArguments="x:Int32">[totalFalhaNegocio]</OutArgument></Assign.To>
+                              <Assign.Value><InArgument x:TypeArguments="x:Int32">[totalFalhaNegocio + 1]</InArgument></Assign.Value>
+                            </Assign>
+                            <ui:LogMessage DisplayName="Log - falha de negócio" Level="Warn" Message="[&quot;Linha &quot; + (indiceLinha + 1).ToString + &quot; - FALHA_NEGOCIO: &quot; + excecaoNegocio.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_6" />
+                          </Sequence>
+                        </ActivityAction>
+                      </Catch>
+                      <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_2">
+                        <ActivityAction x:TypeArguments="s:Exception">
+                          <ActivityAction.Argument>
+                            <DelegateInArgument x:TypeArguments="s:Exception" Name="excecaoSistema" />
+                          </ActivityAction.Argument>
+                          <Sequence DisplayName="Falha de sistema" sap2010:WorkflowViewState.IdRef="Sequence_7">
+                            <Assign DisplayName="statusRobo = FALHA_SISTEMA" sap2010:WorkflowViewState.IdRef="Assign_18">
+                              <Assign.To><OutArgument x:TypeArguments="x:String">[statusRobo]</OutArgument></Assign.To>
+                              <Assign.Value><InArgument x:TypeArguments="x:String">FALHA_SISTEMA</InArgument></Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="mensagem (sistema)" sap2010:WorkflowViewState.IdRef="Assign_19">
+                              <Assign.To><OutArgument x:TypeArguments="x:String">[mensagem]</OutArgument></Assign.To>
+                              <Assign.Value><InArgument x:TypeArguments="x:String">[excecaoSistema.GetType().Name + ": " + excecaoSistema.Message]</InArgument></Assign.Value>
+                            </Assign>
+                            <Assign DisplayName="totalFalhaSistema += 1" sap2010:WorkflowViewState.IdRef="Assign_20">
+                              <Assign.To><OutArgument x:TypeArguments="x:Int32">[totalFalhaSistema]</OutArgument></Assign.To>
+                              <Assign.Value><InArgument x:TypeArguments="x:Int32">[totalFalhaSistema + 1]</InArgument></Assign.Value>
+                            </Assign>
+                            <ui:LogMessage DisplayName="Log - falha de sistema" Level="Error" Message="[&quot;Linha &quot; + (indiceLinha + 1).ToString + &quot; - FALHA_SISTEMA: &quot; + excecaoSistema.GetType().Name + &quot;: &quot; + excecaoSistema.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_7" />
+                          </Sequence>
+                        </ActivityAction>
+                      </Catch>
+                    </TryCatch.Catches>
+                  </TryCatch>
+                  <TryCatch DisplayName="Try Catch - gravar resultado" sap2010:WorkflowViewState.IdRef="TryCatch_2"
+                   sap2010:Annotation.AnnotationText="Se a planilha de saída estiver aberta no Excel a gravação falha: o erro é registrado no log e o robô continua.">
+                    <TryCatch.Try>
+                      <ui:InvokeWorkflowFile DisplayName="Invoke - RegistrarResultado.xaml" UnSafe="False" WorkflowFileName="Workflows\RegistrarResultado.xaml" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_3">
+                        <ui:InvokeWorkflowFile.Arguments>
+                          <InOutArgument x:TypeArguments="sd:DataTable" x:Key="io_Tabela">[dtDenuncias]</InOutArgument>
+                          <InArgument x:TypeArguments="x:Int32" x:Key="in_IndiceLinha">[indiceLinha]</InArgument>
+                          <InArgument x:TypeArguments="x:String" x:Key="in_Status">[statusRobo]</InArgument>
+                          <InArgument x:TypeArguments="x:String" x:Key="in_Protocolo">[protocolo]</InArgument>
+                          <InArgument x:TypeArguments="x:String" x:Key="in_Mensagem">[mensagem]</InArgument>
+                          <InArgument x:TypeArguments="x:String" x:Key="in_CaminhoSaida">[caminhoSaida]</InArgument>
+                          <InArgument x:TypeArguments="x:String" x:Key="in_AbaSaida">[abaSaida]</InArgument>
+                        </ui:InvokeWorkflowFile.Arguments>
+                      </ui:InvokeWorkflowFile>
+                    </TryCatch.Try>
+                    <TryCatch.Catches>
+                      <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch`1_3">
+                        <ActivityAction x:TypeArguments="s:Exception">
+                          <ActivityAction.Argument>
+                            <DelegateInArgument x:TypeArguments="s:Exception" Name="excecaoGravacao" />
+                          </ActivityAction.Argument>
+                          <ui:LogMessage DisplayName="Log - erro ao gravar saída" Level="Error" Message="[&quot;Não foi possível gravar a planilha de saída (feche-a no Excel): &quot; + excecaoGravacao.Message]" sap2010:WorkflowViewState.IdRef="LogMessage_8" />
+                        </ActivityAction>
+                      </Catch>
+                    </TryCatch.Catches>
+                  </TryCatch>
+                </Sequence>
+              </If.Else>
+            </If>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEachRow.Body>
+    </ui:ForEachRow>
+
+    <!-- ===================== 5. Resumo ===================== -->
+    <ui:LogMessage DisplayName="5. Log - resumo com totais" Level="Info" sap2010:WorkflowViewState.IdRef="LogMessage_9"
+     sap2010:Annotation.AnnotationText="Resumo final da execução (aparece no painel Output do Studio e nos logs do Robot)."
+     Message="[&quot;RESUMO AcessaCidade.RPA | Linhas: &quot; + dtDenuncias.Rows.Count.ToString + &quot; | Sucesso: &quot; + totalSucesso.ToString + &quot; | Falha de negócio: &quot; + totalFalhaNegocio.ToString + &quot; | Falha de sistema: &quot; + totalFalhaSistema.ToString + &quot; | Ignoradas (já cadastradas): &quot; + totalIgnoradas.ToString + &quot; | Duração: &quot; + DateTime.Now.Subtract(inicio).ToString(&quot;hh\:mm\:ss&quot;) + &quot; | Planilha de saída: &quot; + caminhoSaida]" />
+    <ui:LogMessage DisplayName="Log - navegador permanece aberto" Level="Info" Message="[&quot;O navegador foi mantido aberto para conferência dos registros (feche-o manualmente).&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_10" />
+  </Sequence>
+</Activity>

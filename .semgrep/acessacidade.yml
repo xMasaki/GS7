@@ -1,0 +1,142 @@
+# =====================================================================
+# AcessaCidade — regras Semgrep customizadas da equipe (Disciplina 06)
+# Usadas no CI junto com os pacotes p/python, p/javascript, p/secrets e
+# p/dockerfile:
+#   semgrep scan --config p/python --config p/javascript --config p/secrets \
+#     --config p/dockerfile --config .semgrep/ --exclude .semgrep/tests --error
+# Teste das próprias regras (arquivos com "ruleid:" / "ok:"):
+#   semgrep --test --config .semgrep/acessacidade.yml .semgrep/tests/
+# =====================================================================
+rules:
+  - id: acessacidade-python-eval-exec
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Uso de eval()/exec() permite execução de código arbitrário. Nunca avalie
+      entrada do usuário; use json.loads, ast.literal_eval ou um dicionário de
+      funções permitidas.
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+      owasp: "A03:2021 - Injection"
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+
+  - id: acessacidade-python-requests-sem-timeout
+    languages: [python]
+    severity: WARNING
+    message: >-
+      Chamada HTTP com "requests" sem timeout pode travar o worker
+      indefinidamente (indisponibilidade). Informe timeout=<segundos>.
+    metadata:
+      category: reliability
+      cwe: "CWE-400: Uncontrolled Resource Consumption"
+    patterns:
+      - pattern: requests.$METHOD(...)
+      - metavariable-regex:
+          metavariable: $METHOD
+          regex: ^(get|post|put|patch|delete|head|options|request)$
+      - pattern-not: requests.$METHOD(..., timeout=$T, ...)
+
+  - id: acessacidade-python-httpx-timeout-none
+    languages: [python]
+    severity: WARNING
+    message: >-
+      httpx com timeout=None desativa o limite de tempo da requisição.
+      Use um valor finito (ex.: ASSISTANT_TIMEOUT_SECONDS).
+    metadata:
+      category: reliability
+      cwe: "CWE-400: Uncontrolled Resource Consumption"
+    pattern-either:
+      - pattern: httpx.$F(..., timeout=None, ...)
+
+  - id: acessacidade-python-subprocess-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >-
+      subprocess com shell=True (ou os.system) permite injeção de comandos.
+      Passe a lista de argumentos e mantenha shell=False.
+    metadata:
+      category: security
+      cwe: "CWE-78: OS Command Injection"
+      owasp: "A03:2021 - Injection"
+    pattern-either:
+      - pattern: subprocess.$F(..., shell=True, ...)
+      - pattern: os.system(...)
+
+  - id: acessacidade-python-segredo-hardcoded
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Possível segredo escrito no código ($NAME). Chaves e tokens devem vir de
+      variável de ambiente (.env local, GitHub Secrets ou
+      secure_environment_variables do ACI).
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A07:2021 - Identification and Authentication Failures"
+    patterns:
+      - pattern-either:
+          - pattern: $NAME = "$VALUE"
+          - pattern: $OBJ.$NAME = "$VALUE"
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i)^([a-z0-9_]*_)?(api_key|apikey|token|secret|password|senha)$
+      - metavariable-regex:
+          metavariable: $VALUE
+          regex: ^[^\s\[\]<>{}]{8,}$
+
+  - id: acessacidade-python-segredo-default-env
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Valor padrão não vazio para a variável de ambiente sensível $KEY. Sem a
+      variável definida a aplicação deve DESATIVAR a funcionalidade, não usar um
+      segredo embutido.
+    metadata:
+      category: security
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+    patterns:
+      - pattern-either:
+          - pattern: os.environ.get("$KEY", "$DEFAULT")
+          - pattern: os.getenv("$KEY", "$DEFAULT")
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: (?i).*(api_key|token|secret|password|senha).*
+      - metavariable-regex:
+          metavariable: $DEFAULT
+          regex: ^.+$
+
+  - id: acessacidade-js-innerhtml
+    languages: [javascript]
+    severity: ERROR
+    message: >-
+      Atribuir HTML dinâmico (innerHTML/outerHTML/insertAdjacentHTML/
+      document.write) abre espaço para XSS com o texto das denúncias. Use
+      textContent, createElement e append.
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting"
+      owasp: "A03:2021 - Injection"
+    patterns:
+      - pattern-either:
+          - pattern: $EL.innerHTML = $X
+          - pattern: $EL.outerHTML = $X
+          - pattern: $EL.insertAdjacentHTML(...)
+          - pattern: document.write(...)
+          - pattern: document.writeln(...)
+      - pattern-not: $EL.innerHTML = ""
+
+  - id: acessacidade-js-eval
+    languages: [javascript]
+    severity: ERROR
+    message: >-
+      eval()/new Function() executam código arbitrário no navegador (e violam
+      a CSP script-src 'self').
+    metadata:
+      category: security
+      cwe: "CWE-95: Eval Injection"
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)

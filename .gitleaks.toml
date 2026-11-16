@@ -1,0 +1,51 @@
+# =====================================================================
+# Gitleaks — configuração do AcessaCidade
+# Usada no CI (.github/workflows/ci-devsecops.yml) e localmente:
+#   gitleaks dir . --config .gitleaks.toml --redact
+#   gitleaks git . --config .gitleaks.toml --redact
+# Os caminhos usam [\\/] para funcionar com "/" (Linux/CI) e "\" (Windows).
+# =====================================================================
+title = "AcessaCidade - gitleaks"
+
+# Mantém TODAS as regras padrão do Gitleaks (AWS, Azure, GitHub, OpenAI, chaves privadas...)
+[extend]
+useDefault = true
+
+# ---------------------------------------------------------------------
+# Regra da equipe: token FICTÍCIO usado na demonstração de "execução barrada".
+# Formato: acd_demo_ + 32 caracteres [a-z0-9]. Não é credencial de nenhum
+# provedor; serve só para provar que o pipeline barra um segredo commitado.
+# Passo a passo: 06-Secure-DevOps-Cloud/docs/DEMONSTRACAO_EXECUCAO_BARRADA.md
+# ---------------------------------------------------------------------
+[[rules]]
+id = "acessacidade-demo-token"
+description = "Token de demonstração do AcessaCidade (fictício) — não deve ser commitado"
+regex = '''acd_demo_[a-z0-9]{32}'''
+keywords = ["acd_demo_"]
+tags = ["acessacidade", "demo"]
+
+# Arquivos que apenas EXPLICAM o formato (sem um token completo)
+[rules.allowlist]
+description = "Documentação do formato do token de demonstração"
+paths = [
+  '''(^|[\\/])\.env\.example$''',
+  '''(^|[\\/])06-Secure-DevOps-Cloud[\\/]docs[\\/]DEMONSTRACAO_EXECUCAO_BARRADA\.md$''',
+]
+
+# ---------------------------------------------------------------------
+# Exclusões globais: ambientes virtuais, caches e artefatos gerados
+# (não são código da equipe e não vão para o Git — ver .gitignore).
+# ---------------------------------------------------------------------
+[allowlist]
+description = "Pastas locais que não fazem parte do repositório"
+paths = [
+  '''(^|[\\/])\.venv[\\/]''',
+  '''(^|[\\/])venv[\\/]''',
+  '''(^|[\\/])node_modules[\\/]''',
+  '''(^|[\\/])__pycache__[\\/]''',
+  '''(^|[\\/])\.pytest_cache[\\/]''',
+  '''(^|[\\/])\.terraform[\\/]''',
+  '''(^|[\\/])\.terraform\.lock\.hcl$''',
+  '''(^|[\\/])data[\\/]runtime[\\/]''',
+  '''(^|[\\/])\.git[\\/]''',
+]

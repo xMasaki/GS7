@@ -1,0 +1,118 @@
+{
+  "arquivo": "sintetica_clara_01.jpg",
+  "sanitizacao": {
+    "largura_original": 1024,
+    "altura_original": 768,
+    "largura_final": 1024,
+    "altura_final": 768,
+    "redimensionada": false,
+    "metadados_removidos": true,
+    "rostos_borrados": 0,
+    "detector_rostos_disponivel": true
+  },
+  "classificacao": "INCONCLUSIVE",
+  "rotulo": "Análise inconclusiva",
+  "pontuacao": 0.5426,
+  "explicacao": [
+    "A qualidade da fotografia não permite uma triagem confiável:",
+    "Imagem muito clara ou estourada (brilho médio 252 de 255; 95% de pixels saturados).",
+    "A melhor região encontrada teria pontuação heurística 0,54, mas o resultado foi marcado como inconclusivo por causa da qualidade da foto.",
+    "Envie outra foto, com boa iluminação, foco no piso e o celular estável.",
+    "Limitação: sombras, manchas de óleo/umidade, rachaduras largas, poças e juntas escuras podem gerar falsos positivos; buracos rasos, cheios de água ou com a mesma cor do piso podem não ser detectados."
+  ],
+  "metricas": {
+    "largura_original": 1024,
+    "altura_original": 768,
+    "largura_analise": 800,
+    "altura_analise": 600,
+    "brilho_medio": 252.29,
+    "contraste_rms": 13.29,
+    "nitidez_laplaciano": 36.57,
+    "percentual_pixels_escuros": 0.0,
+    "percentual_pixels_saturados": 94.8,
+    "histograma_16_faixas": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0001,
+      0.0003,
+      0.0012,
+      0.0028,
+      0.0054,
+      0.0076,
+      0.0093,
+      0.0099,
+      0.0093,
+      0.9541
+    ],
+    "qualidade_adequada": false,
+    "problemas_qualidade": [
+      "Imagem muito clara ou estourada (brilho médio 252 de 255; 95% de pixels saturados)."
+    ],
+    "histograma_bimodal_extenso": false,
+    "fracao_escura_otsu": 0.0385,
+    "mediana_cinza": 255.0,
+    "sigma_robusto": 0.0,
+    "limiar_otsu": 224.0,
+    "efetividade_otsu": 0.8432,
+    "limiar_robusto": 227.0,
+    "limiar_aplicado": 224.0,
+    "percentual_mascara": 3.35,
+    "densidade_bordas_global": 0.0104,
+    "num_candidatas": 1,
+    "num_deteccoes": 0,
+    "decisao": "qualidade",
+    "candidatas": [
+      {
+        "x": 311,
+        "y": 180,
+        "largura": 165,
+        "altura": 221,
+        "area_px": 15405,
+        "area_relativa": 0.0321,
+        "perimetro_px": 1297.2,
+        "circularidade": 0.115,
+        "solidez": 0.5658,
+        "razao_aspecto": 0.747,
+        "alongamento": 1.409,
+        "media_interna": 196.24,
+        "media_externa": 243.05,
+        "contraste_int_ext": 0.1926,
+        "textura_relativa": 2.6597,
+        "densidade_bordas_contorno": 0.2042,
+        "razao_bordas": 19.6987,
+        "nitidez_borda": 0.1618,
+        "gradiente_profundidade": -0.0244,
+        "fracao_toca_borda_imagem": 0.0,
+        "pontuacao": 0.5426,
+        "subpontuacoes": {
+          "contraste": 0.142,
+          "borda": 1.0,
+          "textura": 1.0,
+          "profundidade": 0.0,
+          "forma": 0.3211,
+          "fator_borda_imagem": 1.0
+        },
+        "criterios_nao_atendidos": [
+          "forma muito recortada (solidez 0,57; mínimo 0,60)"
+        ]
+      }
+    ],
+    "parametros": {
+      "maior_lado_analise_px": 800,
+      "filtro": "GaussianBlur 5x5, sigma=1.1",
+      "clahe": "clipLimit=2.0, tileGridSize=4x4",
+      "canny": "40/110 (L2)",
+      "morfologia": "abertura elipse 5x5 x2; fechamento elipse 11x11; preenchimento de furos",
+      "limiar_possivel_buraco": 0.6,
+      "limiar_inconclusivo": 0.42
+    },
+    "coordenadas_referem_se_a": "imagem de análise (largura_analise x altura_analise)"
+  },
+  "deteccoes": [],
+  "versao_algoritmo": "1.0.0",
+  "aviso": "Triagem automática inicial. Não substitui avaliação técnica; requer revisão humana."
+}

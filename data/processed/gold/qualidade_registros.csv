@@ -1,0 +1,11 @@
+ordem,metrica,valor,descricao
+1,linhas_raw,271.0,"Linhas carregadas na RAW (todas as fontes, sem transformação)"
+2,linhas_bronze,260.0,Linhas na BRONZE após remover duplicatas técnicas
+3,duplicatas_removidas,11.0,Duplicatas técnicas removidas (linhas 100% idênticas na origem)
+4,datas_invalidas,12.0,"Registros com data ausente, não reconhecida ou implausível (RN-09)"
+5,coordenadas_invalidas,11.0,Registros com coordenada inválida ou fora do Brasil (RN-10)
+6,campos_obrigatorios_ausentes,25.0,Registros com ao menos um campo obrigatório vazio
+7,percentual_registros_validos,84.4,Percentual de denúncias únicas que atendem à regra de registro válido (RN-12)
+8,linhas_silver,250.0,Denúncias únicas na SILVER após a deduplicação de negócio
+9,duplicatas_negocio_removidas,10.0,"Quase-duplicatas removidas na SILVER (mesmo endereço + tipo + dia, RN-11)"
+10,registros_validos,211.0,"Denúncias únicas válidas, usadas nos agregados Gold"

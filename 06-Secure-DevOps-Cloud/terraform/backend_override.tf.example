@@ -1,0 +1,9 @@
+# OPCIONAL — state LOCAL fora do repositório (somente estudo/validação individual).
+# Copie para backend_override.tf (ignorado pelo .gitignore: *_override.tf) e rode
+# "terraform init -reconfigure". O arquivo de state fica numa pasta FORA do Git.
+# Atenção: o CI usa o state remoto; não misture os dois para o mesmo ambiente.
+terraform {
+  backend "local" {
+    path = "../../../acessacidade-tfstate/terraform.tfstate"
+  }
+}

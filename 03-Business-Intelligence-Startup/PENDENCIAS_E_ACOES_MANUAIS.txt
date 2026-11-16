@@ -1,0 +1,197 @@
+AcessaCidade — Disciplina 03: Business Intelligence & Startup Development
+("Pitch de Negócio + MVP CitizenTech")
+PENDÊNCIAS E AÇÕES MANUAIS
+Atualizado em: 2026-11-15 | Prazo no portal: 19/11/2026, 23h55 (um envio por equipe)
+Avaliação: 14 pts = Pitch 7 (Lean Canvas 2,0 · Modelo de Negócio 2,5 · Narrativa 2,5)
+                  + MVP 7 (Demonstração ponta a ponta 3,5 · Valor entregue evidenciado 3,5)
+======================================================================================
+
+--------------------------------------------------------------------------------------
+A. O QUE FOI DESENVOLVIDO
+--------------------------------------------------------------------------------------
+business-model/
+  - lean_canvas.json (fonte única) -> LEAN_CANVAS.md (9 blocos + status de validação por bloco:
+    todos "HIPÓTESE (não validada)" com [PREENCHER] do que foi validado no CP1), LEAN_CANVAS.html
+    (A4 paisagem, sem dependências externas), LEAN_CANVAS.xlsx
+  - MODELO_DE_NEGOCIO.md (quem usa × quem paga, proposta de valor por segmento, canais B2G/B2B,
+    receitas, preço, custos, ponto de equilíbrio com premissas, métricas, escala, riscos)
+  - ESTRATEGIA_DE_PRECO.md (planos com valores HIPOTÉTICOS), METRICAS_E_IMPACTO.md
+  - MODELO_FINANCEIRO_HIPOTETICO.xlsx (fórmulas do Excel; premissas editáveis)
+pitch/
+  - ROTEIRO_PITCH.md (6 blocos, 0:45/0:45/1:30/1:00/0:30/0:30), STORYBOARD.md, LISTA_DE_CENAS.md,
+    ROTEIRO_DE_GRAVACAO.md, LISTA_DE_EVIDENCIAS.md, ROTEIRO_TESTE_USABILIDADE.md,
+    TERMO_CONSENTIMENTO_MODELO.md, registro_testes_usuarios_TEMPLATE.xlsx (vazio), evidencias/README.md
+dashboard/
+  - README.md (KPIs do #/painel com fórmula, fonte e camada), exportar_gold_para_excel.py,
+    AcessaCidade_indicadores.xlsx (gerado em 2026-11-15 a partir de data/processed/gold real do pipeline;
+    dados incluem registros SIMULADOS)
+docs/
+  - DOCUMENTO_DE_ENTREGA_BI.md (fonte do PDF único), links_entrega.yaml, PROBLEMA_E_CIDADAO.md
+    (personas hipotéticas), ANALISE_CONCORRENCIA.md, PROXIMOS_PASSOS.md
+scripts/
+  - gerar_lean_canvas.py, gerar_planilhas.py, gerar_pdf_entrega.py
+README.md da disciplina (entregáveis × arquivos, estrutura, comandos, verificação)
+Raiz: C:\Users\masak\Desktop\GS7-4ESPR\docs\FICHA_TECNICA_MVP.md (estrutura da pág. 20 do PDF:
+  nome, cidadão, território, problema, proposta de valor, componentes por disciplina, fontes de dados,
+  modelos de IA, URL/repositório, indicadores de impacto, ODS 11/10/9 com metas)
+
+--------------------------------------------------------------------------------------
+B. O QUE FOI TESTADO (comandos exatos e resultados reais — 2026-11-15, PowerShell na raiz)
+--------------------------------------------------------------------------------------
+B1. .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\scripts\gerar_lean_canvas.py
+    -> gerou LEAN_CANVAS.md, LEAN_CANVAS.html, LEAN_CANVAS.xlsx (saída 0).
+B2. .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\scripts\gerar_planilhas.py
+    -> planilhas geradas; cenário hipotético: ponto_equilibrio_clientes 24, mes_ponto_equilibrio 17,
+       necessidade_caixa 576.845,50, mes_caixa_acumulado_positivo 33 (resultado das PREMISSAS, não de mercado).
+B3. .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\dashboard\exportar_gold_para_excel.py
+    -> contra os CSVs REAIS do pipeline em data\processed\gold: Bairros 9, Categorias 8, Período 19,
+       Status 5, Triagem da foto 4 linhas; aviso "dados incluem registros SIMULADOS" (saída 0).
+       (Em execução anterior também foi testado com CSVs temporários no scratchpad.)
+B4. Lean Canvas HTML -> PDF com Edge headless (Playwright channel="msedge"): 1 página A4 paisagem
+    (841,9 × 595,0 pt). Arquivo de verificação fora do repositório (scratchpad\bi\lean_canvas_verificacao.pdf).
+B5. .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\scripts\gerar_pdf_entrega.py --saida <scratchpad>\bi\entrega_teste.pdf
+    -> PDF de 15 páginas; 0 links clicáveis (links vazios); pendências listadas: url_video, url_mvp,
+       url_repositorio vazios; 27 [PREENCHER] no DOCUMENTO_DE_ENTREGA_BI.md, 31 no Lean Canvas, 5 no MODELO_DE_NEGOCIO.md.
+    Observação: no Git Bash com sandbox o Edge não abre; use o PowerShell.
+B6. (auditoria de 15/11/2026) Testes automáticos criados em tests\test_bi_artefatos.py e incluídos no pytest da raiz:
+    .\.venv\Scripts\python.exe -m pytest 03-Business-Intelligence-Startup\tests  -> 7 passed.
+    Conferem: 9 blocos do canvas com itens e status "HIPÓTESE"; JSON incompleto é recusado; LEAN_CANVAS.md/.html
+    versionados idênticos à saída do gerador; geradores de planilhas e exportador da Gold funcionam em pasta
+    temporária; links_entrega.yaml vazio ou https://. NÃO testam a validade do modelo de negócio (é hipótese).
+
+--------------------------------------------------------------------------------------
+C. O QUE NÃO FOI POSSÍVEL FAZER (e por quê)
+--------------------------------------------------------------------------------------
+C1. Validar o Lean Canvas: depende do que a equipe realmente aprendeu no CP1/entrevistas. Nada foi inventado;
+    todos os blocos estão como "HIPÓTESE (não validada)" até a equipe preencher.
+C2. Testes com usuários reais e métrica antes/depois: exigem pessoas do público-alvo e consentimento.
+C3. Gravar o vídeo-pitch com todos os integrantes.
+C4. URL pública do MVP e repositório público: dependem do deploy (disciplina 06) e da equipe. O backend e a
+    integração já estão prontos e testados localmente (E2E 199/199 em 15/11/2026); a demo do vídeo deve ser
+    gravada na URL pública, depois do deploy.
+C5. Dados de contexto público (ex.: IBGE): só com fonte conferida pela equipe; ficaram como [PREENCHER].
+
+--------------------------------------------------------------------------------------
+D. O QUE DEPENDE DO USUÁRIO
+--------------------------------------------------------------------------------------
+D1. Validar o Lean Canvas com dados do CP1/entrevistas (2,0 pts)
+  Ação necessária: registrar, por bloco, o que foi validado e o que mudou desde o CP1.
+  Programa ou site: VS Code (ou outro editor) + PowerShell.
+  Arquivo envolvido: business-model\lean_canvas.json (fonte única; NÃO editar o .md/.html/.xlsx à mão).
+  Caminho do menu ou procedimento: editar os campos de status/validação de cada um dos 9 blocos.
+  Passo a passo:
+    1. Reunir anotações do CP1, entrevistas, protótipo, MVP 0 e MVP 1.
+    2. Para cada bloco: trocar "HIPÓTESE (não validada)" pelo status real (ex.: "VALIDADO com 6 entrevistas")
+       e substituir o [PREENCHER] pelo que foi aprendido e o que mudou. Se não validou, deixe "HIPÓTESE".
+    3. Rodar: .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\scripts\gerar_lean_canvas.py
+    4. Abrir business-model\LEAN_CANVAS.html no navegador e conferir.
+  Resultado esperado: canvas consolidado com evidências reais.
+  Como saber se deu certo: nenhum [PREENCHER] no LEAN_CANVAS.md; cada bloco diz o que foi validado ou que segue hipótese.
+
+D2. Preencher nomes, RMs e papéis do time
+  Ação necessária: identificar a equipe real em todos os documentos de entrega.
+  Programa ou site: VS Code (ou outro editor de texto).
+  Arquivo envolvido: docs\DOCUMENTO_DE_ENTREGA_BI.md (tabela de integrantes), pitch\ROTEIRO_PITCH.md,
+    pitch\STORYBOARD.md, ..\docs\FICHA_TECNICA_MVP.md, README.md (seção 6).
+  Caminho do menu ou procedimento: VS Code > Edit > Replace in Files (Ctrl+Shift+H), buscando "[PREENCHER: Integrante".
+  Passo a passo: 1. Substituir [PREENCHER: Integrante N] pelos nomes. 2. Distribuir falas para TODOS.
+  Resultado esperado: nomes, RMs e papéis reais em todos os arquivos listados; todos os integrantes com fala no pitch.
+  Como saber se deu certo: busca por "Integrante" sem resultado de [PREENCHER] nesses arquivos.
+
+D3. Teste com usuários reais + métrica antes/depois (Valor entregue, 3,5 pts)
+  Ação necessária: testar o MVP com 3–5 pessoas do público-alvo e medir o antes/depois (dados reais).
+  Programa ou site: MVP na URL pública (celular), cronômetro, Excel.
+  Arquivo envolvido: pitch\ROTEIRO_TESTE_USABILIDADE.md, pitch\TERMO_CONSENTIMENTO_MODELO.md,
+    pitch\registro_testes_usuarios_TEMPLATE.xlsx -> salvar cópia preenchida em pitch\evidencias\registro_testes_usuarios.xlsx
+  Caminho do menu ou procedimento: celular > <URL pública>/#/registrar; Excel > Arquivo > Salvar como (cópia preenchida da planilha).
+  Passo a passo:
+    1. Recrutar 3–5 pessoas do público-alvo (PcD, idosos, mobilidade reduzida); colegas não contam como público-alvo.
+    2. Imprimir/assinar o termo de consentimento (guardar fora do repositório).
+    3. Seguir o roteiro (~25 min): cronometrar o canal atual até a etapa ANTERIOR ao envio (nunca enviar
+       denúncia falsa a canal oficial) e o registro no AcessaCidade até o protocolo.
+    4. Preencher a planilha SEM dados pessoais (códigos P1, P2...). Aplicar SUS.
+    5. Copiar os resultados reais para docs\DOCUMENTO_DE_ENTREGA_BI.md (seção 3) e
+       business-model\METRICAS_E_IMPACTO.md (seção 4). Se não fizer, escreva "não realizado".
+  Resultado esperado: tempo antes × depois, % conclusão sem ajuda, SUS médio, nº e perfil dos participantes.
+  Como saber se deu certo: planilha preenchida com dados reais; consentimentos guardados.
+
+D4. Gravar o vídeo-pitch (Narrativa 2,5 + Demonstração 3,5)
+  Ação necessária: gravar e publicar o vídeo-pitch de até 5 minutos com todos os integrantes.
+  Programa ou site: OBS Studio, editor de vídeo, YouTube.
+  Arquivo envolvido: pitch\ROTEIRO_PITCH.md, STORYBOARD.md, LISTA_DE_CENAS.md, ROTEIRO_DE_GRAVACAO.md.
+  Caminho do menu ou procedimento: YouTube > Criar > Enviar vídeo > Visibilidade: Público ou Não listado.
+  Passo a passo:
+    1. Ensaiar com cronômetro (até 5:00; blocos 0:45/0:45/1:30/1:00/0:30/0:30).
+    2. Gravar a demo REAL na URL pública: acessar → registrar com foto → triagem e etapas → consultar
+       protocolo → perguntar ao helper → painel atualizado. Sem telas falsas, sem localhost.
+    3. Todos os integrantes falam.
+    4. Publicar no YouTube como Público ou Não listado; abrir o link em aba anônima.
+  Resultado esperado: vídeo ≤ 5:00, público, com demo real.
+  Como saber se deu certo: link abre sem login em aba anônima e no celular com dados móveis.
+  Dependência: URL pública (disciplina 06) e backend integrados.
+
+D5. Prints do MVP e do painel (evidências)
+  Ação necessária: capturar as telas reais do MVP publicado como evidência.
+  Programa ou site: navegador na URL pública; Win + Shift + S.
+  Arquivo envolvido: pitch\evidencias\ (ver pitch\LISTA_DE_EVIDENCIAS.md, seção 3).
+  Caminho do menu ou procedimento: Win + Shift + S > Recorte retangular > abrir a notificação > Salvar (Ctrl+S) em pitch\evidencias\.
+  Passo a passo: prints da página inicial, do protocolo gerado, da triagem, da consulta, do helper e do
+    #/painel antes e depois do registro. Nenhum dado pessoal visível.
+  Resultado esperado: um print por tela listada, sem dados pessoais visíveis.
+  Como saber se deu certo: arquivos salvos e citados no DOCUMENTO_DE_ENTREGA_BI.md.
+
+D6. Dados públicos de contexto (opcional, para o bloco "Problema")
+  Ação necessária: (opcional) obter um dado oficial que dimensione o problema.
+  Programa ou site: site do IBGE (PNAD Contínua — pessoas com deficiência).
+  Arquivo envolvido: business-model\MODELO_DE_NEGOCIO.md (seção 13), docs\PROBLEMA_E_CIDADAO.md, ..\docs\FICHA_TECNICA_MVP.md.
+  Caminho do menu ou procedimento: site do IBGE > campo de busca > "pessoas com deficiência PNAD Contínua" > publicação mais recente.
+  Passo a passo: conferir o número na fonte oficial, anotar a fonte e a data de acesso; só então usar no pitch.
+  Resultado esperado: número com fonte, link e data de acesso anotados nos arquivos listados.
+  Como saber se deu certo: todo número citado tem fonte e data.
+
+D7. Preencher URL do MVP, repositório e vídeo; gerar o PDF único
+  Ação necessária: preencher os links reais e gerar o PDF único da disciplina.
+  Programa ou site: editor + PowerShell (requer Microsoft Edge).
+  Arquivo envolvido: docs\links_entrega.yaml; ..\docs\FICHA_TECNICA_MVP.md (URL/repositório/vídeo).
+  Caminho do menu ou procedimento: VS Code para editar os arquivos; PowerShell na raiz do repositório para gerar o PDF.
+  Passo a passo:
+    1. Preencher url_video, url_mvp e url_repositorio (https://) em docs\links_entrega.yaml.
+    2. Preencher os mesmos links na Ficha Técnica (raiz) e no README.md (seção 6).
+    3. Resolver os [PREENCHER] restantes (o gerador lista quais).
+    4. .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\scripts\gerar_pdf_entrega.py --estrito
+    5. Abrir o PDF gerado (03-Business-Intelligence-Startup\entrega\AcessaCidade_BI_Pitch_MVP.pdf) e clicar nos 3 links.
+  Resultado esperado: PDF único (Lean Canvas + modelo de negócio + links clicáveis).
+  Como saber se deu certo: o script informa os links clicáveis encontrados e não lista pendências.
+
+D8. Enviar no portal
+  Ação necessária: um integrante envia o PDF único no portal.
+  Programa ou site: portal FIAP > Business Intelligence & Startup Development.
+  Arquivo envolvido: 03-Business-Intelligence-Startup\entrega\AcessaCidade_BI_Pitch_MVP.pdf.
+  Caminho do menu ou procedimento: portal FIAP > disciplina Business Intelligence & Startup Development > atividade da Global Solution > anexar e enviar (o nome exato dos menus depende do portal; confira com o professor).
+  Passo a passo: 1. Um integrante anexa o PDF único. 2. Confere os links. 3. Envia até 19/11/2026 23h55.
+  Resultado esperado: entrega registrada no portal antes de 19/11/2026 23h55.
+  Como saber se deu certo: comprovante de envio. Manter links públicos por pelo menos uma semana após o prazo.
+
+--------------------------------------------------------------------------------------
+E. EVIDÊNCIAS QUE O USUÁRIO PRECISA PRODUZIR
+--------------------------------------------------------------------------------------
+  - Anotações/registros do CP1 e entrevistas que sustentam o status de cada bloco do canvas.
+  - Planilha de testes com usuários preenchida (sem dados pessoais) + termos assinados (fora do repositório).
+  - Medição antes/depois (tempo para registrar) feita pela equipe.
+  - Prints do MVP na URL pública e do #/painel antes/depois de registrar.
+  - Link do vídeo-pitch (público/não listado) com todos os integrantes.
+  - Link do repositório público e da URL do MVP, testados em aba anônima.
+  - PDF único gerado e comprovante de envio.
+
+--------------------------------------------------------------------------------------
+F. CHECKLIST DE ENTREGÁVEIS PENDENTES (PDF oficial, págs. 32–34)
+--------------------------------------------------------------------------------------
+  [ ] Vídeo-pitch (até 5 min) com demo do MVP — link público — todos participam
+  [ ] Lean Canvas consolidado: 9 blocos com o que foi VALIDADO (status preenchido com fatos)
+  [x] Modelo de negócio: proposta de valor, receita e preço, canais e métricas (premissas declaradas)
+  [ ] MVP em URL pública funcionando ponta a ponta
+  [ ] Repositório público
+  [x] Ficha Técnica do MVP (docs\FICHA_TECNICA_MVP.md) — falta preencher território, URL, repositório, equipe
+  [ ] Evidência de valor entregue (teste com usuário real / métrica antes-depois)
+  [ ] PDF único: Lean Canvas + modelo de negócio + links clicáveis (vídeo, MVP, repositório)
+  [ ] Envio no portal até 19/11/2026 23h55 — um envio por equipe

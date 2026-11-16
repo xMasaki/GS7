@@ -1,0 +1,39 @@
+# Dependências de DESENVOLVIMENTO, testes, pipeline de dados, geração de documentos e CAD.
+# Instalação (na raiz do projeto, com o venv ativado):
+#   python -m pip install -r requirements-dev.txt
+-r requirements.txt
+
+# Testes
+pytest==8.3.5
+
+# Pipeline de dados (disciplina 02)
+pandas==2.2.3
+duckdb==1.2.2
+
+# Planilhas (disciplinas 03 e 05)
+openpyxl==3.1.5
+
+# Notebook (execução automatizada para teste)
+nbformat
+nbclient
+ipykernel
+
+# Gráficos estáticos para relatórios
+matplotlib==3.10.3
+
+# Maker Lab (disciplina 07): DXF, malhas, QR Code, CAD paramétrico (STEP)
+ezdxf==1.4.1
+trimesh==4.6.8
+numpy-stl==3.2.0
+qrcode==8.2
+lxml
+networkx
+cadquery==2.5.2
+
+# Geração de documentos (Markdown -> HTML -> PDF)
+markdown==3.8
+pypdf==5.4.0
+
+# Testes ponta a ponta da interface (usa o Microsoft Edge/Chrome instalado: channel='msedge')
+playwright==1.52.0
+pyyaml==6.0.2

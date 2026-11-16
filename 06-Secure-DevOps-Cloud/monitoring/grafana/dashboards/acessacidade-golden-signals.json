@@ -1,0 +1,1514 @@
+{
+  "uid": "acessacidade-golden",
+  "title": "AcessaCidade — Sinais de Ouro",
+  "description": "Latência, tráfego, erros e saturação do MVP AcessaCidade + métricas de negócio (contrato de integração, seção 10).",
+  "tags": [
+    "acessacidade",
+    "golden-signals",
+    "fiap-gs"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "job",
+        "label": "Ambiente (job)",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus-acessacidade"
+        },
+        "query": {
+          "query": "label_values(up{job=~\"acessacidade-.*\"}, job)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "definition": "label_values(up{job=~\"acessacidade-.*\"}, job)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": "acessacidade-.*",
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      }
+    ]
+  },
+  "links": [],
+  "panels": [
+    {
+      "type": "row",
+      "title": "Visão geral",
+      "id": 1,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "type": "stat",
+      "title": "Aplicação no ar",
+      "description": "1 = Prometheus coleta /metrics com sucesso; 0 = fora do ar (alerta AcessaCidadeIndisponivel).",
+      "id": 2,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "FORA DO AR",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "NO AR",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "min(up{job=~\"$job\"})",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Tráfego (req/s)",
+      "description": "Requisições por segundo (exceto /metrics), média de 1 minuto.",
+      "id": 3,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum(rate(acessacidade_http_requests_total{job=~\"$job\",route!=\"/metrics\"}[1m]))",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Erros 5xx (%)",
+      "description": "Percentual de respostas 5xx nos últimos 5 minutos.",
+      "id": 4,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "100 * sum(rate(acessacidade_http_requests_total{job=~\"$job\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(acessacidade_http_requests_total{job=~\"$job\"}[5m])), 1e-9)",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Latência p95",
+      "description": "Percentil 95 da duração das requisições (exceto /metrics e /health), janela de 5 minutos.",
+      "id": 5,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(acessacidade_http_request_duration_seconds_bucket{job=~\"$job\",route!~\"/metrics|/health\"}[5m])))",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Sinal de ouro 1 — Latência",
+      "id": 6,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Latência p50 / p95 / p99",
+      "description": "histogram_quantile sobre acessacidade_http_request_duration_seconds_bucket (todas as rotas da aplicação, exceto /metrics e /health).",
+      "id": 7,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(acessacidade_http_request_duration_seconds_bucket{job=~\"$job\",route!~\"/metrics|/health\"}[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(acessacidade_http_request_duration_seconds_bucket{job=~\"$job\",route!~\"/metrics|/health\"}[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(acessacidade_http_request_duration_seconds_bucket{job=~\"$job\",route!~\"/metrics|/health\"}[5m])))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latência p95 por rota",
+      "description": "Percentil 95 por template de rota (rótulo route do contrato).",
+      "id": 8,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, route) (rate(acessacidade_http_request_duration_seconds_bucket{job=~\"$job\",route!~\"/metrics|/health\"}[5m])))",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Sinal de ouro 2 — Tráfego",
+      "id": 9,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Requisições por segundo por rota",
+      "description": "rate(acessacidade_http_requests_total[1m]) agrupado por rota.",
+      "id": 10,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 15
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum by (route) (rate(acessacidade_http_requests_total{job=~\"$job\",route!=\"/metrics\"}[1m]))",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Requisições por segundo por método e status",
+      "description": "Distribuição do tráfego por método HTTP e código de status.",
+      "id": 11,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum by (method, status) (rate(acessacidade_http_requests_total{job=~\"$job\",route!=\"/metrics\"}[1m]))",
+          "legendFormat": "{{method}} {{status}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Sinal de ouro 3 — Erros",
+      "id": 12,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Taxa de erros 4xx e 5xx (req/s)",
+      "description": "Respostas de erro por segundo. O alerta AcessaCidadeMuitas4xx dispara acima de 0,5 req/s de 4xx por 1 minuto.",
+      "id": 13,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum(rate(acessacidade_http_requests_total{job=~\"$job\",status=~\"4..\"}[2m]))",
+          "legendFormat": "4xx"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "B",
+          "expr": "sum(rate(acessacidade_http_requests_total{job=~\"$job\",status=~\"5..\"}[2m]))",
+          "legendFormat": "5xx"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Percentual de erros (%)",
+      "description": "Percentual de respostas 4xx e 5xx sobre o total (janela de 5 minutos). O alerta de 5xx dispara acima de 5%.",
+      "id": 14,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "100 * sum(rate(acessacidade_http_requests_total{job=~\"$job\",status=~\"4..\"}[5m])) / clamp_min(sum(rate(acessacidade_http_requests_total{job=~\"$job\"}[5m])), 1e-9)",
+          "legendFormat": "% 4xx"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "B",
+          "expr": "100 * sum(rate(acessacidade_http_requests_total{job=~\"$job\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(acessacidade_http_requests_total{job=~\"$job\"}[5m])), 1e-9)",
+          "legendFormat": "% 5xx"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Erros por rota e status",
+      "description": "Quais rotas estão gerando erros (4xx/5xx).",
+      "id": 15,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 24
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum by (route, status) (rate(acessacidade_http_requests_total{job=~\"$job\",status=~\"4..|5..\"}[2m]))",
+          "legendFormat": "{{route}} {{status}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Sinal de ouro 4 — Saturação",
+      "id": 16,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Requisições em andamento",
+      "description": "Gauge acessacidade_http_requests_in_progress (concorrência no processo).",
+      "id": 17,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 33
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum(acessacidade_http_requests_in_progress{job=~\"$job\"})",
+          "legendFormat": "em andamento"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memória residente",
+      "description": "process_resident_memory_bytes — o container na Azure tem 1,5 GB (alerta acima de 1,2 GB).",
+      "id": 18,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 33
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1200000000.0
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "process_resident_memory_bytes{job=~\"$job\"}",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Uso de CPU",
+      "description": "rate(process_cpu_seconds_total[1m]) — 1,0 = um vCPU inteiro (o ACI tem 1 vCPU).",
+      "id": 19,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 33
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 0.8
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "rate(process_cpu_seconds_total{job=~\"$job\"}[1m])",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Negócio — denúncias, visão computacional e assistente",
+      "id": 20,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 41
+      },
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Denúncias criadas (por hora)",
+      "description": "increase(acessacidade_denuncias_criadas_total[1h]) por origem e presença de foto.",
+      "id": 21,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 42
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum by (origem, tem_foto) (increase(acessacidade_denuncias_criadas_total{job=~\"$job\"}[1h]))",
+          "legendFormat": "{{origem}} foto={{tem_foto}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Classificações da triagem por imagem (por hora)",
+      "description": "acessacidade_visao_classificacoes_total por classificação (POSSIBLE_POTHOLE, NOT_IDENTIFIED, INCONCLUSIVE). Triagem é apoio: requer revisão humana.",
+      "id": 22,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 42
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum by (classificacao) (increase(acessacidade_visao_classificacoes_total{job=~\"$job\"}[1h]))",
+          "legendFormat": "{{classificacao}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Respostas do assistente por fonte (por hora)",
+      "description": "acessacidade_assistente_respostas_total por fonte: llm (modelo) ou fallback (regras).",
+      "id": 23,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 42
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum by (fonte) (increase(acessacidade_assistente_respostas_total{job=~\"$job\"}[1h]))",
+          "legendFormat": "{{fonte}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Duração da triagem de imagem (p50/p95)",
+      "description": "acessacidade_visao_duracao_seconds — tempo do processamento OpenCV.",
+      "id": 24,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 50
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(acessacidade_visao_duracao_seconds_bucket{job=~\"$job\"}[15m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(acessacidade_visao_duracao_seconds_bucket{job=~\"$job\"}[15m])))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Denúncias criadas (total desde o início do processo)",
+      "description": "Contador acumulado desde o último reinício do container (contadores Prometheus zeram ao reiniciar).",
+      "id": 25,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 50
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum(acessacidade_denuncias_criadas_total{job=~\"$job\"})",
+          "instant": false
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Respostas do assistente (total)",
+      "description": "Contador acumulado desde o último reinício do container.",
+      "id": 26,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-acessacidade"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 50
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "color": {
+            "mode": "thresholds"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "textMode": "auto",
+        "justifyMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus-acessacidade"
+          },
+          "refId": "A",
+          "expr": "sum(acessacidade_assistente_respostas_total{job=~\"$job\"})",
+          "instant": false
+        }
+      ]
+    }
+  ]
+}

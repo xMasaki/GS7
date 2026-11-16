@@ -1,0 +1,19 @@
+# AcessaCidade — dependências do PIPELINE DE DADOS (disciplina 02)
+# ------------------------------------------------------------------
+# Runner local (python -m acessacidade_pipeline) e notebook — Python 3.11:
+#   pip install -r 02-Big-Data-Architecture/requirements-pipeline.txt
+# (o .venv da raiz do repositório já contém tudo isto via requirements.txt / requirements-dev.txt)
+#
+# Versões testadas no runner local (Windows 11, Python 3.11):
+duckdb==1.2.2
+pandas==2.2.3
+numpy>=2.0,<2.3
+httpx==0.28.1
+#
+# Dentro do container do Airflow 2.10.5 (python3.11) NÃO use este arquivo: o
+# docker-compose.airflow.yml instala apenas duckdb==1.1.3 e reaproveita pandas 2.1.4 /
+# httpx 0.27.0 / numpy 1.26.4 que já vêm na imagem, respeitando
+# https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-3.11.txt
+# (o código do pacote foi testado também com essas versões — ver PENDENCIAS_E_ACOES_MANUAIS.txt).
+#
+# Testes:  pytest   |  Notebook: nbformat, nbclient, ipykernel (ver requirements-dev.txt da raiz)

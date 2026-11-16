@@ -1,0 +1,234 @@
+AcessaCidade - Disciplina 02 - Big Data Architecture & Data Integration
+"Pipeline de Dados do MVP CitizenTech" (14 pts: pipeline funcional 8 + arquitetura e documentacao 6)
+PENDENCIAS E ACOES MANUAIS
+Atualizado em: 2026-11-15
+======================================================================================================
+
+Todos os caminhos sao relativos a raiz do repositorio (GS7-4ESPR). Dados usados: SIMULADOS ("Cidade Exemplo").
+
+
+A. O QUE FOI DESENVOLVIDO
+------------------------------------------------------------------------------------------------------
+1) Pacote Python 02-Big-Data-Architecture/src/acessacidade_pipeline/
+   - config.py ......... caminhos via ambiente: PIPELINE_DATA_DIR (padrao <raiz>/data), PIPELINE_WAREHOUSE_PATH
+                         (padrao data/processed/warehouse/acessacidade.duckdb), ACESSACIDADE_API_URL, PIPELINE_TOKEN,
+                         PIPELINE_HTTP_TIMEOUT. O token nunca aparece em log ("(nao configurado)"/mascarado).
+   - simulate.py ....... gera data/samples/denuncias_simuladas.csv (semente 20261114; 271 linhas "baguncadas";
+                         colunas do contrato 4.7 + nome_denunciante + origem_dado=SIMULADO).
+   - parsing.py ........ regras TECNICAS: parse_data_multi (ISO, dd/mm/aaaa, dd-mm-aaaa hh:mm, "14 de outubro de 2026"),
+                         parse_coordenada, parse_decimal, parse_booleano, normalizar_texto, limpar_espacos.
+   - regras.py / dominio.py ... regras de NEGOCIO RN-01..RN-08 e enumeracoes do contrato (secao 3).
+   - warehouse.py ...... conexao DuckDB, schemas, funcoes Python registradas com create_function.
+   - extract.py ........ fonte 1 (CSV simulado) e fonte 2 (GET {API}/api/export/denuncias?formato=csv com
+                         X-Pipeline-Token; copia em data/exports/denuncias_api_<timestamp>.csv; sem API/token -> aviso
+                         e segue so com a fonte simulada; valida as colunas do contrato 4.7).
+   - raw.py ............ raw.denuncias_simuladas, raw.denuncias_app, raw.log_cargas (all_varchar + _source_file,
+                         _ingested_at, _row_id, _batch_id; full refresh).
+   - bronze.py ......... bronze.denuncias: uniao das fontes (coluna fonte), tipagem, TRY_CAST, dedup tecnico
+                         row_number() OVER (PARTITION BY todas as colunas), flags, nome NAO passa (so flag_possui_nome).
+   - silver.py ......... silver.denuncias, silver.denuncias_duplicadas, silver.ref_* (RN-01..RN-12, dedup de negocio).
+   - gold.py ........... gold.denuncias_por_bairro/_por_categoria/_por_periodo (mensal+semanal)/_por_status,
+                         gold.resultado_visao, gold.qualidade_registros; CSVs em data/processed/gold/ e
+                         data/processed/gold/gold_snapshot.json (contrato 4.8).
+   - quality.py ........ relatorio data/processed/relatorio_qualidade.json/.md + verificacoes automaticas (portao).
+   - publish.py ........ POST {API}/api/pipeline/gold com X-Pipeline-Token; sem configuracao -> pula com mensagem.
+   - run_pipeline.py / __main__.py ... python -m acessacidade_pipeline [--sem-api] [--log-arquivo] executa as 6 tarefas.
+2) DAG 02-Big-Data-Architecture/dags/acessacidade_elt_pipeline.py (Airflow 2.10.5, TaskFlow @dag/@task, "@daily",
+   catchup=False, retries=1, max_active_runs=1, tags, parametro usar_api).
+3) Airflow via Docker: 02-Big-Data-Architecture/airflow/docker-compose.airflow.yml (apache/airflow:2.10.5-python3.11,
+   standalone, monta dags/ src/ data/, _PIP_ADDITIONAL_REQUIREMENTS=duckdb==1.1.3, porta 127.0.0.1:8080,
+   ACESSACIDADE_API_URL=http://host.docker.internal:8000, PIPELINE_TOKEN via --env-file) + airflow/README.md.
+4) Notebook 02-Big-Data-Architecture/notebooks/AcessaCidade_ELT_Raw_Bronze_Silver_Gold.ipynb (didatica da Aula 06,
+   4 camadas, chama o pacote, EXECUTADO e salvo com saidas reais) + notebooks/executar_notebook.py.
+5) Testes 02-Big-Data-Architecture/tests/test_pipeline_*.py (107 testes) + conftest.py.
+6) Documentacao 02-Big-Data-Architecture/docs/: ARQUITETURA_PIPELINE.md (Mermaid), DICIONARIO_DE_DADOS.md,
+   REGRAS_DE_NEGOCIO.md, INSTRUCOES_EXECUCAO.md, EVIDENCIAS_NECESSARIAS.md, RELATORIO_ENTREGA_BIGDATA.md (fonte do
+   PDF unico) e gerar_pdf_relatorio.py (gera o PDF com os diagramas desenhados). README.md da disciplina.
+   requirements-pipeline.txt.
+7) Dados: data/samples/denuncias_simuladas.csv + data/samples/LEIAME_denuncias_simuladas.md; saidas Gold em
+   data/processed/gold/ e relatorio em data/processed/relatorio_qualidade.*; log real em
+   02-Big-Data-Architecture/docs/evidencias/execucao_local_runner.log.
+8) Correcao de compatibilidade feita nesta etapa: raw.py usava read_csv(..., encoding='utf-8'), parametro que nao
+   existe no DuckDB 1.1.3 (versao das constraints do Airflow 2.10.5). Removido (UTF-8 ja e o padrao).
+
+
+B. O QUE FOI TESTADO (comandos exatos e resultados reais)
+------------------------------------------------------------------------------------------------------
+1) Testes no .venv do projeto (duckdb 1.2.2, pandas 2.2.3, httpx 0.28.1, numpy 2.2.6):
+     cd C:\Users\masak\Desktop\GS7-4ESPR
+     .\.venv\Scripts\python.exe -m pytest 02-Big-Data-Architecture/tests
+   Resultado: 107 passed in 8.26s
+2) Mesmos testes num venv temporario com as versoes das constraints do Airflow 2.10.5/py3.11
+   (duckdb 1.1.3, pandas 2.1.4, httpx 0.27.0, numpy 1.26.4):
+   Antes da correcao (A.8): 5 erros "Binder Error: Invalid named parameter "encoding" for function read_csv".
+   Depois da correcao: 107 passed in 7.19s
+3) Pipeline completo (runner local, sem API):
+     $env:PYTHONPATH="02-Big-Data-Architecture/src"
+     .\.venv\Scripts\python.exe -m acessacidade_pipeline --sem-api --log-arquivo 02-Big-Data-Architecture/docs/evidencias/execucao_local_runner.log
+   Resultado (exit 0): RAW 271 | BRONZE 260 (11 duplicatas exatas) | SILVER 250 (10 quase-duplicatas) |
+   validos 211 (84,4%) | datas_invalidas 12 | coordenadas_invalidas 11 | campos_obrigatorios_ausentes 25 |
+   10 verificacoes de qualidade OK -> APROVADO | publicacao PULADA (--sem-api). Duracao ~0,7 s.
+4) Determinismo da fonte simulada: gerada novamente em pasta temporaria -> mesmo MD5
+   e1792546864d085d8d49cbf1c3d31e1f do arquivo versionado.
+5) Notebook: .\.venv\Scripts\python.exe 02-Big-Data-Architecture/notebooks/executar_notebook.py
+   Resultado: "Notebook executado e salvo ... celulas: 39 | erros: 0".
+6) Extracao/publicacao com API: testadas com httpx.MockTransport (tests/test_pipeline_api.py): copia em data/exports,
+   header X-Pipeline-Token enviado, 401/403/erro de rede/CSV fora do contrato nao derrubam a extracao, pipeline
+   completo com API simulada, publicacao OK e recusada.
+   ATUALIZACAO 15/11/2026 (auditoria): executado tambem contra a API REAL local (uvicorn, banco temporario com as
+   28 denuncias simuladas do seed, PIPELINE_TOKEN gerado na hora e nao gravado; dados do pipeline numa copia
+   temporaria via PIPELINE_DATA_DIR para nao sobrescrever data/processed versionado). Resultado:
+   "[extract] API: Exportacao da API salva com 28 linhas", RAW 299 -> BRONZE 288 -> SILVER 278, APROVADO,
+   "POST /api/pipeline/gold HTTP 200" e "Publicacao: OK"; /api/indicadores/analiticos devolveu o mesmo
+   execucao_id (manual__2026-11-15T13:23:00). Log: docs/evidencias/execucao_com_api.log.
+7) DAG: tests/test_pipeline_dag.py injeta um stub de airflow.decorators e verifica dag_id, schedule "@daily",
+   catchup=False, retries=1, tags, os 6 task_ids e a ordem linear das dependencias, e executa as tasks.
+   O Airflow real NAO foi executado (sem Docker/WSL nesta maquina).
+8) docker-compose.airflow.yml: validado apenas como YAML (pyyaml). Nao executado.
+9) PDF: docs/gerar_pdf_relatorio.py gerou um PDF de teste (10 paginas, 2 diagramas desenhados) fora do repositorio;
+   os 3 diagramas de ARQUITETURA_PIPELINE.md tambem renderizaram sem erro (Mermaid 10.9.1 via Edge headless).
+   Observacao: o script precisou ser executado pelo PowerShell (no Git Bash do ambiente o Edge headless fechou ao abrir).
+10) gitleaks dir em 02-Big-Data-Architecture, data/samples/denuncias_simuladas.csv e data/processed/gold: "no leaks found".
+
+
+C. O QUE NAO FOI POSSIVEL FAZER (E POR QUE)
+------------------------------------------------------------------------------------------------------
+1) Rodar o Airflow de verdade (UI, Graph, logs): nao ha Docker nem WSL nesta maquina, e o Airflow 2.10.5 nao roda
+   no Windows nativo. -> Acao D1/D2.
+2) Extracao e publicacao contra a API real: FEITO localmente em 15/11/2026 pelo runner (ver B.6). Falta repetir
+   pela DAG no Airflow (API acessivel em host.docker.internal:8000) e contra a URL publica. -> Acao D3.
+3) Prints/video: dependem de 1) e 2). -> Secao E.
+4) PDF final: depende dos nomes/RMs dos integrantes e dos links (repositorio, video), que nao podem ser inventados. -> D5.
+5) Criterios detalhados de avaliacao: o PDF remete ao "README da disciplina" publicado pela professora, que nao estava
+   disponivel. -> D6.
+
+
+D. O QUE DEPENDE DO USUARIO
+------------------------------------------------------------------------------------------------------
+D1. Instalar Docker Desktop (com WSL2)
+  Acao necessaria: instalar o ambiente de containers para subir o Airflow.
+  Programa ou site: Docker Desktop para Windows (https://www.docker.com/products/docker-desktop/) e WSL2.
+  Arquivo envolvido: nenhum.
+  Caminho do menu ou procedimento: PowerShell como Administrador -> "wsl --install" -> reiniciar -> instalar Docker
+    Desktop -> Settings > General > "Use the WSL 2 based engine" marcado.
+  Passo a passo:
+    1. Abrir PowerShell como Administrador e executar: wsl --install
+    2. Reiniciar o computador quando solicitado.
+    3. Baixar e instalar o Docker Desktop; abrir e aguardar "Engine running".
+    4. Em Settings > Resources, reservar pelo menos 4 GB de memoria (o Airflow standalone usa ~2 GB).
+    5. No PowerShell comum: docker version
+  Resultado esperado: "docker version" mostra Client e Server.
+  Como saber se deu certo: "docker run --rm hello-world" imprime "Hello from Docker!".
+
+D2. Subir o Airflow e executar a DAG
+  Acao necessaria: subir o Airflow 2.10.5 e disparar acessacidade_elt_pipeline.
+  Programa ou site: Docker Desktop + navegador (http://127.0.0.1:8080).
+  Arquivo envolvido: 02-Big-Data-Architecture/airflow/docker-compose.airflow.yml; .env da raiz (opcional).
+  Caminho do menu ou procedimento: UI do Airflow > DAGs > acessacidade_elt_pipeline > botao de ativar > Trigger DAG.
+  Passo a passo:
+    1. Feche o notebook/qualquer processo usando data/processed/warehouse/acessacidade.duckdb.
+    2. cd C:\Users\masak\Desktop\GS7-4ESPR\02-Big-Data-Architecture\airflow
+    3. Sem API: docker compose -f docker-compose.airflow.yml up -d
+       Com API: docker compose --env-file ..\..\.env -f docker-compose.airflow.yml up -d
+    4. docker compose -f docker-compose.airflow.yml logs -f airflow  (aguardar "Airflow is ready"; Ctrl+C sai do log)
+    5. Senha: docker compose -f docker-compose.airflow.yml exec airflow cat /opt/airflow/standalone_admin_password.txt
+    6. Abrir http://127.0.0.1:8080, entrar com usuario admin e a senha do passo 5.
+    7. Ativar (unpause) a DAG acessacidade_elt_pipeline; clicar em Trigger DAG (ou "Trigger DAG w/ config" com
+       {"usar_api": false} para rodar sem API).
+    8. Abrir a visao Graph e aguardar as 6 tarefas ficarem verdes; abrir Logs de cada tarefa.
+  Resultado esperado: 6 tarefas "success"; log de quality_report com "situacao: APROVADO"; arquivos em
+    data/processed/gold/ com data/hora atualizadas.
+  Como saber se deu certo: Graph todo verde; data/processed/gold/gold_snapshot.json com "execucao_id" igual ao run_id
+    do Airflow (ex.: "manual__2026-11-...").
+  Observacao: se a instalacao do duckdb pelo _PIP_ADDITIONAL_REQUIREMENTS falhar (sem internet), a DAG aparece com
+    erro de importacao "No module named duckdb" no topo da UI.
+
+D3. Executar com a API real e o PIPELINE_TOKEN (integracao com o backend)
+  [FEITO LOCALMENTE em 15/11/2026 - log em docs/evidencias/execucao_com_api.log; resta repetir pela DAG no
+   Airflow e/ou contra a URL publica, e tirar os prints da secao E]
+  Acao necessaria: rodar o pipeline extraindo da API e publicando a Gold.
+  Programa ou site: PowerShell (runner) e/ou Airflow; navegador.
+  Arquivo envolvido: .env da raiz (PIPELINE_TOKEN), backend em app/backend.
+  Caminho do menu ou procedimento: subir a API (ver README da raiz) -> rodar o runner sem --sem-api.
+  Passo a passo:
+    1. Gerar um token: .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
+    2. Colocar o valor em PIPELINE_TOKEN no arquivo .env da raiz (nunca no .env.example nem no Git).
+    3. Subir a API (porta 8000) conforme o README da raiz; para o Airflow em Docker alcanca-la, escutar em 0.0.0.0.
+    4. Runner: $env:PYTHONPATH="02-Big-Data-Architecture/src"; $env:ACESSACIDADE_API_URL="http://localhost:8000";
+       $env:PIPELINE_TOKEN="<mesmo valor do .env>"
+       .\.venv\Scripts\python.exe -m acessacidade_pipeline --log-arquivo 02-Big-Data-Architecture/docs/evidencias/execucao_com_api.log
+    5. Abrir http://localhost:8000/api/indicadores/analiticos no navegador.
+  Resultado esperado: log com "[extract] API: Exportacao da API salva com N linhas" e "Publicacao: OK";
+    arquivo novo em data/exports/; fonte "api_export" com linhas > 0 no snapshot.
+  Como saber se deu certo: /api/indicadores/analiticos devolve o snapshot com o mesmo "execucao_id" do log.
+  Dependencia: URL publica da API (disciplina 06) ainda nao integrada; com ela, use ACESSACIDADE_API_URL=<URL publica>
+    (runner) ou ACESSACIDADE_API_URL_AIRFLOW=<URL publica> no .env (Airflow).
+
+D4. Produzir as evidencias (prints e video)
+  Acao necessaria: capturar telas e gravar video curto.
+  Programa ou site: Ferramenta de Captura (Win+Shift+S), Xbox Game Bar (Win+Alt+R) ou OBS Studio.
+  Arquivo envolvido: 02-Big-Data-Architecture/docs/EVIDENCIAS_NECESSARIAS.md (lista e nomes de arquivo).
+  Caminho do menu ou procedimento: salvar em 02-Big-Data-Architecture/docs/evidencias/.
+  Passo a passo:
+    1. Seguir a tabela de EVIDENCIAS_NECESSARIAS.md (itens 1 a 12).
+    2. Conferir que nenhum print mostra token/senha.
+    3. Publicar o video (YouTube nao listado ou Drive com acesso por link) e copiar o link.
+  Resultado esperado: arquivos 01_...png a 10_...png e o video.
+  Como saber se deu certo: cada print mostra claramente DAG/log/dado com data e hora.
+
+D5. Gerar o PDF unico (diagrama de arquitetura + dicionario de dados)
+  Acao necessaria: preencher os marcadores e gerar o PDF.
+  Programa ou site: editor de texto + PowerShell (Microsoft Edge instalado; internet para baixar o Mermaid).
+  Arquivo envolvido: 02-Big-Data-Architecture/docs/RELATORIO_ENTREGA_BIGDATA.md, docs/gerar_pdf_relatorio.py.
+  Caminho do menu ou procedimento: substituir todos os "[PREENCHER: ...]" e executar o script no PowerShell.
+  Passo a passo:
+    1. Preencher equipe, integrantes (nome e RM), URL do repositorio, link do video, URL da API, data.
+    2. (Opcional) inserir na secao 3 os prints do Airflow.
+    3. .\.venv\Scripts\python.exe 02-Big-Data-Architecture/docs/gerar_pdf_relatorio.py
+    4. Abrir 02-Big-Data-Architecture/docs/RELATORIO_ENTREGA_BIGDATA.pdf e revisar.
+  Resultado esperado: "PDF gerado: ... | diagramas desenhados: 2" sem aviso de [PREENCHER] restante.
+  Como saber se deu certo: PDF com diagramas visiveis e o Anexo A (dicionario) completo.
+
+D6. Conferir os criterios oficiais e entregar
+  Acao necessaria: ler o README/criterios publicados pela professora e enviar no portal.
+  Programa ou site: portal da disciplina (FIAP).
+  Arquivo envolvido: PDF do D5; link do repositorio.
+  Caminho do menu ou procedimento: portal > Big Data Architecture & Data Integration > Global Solution.
+  Passo a passo:
+    1. Conferir os criterios e completar o que faltar (colar em 02-Big-Data-Architecture/README.md onde ha [PREENCHER]).
+    2. Garantir que o repositorio esteja acessivel a professora.
+    3. Enviar link do repositorio + PDF unico ate 19/11, 23h55 (um envio por equipe).
+  Resultado esperado: envio registrado no portal.
+  Como saber se deu certo: comprovante/tela de confirmacao do portal (guardar print).
+
+
+E. EVIDENCIAS QUE O USUARIO PRECISA PRODUZIR
+------------------------------------------------------------------------------------------------------
+[ ] Print da lista de DAGs com acessacidade_elt_pipeline ativa (01_airflow_lista_dags.png)
+[ ] Print da visao Graph com as 6 tarefas em sucesso (02_airflow_graph_sucesso.png)
+[ ] Print da visao Grid (03_airflow_grid.png)
+[ ] Prints dos logs de extract_and_load_raw e quality_report (04_..., 05_...)
+[ ] Print do log de publish_gold com publicacao OK, executado com API + token (06_log_publish.png)
+[ ] Print do XCom de build_gold (07_xcom_build_gold.png)
+[ ] Print de /api/indicadores/analiticos mostrando o snapshot (08_indicadores_analiticos.png)
+[ ] Print de consulta a uma tabela Gold no DuckDB/notebook (09_duckdb_gold.png)
+[ ] Print do painel/BI exibindo os indicadores (10_painel_indicadores.png) - tela #/painel (ja integrada e testada localmente)
+[ ] Video curto (1-3 min) do pipeline rodando no Airflow - link: [PREENCHER: link do video]
+[x] Log execucao_com_api.log (D3) - gerado em 15/11/2026 contra a API local (runner); repetir na URL publica se desejar
+[ ] Comprovante de envio no portal
+
+
+F. CHECKLIST DE ENTREGAVEIS DA DISCIPLINA (PDF oficial, pagina 30)
+------------------------------------------------------------------------------------------------------
+[x] Repositorio com o pipeline (scripts, notebooks ou DAGs) - 02-Big-Data-Architecture/
+[x] Instrucoes de execucao - docs/INSTRUCOES_EXECUCAO.md, airflow/README.md
+[x] Pipeline ELT de ponta a ponta, repetivel (runner local executado; idempotencia testada)
+[ ] Pipeline orquestrado no Airflow executado de fato (D2)
+[~] Pipeline alimentando de fato o MVP: publicacao na API real - OK localmente (runner, 15/11/2026);
+    falta pela DAG no Airflow e na URL publica (D2/D3)
+[x] Diagrama de arquitetura - docs/ARQUITETURA_PIPELINE.md
+[x] Dicionario de dados das tabelas entregues - docs/DICIONARIO_DE_DADOS.md
+[ ] Prints ou video do pipeline rodando (DAG no Airflow, logs, dados carregados) (D4)
+[ ] PDF unico com diagrama de arquitetura e dicionario de dados, com equipe e links preenchidos (D5)
+[ ] Link do repositorio informado: [PREENCHER: URL do repositorio]
+[ ] Envio no portal ate 19/11, 23h55 - um envio por equipe (D6)

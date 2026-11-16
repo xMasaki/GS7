@@ -1,0 +1,44 @@
+# Dados da entrega do AcessaCidade — fonte única para tools/preencher_marcadores.py
+#
+# Preencha SÓ o que você realmente tem. Campo vazio ("") = o script não mexe nos marcadores correspondentes.
+# Nada aqui é inventado: o arquivo vem todo vazio de propósito.
+#
+# Uso (na raiz do repositório, PowerShell):
+#   .\.venv\Scripts\python.exe tools\preencher_marcadores.py --dry-run   # só mostra o que mudaria
+#   .\.venv\Scripts\python.exe tools\preencher_marcadores.py             # preview + diff + pede confirmação
+#
+# Regras de validação (o script aborta sem alterar nada se violar):
+#   - links de vídeo e repositório: https://...  (repositório: https://github.com/<conta>/<repo>)
+#   - link do MVP: https:// (ou http:// — o Azure Container Instances publica http://<fqdn>:8000; nesse caso o
+#     script avisa e NÃO copia para os docs/links_entrega.yaml, que exigem https)
+#   - sem as palavras "PREENCHER", sem "<" ou ">", sem quebra de linha e sem "|" (quebraria tabelas Markdown)
+
+equipe:
+  nome: "AcessaCidade"            # nome da equipe / startup
+  integrantes:        # até 5; deixe em branco o que não houver. Mantenha a ORDEM (Integrante 1, 2, ...)
+    - nome: "Lucas Masaki Nagahama"
+      rm: "RM553084"
+      papel: ""       # ex.: papel real da pessoa no projeto — só se ela de fato tiver esse papel
+    - nome: ""
+      rm: ""
+      papel: ""
+    - nome: ""
+      rm: ""
+      papel: ""
+    - nome: ""
+      rm: ""
+      papel: ""
+    - nome: ""
+      rm: ""
+      papel: ""
+
+links:
+  mvp: ""             # URL pública do MVP (saída app_url do Terraform, disciplina 06)
+  repositorio: ""     # URL do repositório público no GitHub (sem barra no final)
+  video_pitch: ""     # vídeo-pitch da entrega geral e da disciplina 03 (README, Ficha Técnica, pasta 03)
+  videos:             # vídeos ESPECÍFICOS de cada disciplina (cada professor pede o seu)
+    "01": ""          # vídeo de demonstração do helper de GenAI (se o professor exigir)
+    "02": ""          # vídeo do pipeline rodando no Airflow
+    "04": ""          # vídeo da visão computacional (até 5 min)
+    "05": ""          # vídeo do robô UiPath (até 3 min)
+    "07": ""          # vídeo do Maker Lab

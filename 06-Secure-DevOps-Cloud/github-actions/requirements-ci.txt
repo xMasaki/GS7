@@ -1,0 +1,29 @@
+# Dependências do job "testes" do GitHub Actions (.github/workflows/ci-devsecops.yml).
+# Igual a requirements-dev.txt, EXCETO:
+#   - cadquery (CAD paramétrico, pesado; os testes do Maker usam pytest.importorskip("cadquery"))
+#   - playwright (exige navegador instalado; testes ponta a ponta rodam localmente com channel='msedge'
+#     e devem usar pytest.importorskip("playwright"))
+#   - nbformat/nbclient/ipykernel (execução de notebook — validada localmente)
+# Instalação: python -m pip install -r 06-Secure-DevOps-Cloud/github-actions/requirements-ci.txt
+-r ../../requirements.txt
+
+pytest==8.3.5
+pyyaml==6.0.2
+
+# Pipeline de dados (disciplina 02) e planilhas (03/05)
+pandas==2.2.3
+duckdb==1.2.2
+openpyxl==3.1.5
+matplotlib==3.10.3
+
+# Maker Lab (disciplina 07) — bibliotecas leves
+ezdxf==1.4.1
+trimesh==4.6.8
+numpy-stl==3.2.0
+qrcode==8.2
+lxml
+networkx
+
+# Documentos
+markdown==3.8
+pypdf==5.4.0

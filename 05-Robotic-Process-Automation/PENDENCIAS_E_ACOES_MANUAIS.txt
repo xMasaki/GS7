@@ -1,0 +1,361 @@
+PENDENCIAS E ACOES MANUAIS - DISCIPLINA 05: ROBOTIC PROCESS AUTOMATION (RPA)
+AcessaCidade - FIAP Global Solution 2026.2 - CitizenTech (ODS 11)
+Atividade: "CitizenTech: Da Análise de Processos à Automação com UiPath" - 14 pontos
+(3 documentação, 3 vídeo, 8 automação no UiPath)
+Entrega: ZIP (PDF + arquivos da automação + link do vídeo) pelo Microsoft Teams até 19/11/2026 às 23h55,
+um envio por equipe.
+Pasta: C:\Users\masak\Desktop\GS7-4ESPR\05-Robotic-Process-Automation
+
+IMPORTANTE: o UiPath Studio NÃO estava disponível no ambiente onde este material foi gerado. O projeto
+UiPath foi escrito à mão no formato XAML do Studio e validado apenas estruturalmente (XML, namespaces,
+argumentos, seletores). Ele precisa ser ABERTO, REVISADO e EXECUTADO no UiPath Studio por um integrante
+da equipe. Todos os dados são SIMULADOS (cidade fictícia "Cidade Exemplo").
+
+==========================================================================================================
+A. O QUE FOI DESENVOLVIDO
+==========================================================================================================
+
+A.1 Projeto UiPath - UiPath\AcessaCidade.RPA\
+  - project.json: processo Windows, linguagem VB.NET (expressionLanguage VisualBasic), targetFramework
+    "Windows", main = Main.xaml, dependências UiPath.System.Activities 23.10.0,
+    UiPath.UIAutomation.Activities 23.10.0, UiPath.Excel.Activities 2.22.0 (versões de referência para
+    Studio 2023.10; o Studio pode pedir para atualizar/restaurar).
+  - Main.xaml: carrega configuração -> verifica planilha de entrada -> Read Range -> confere colunas ->
+    garante colunas de saída -> Open Browser (Edge/Chrome conforme Config) -> For Each Row com Try/Catch
+    por linha (BusinessRuleException = FALHA_NEGOCIO; Exception = FALHA_SISTEMA) -> invoca
+    ProcessarDenuncia.xaml -> invoca RegistrarResultado.xaml (com Try/Catch próprio) -> log por linha
+    -> resumo final com totais (sucesso, falha de negócio, falha de sistema, ignoradas).
+    Idempotência: linhas com Status_Robo = SUCESSO são ignoradas.
+  - Workflows\CarregarConfiguracao.xaml: lê Data\Config.xlsx, aba Settings (colunas Nome/Valor), para
+    Dictionary(Of String, Object); valida chaves obrigatórias.
+  - Workflows\ProcessarDenuncia.xaml: valida a linha (mesmas regras da API: logradouro 3-120, bairro
+    2-80, descrição 10-1000, rótulos exatos de tipo/impacto do contrato); navega para
+    {URL}/#/registrar?canal=rpa (origem=RPA); Element Exists #form-denuncia; Type Into em
+    #campo-nome, #campo-logradouro, #campo-numero, #campo-bairro, #campo-cidade, #campo-referencia,
+    #campo-descricao; Select Item em #campo-tipo e #campo-impacto pelo texto visível; foto opcional
+    (MODO_UPLOAD_FOTO = DIALOGO: clique real em #campo-foto + Type Into no diálogo "Abrir" do Windows;
+    TYPEINTO: digitar no input file; IGNORAR); Check #campo-consentimento; Click #botao-enviar; polling
+    até TIMEOUT_SEGUNDOS de Get Text #protocolo-gerado (regex ^AC-\d{4}-\d{6}$) e #erro-envio; Element
+    Exists #resultado-envio como confirmação; erro -> BusinessRuleException com a mensagem; sem
+    resposta -> TimeoutException; Click #botao-nova-denuncia. Seletores no formato
+    <webctrl id='campo-logradouro' tag='INPUT' />.
+  - Workflows\RegistrarResultado.xaml: grava Status_Robo, Protocolo, Mensagem (até 500 caracteres) e
+    Data_Hora_Processamento e salva a planilha de saída (Write Range) a cada linha.
+  - Data\Config.xlsx (gerado por script): URL_ACESSACIDADE=http://localhost:8000,
+    CAMINHO_PLANILHA_ENTRADA, CAMINHO_PLANILHA_SAIDA, PASTA_IMAGENS, TIMEOUT_SEGUNDOS=30,
+    NAVEGADOR=Edge, ABA_ENTRADA=Denuncias, ABA_SAIDA=Resultado, MODO_UPLOAD_FOTO=DIALOGO.
+  - .gitignore local (exclui .local, .objects, .project, .screenshots, .tmh, ~$*.xlsx).
+  - Todos os XAML têm anotações (sap2010:Annotation.AnnotationText) explicando cada passo.
+  - Nesta continuação: acrescentado em ProcessarDenuncia.xaml o "Element Exists - #resultado-envio
+    (confirmação)" + aviso no log se a caixa não for encontrada.
+
+A.2 Planilhas - spreadsheet\ e Data\ (geradas por scripts\gerar_planilhas.py)
+  - denuncias_para_cadastro_SIMULADAS.xlsx: aba Denuncias com 12 linhas fictícias ("Robô Teste 01" a
+    "Robô Teste 12", Cidade Exemplo, descrições iniciadas por "[TESTE SIMULADO RPA]"), 10 válidas e 2
+    negativas de propósito (linha 11: descrição curta; linha 12: logradouro curto) para demonstrar
+    FALHA_NEGOCIO; 3 linhas com imagem sintética (sintetica_buraco_01/02/03.jpg) e as demais sem
+    imagem; colunas de saída vazias; coluna informativa Cenario_Teste; aba LEIAME.
+  - assessment_rpa_AcessaCidade.xlsx: aba Assessment (11 critérios, peso, nota 1-5, justificativa,
+    fórmulas Excel de pontuação ponderada, total, aderência e classificação), PREENCHIDA como avaliação
+    PRELIMINAR - revisar com a equipe; aba "Modelo em branco"; aba "Processos candidatos" (A, B, C);
+    aba LEIAME. Resultado calculado em Python: 397/500 = 79,4% -> Alta aptidão para RPA.
+  - Config.xlsx (ver A.1).
+
+A.3 Mapeamento de processos - process-mapping\
+  - AS-IS_cadastro_denuncias.bpmn e TO-BE_cadastro_denuncias.bpmn: BPMN 2.0 com diagrama
+    (BPMNShape/BPMNEdge com coordenadas), raias Cidadão/Associação, Operador, Robô UiPath (To-Be),
+    AcessaCidade; versões .svg; MAPEAMENTO_PROCESSOS.md com narrativa, gargalos e Mermaid.
+  - Gerados por scripts\gerar_bpmn.py.
+
+A.4 Documentação - docs\
+  - ANALISE_RPA_VS_API.md (diagnóstico crítico), BUSINESS_CASE.md (premissas declaradas, cálculo
+    ilustrativo, ponto de equilíbrio, riscos, KPIs), CONFIGURACAO_SELETORES.md, INSTRUCOES_UIPATH_STUDIO.md,
+    ROTEIRO_VIDEO_RPA.md, EVIDENCIAS_NECESSARIAS.md, RELATORIO_RPA.md (fonte do PDF, com [PREENCHER]),
+    INSTRUCOES_ZIP_ENTREGA.md. README.md da disciplina.
+
+A.5 Scripts - scripts\
+  - gerar_planilhas.py, gerar_bpmn.py, gerar_pdf_relatorio.py (Markdown -> HTML -> PDF via Edge
+    headless), gerar_zip_entrega.ps1 (monta o ZIP; bloqueia se faltar PDF ou link).
+
+A.6 Testes - tests\test_rpa_artefatos.py, test_rpa_planilhas.py, test_rpa_entrega.py.
+
+A.7 Pastas de apoio: entrega\ (LEIAME.txt) e evidencias\ (LEIAME.txt).
+
+==========================================================================================================
+B. O QUE FOI TESTADO (comandos exatos e resultados reais)
+==========================================================================================================
+
+B.1 Testes automatizados
+  Comando:  cd C:\Users\masak\Desktop\GS7-4ESPR
+            .\.venv\Scripts\python.exe -m pytest 05-Robotic-Process-Automation\tests
+  Resultado: 49 passed (detalhes em B.6).
+  O que cobrem: XAML bem-formado com namespaces e x:Class; anotações; IdRef únicos; Invoke Workflow
+  File aponta para arquivos e argumentos existentes; Main orquestra o fluxo completo; ProcessarDenuncia
+  usa todos os ids do contrato e a URL ?canal=rpa; project.json válido (main, VB, Windows, 3 pacotes);
+  BPMN bem-formado, todo elemento com BPMNShape, todo fluxo com BPMNEdge (>= 2 waypoints),
+  incoming/outgoing coerentes; planilha de entrada com colunas esperadas, rótulos de tipo/impacto
+  idênticos aos do contrato (lidos do próprio docs\CONTRATOS_DE_INTEGRACAO.md), linhas fictícias;
+  imagens referenciadas existem em data\samples\fotos (teste é pulado se a pasta não existir);
+  Config com URL_ACESSACIDADE e caminhos relativos que resolvem a partir da pasta do projeto;
+  assessment recalculado em Python = cálculo do gerador; documentos e scripts de entrega.
+
+B.2 Geração das planilhas e BPMN (executados nesta sessão)
+  .\.venv\Scripts\python.exe 05-Robotic-Process-Automation\scripts\gerar_planilhas.py
+    -> "Soma dos pesos: 100 / Pontuação ponderada: 397 de 500 / Aderência: 79.4% -> Alta aptidão
+       para RPA"; candidatos A 24/30 (80%) ESCOLHIDO, B 19/30 (63%), C 15/30 (50%).
+  .\.venv\Scripts\python.exe 05-Robotic-Process-Automation\scripts\gerar_bpmn.py
+    -> "[ok] AS-IS (13 elementos, 13 fluxos, 3 raias)" e "[ok] TO-BE (19 elementos, 21 fluxos, 4 raias)".
+
+B.3 PDF de teste: gerar_pdf_relatorio.py --saida <scratchpad>\teste_relatorio.pdf -> "PDF gerado
+    (179199 bytes)", com aviso "o relatório ainda tem 18 marcador(es) [PREENCHER]". (O PDF de teste
+    ficou fora do repositório; o PDF final deve ser gerado depois do preenchimento.)
+
+B.4 ZIP: gerar_zip_entrega.ps1 sem PDF/link -> lista os pendentes e sai com código 2 (ZIP não gerado).
+    Com -PermitirIncompleto -Saida <scratchpad>\teste_entrega.zip -> "ZIP gerado (13 arquivos, 56.7 KB)",
+    conteúdo: UiPath\AcessaCidade.RPA (sem pastas locais), planilhas, process-mapping.
+
+B.5 Conferência estática do frontend (app\frontend\js): os ids campo-*, botao-enviar,
+    botao-nova-denuncia, resultado-envio, protocolo-gerado, erro-envio existem em views\registrar.js;
+    os 11 rótulos de tipo/impacto do contrato existem em constants.js; ?canal=rpa envia origem RPA.
+    Observação: #resultado-envio e #protocolo-gerado existem no DOM desde o início com atributo hidden;
+    por isso o robô verifica o TEXTO do protocolo (regex) e não apenas a existência do elemento.
+    NÃO foi possível executar o formulário renderizado num navegador automatizado neste ambiente, e o
+    backend (FastAPI) ainda não tinha o app montado quando esta tarefa rodou.
+
+B.6 Última execução dos testes (15/11/2026, nesta sessão):
+    .\.venv\Scripts\python.exe -m pytest 05-Robotic-Process-Automation	ests -rs
+    -> "49 passed in 0.84s" (0 falhas, 0 pulados - data\samples\fotos já existia).
+    Na primeira execução desta sessão, 1 teste falhou (ProcessarDenuncia.xaml não usava #resultado-envio);
+    corrigido com o Element Exists de confirmação (ver A.1).
+
+==========================================================================================================
+C. O QUE NÃO FOI POSSÍVEL FAZER (e por quê)
+==========================================================================================================
+  1. Abrir/validar/executar o projeto no UiPath Studio - o Studio (Windows, licença Community) não está
+     disponível no ambiente de geração. Não há como garantir que o Studio abre sem avisos.
+  2. Validar seletores com Indicate/UI Explorer - exige Studio + extensão do navegador.
+  3. Executar o robô contra http://localhost:8000 - depende só do UiPath Studio: o backend e o formulário
+     estão prontos e testados (E2E 199/199 em 15/11/2026 conferiu ids, selo de canal RPA e origem=RPA).
+  4. Executar contra a URL pública da Azure - depende do deploy da disciplina 06 (URL ainda não existe:
+     [PREENCHER: URL pública]).
+  5. Gerar a planilha de saída real (denuncias_resultado_RPA.xlsx), prints, vídeo e PDF final - dependem
+     da execução real no Studio e da equipe.
+  6. Medir tempos reais (manual e do robô) - os números do business case são PREMISSAS.
+  7. Revisar o assessment com a equipe - a planilha está como avaliação preliminar.
+
+==========================================================================================================
+D. O QUE DEPENDE DO USUÁRIO (passo a passo)
+==========================================================================================================
+
+D.1 Instalar o UiPath Studio Community
+  Ação necessária: instalar e ativar o Studio.
+  Programa ou site: site oficial da UiPath (cadastro gratuito Automation Cloud / Community) e instalador
+    do UiPath Studio.
+  Arquivo envolvido: nenhum.
+  Caminho do menu ou procedimento: site UiPath -> criar conta Community -> Download Studio -> instalar.
+  Passo a passo:
+    1. Crie a conta gratuita no site da UiPath (plano Community/Free) e confira os termos de uso acadêmico.
+    2. Baixe e instale o UiPath Studio (opções padrão).
+    3. Abra o Studio, faça login com a conta e escolha o perfil "UiPath Studio".
+  Resultado esperado: tela inicial do Studio (Home) aberta e licenciada.
+  Como saber se deu certo: Home -> Help mostra a versão (ex.: 2023.10 ou 2024.10) e a licença Community.
+
+D.2 Instalar a extensão do navegador
+  Ação necessária: habilitar automação web.
+  Programa ou site: UiPath Studio + Microsoft Edge (ou Google Chrome).
+  Arquivo envolvido: Data\Config.xlsx (NAVEGADOR).
+  Caminho do menu: Home -> Tools -> UiPath Extensions -> Edge (ou Chrome).
+  Passo a passo:
+    1. Clique em Edge; confirme a instalação.
+    2. No navegador, abra edge://extensions e ative "UiPath Browser Automation".
+    3. Reinicie o navegador.
+    4. Se usar Chrome, mude NAVEGADOR para Chrome no Config.xlsx.
+  Resultado esperado: extensão ativa.
+  Como saber se deu certo: no Studio, Indicate em qualquer página mostra seletor <webctrl ... />
+    (e não apenas <wnd ...>).
+
+D.3 Abrir o projeto e corrigir pacotes/avisos
+  Ação necessária: abrir o projeto gerado fora do Studio e deixá-lo sem erros.
+  Programa: UiPath Studio.
+  Arquivo envolvido: UiPath\AcessaCidade.RPA\project.json (e todos os .xaml).
+  Caminho do menu: Home -> Open -> project.json; Design -> Manage Packages; View -> Error List.
+  Passo a passo:
+    1. Mantenha a estrutura de pastas do repositório (caminhos relativos do Config dependem dela).
+    2. Studio -> Open -> selecione 05-Robotic-Process-Automation\UiPath\AcessaCidade.RPA\project.json.
+    3. Aceite conversão/atualização de projeto se o Studio oferecer.
+    4. Se houver dependência não resolvida: Manage Packages -> Project Dependencies -> para cada um dos 3
+       pacotes, selecione a versão estável mais próxima disponível -> Save.
+    5. Abra cada arquivo (Main, CarregarConfiguracao, ProcessarDenuncia, RegistrarResultado) e veja o
+       Error List. Correções comuns em docs\INSTRUCOES_UIPATH_STUDIO.md, seção 6 (imports
+       System.Text.RegularExpressions / System.IO / UiPath.Core.Activities; atributo desconhecido ->
+       remover no editor de texto; atividade não resolvida -> recriar arrastando a atividade
+       equivalente e colando o seletor de docs\CONFIGURACAO_SELETORES.md).
+    6. Ctrl+Shift+S (Save All).
+  Resultado esperado: os 4 workflows abrem no designer.
+  Como saber se deu certo: Error List sem erros (avisos explicados podem ficar); botão "Analyze
+    Project" (Design -> Analyze File/Project) sem erros. Tire o print E10.
+
+D.4 Validar/reindicar seletores
+  Ação necessária: confirmar que cada seletor encontra o elemento.
+  Programa: UiPath Studio + Edge com extensão + AcessaCidade rodando.
+  Arquivo envolvido: Workflows\ProcessarDenuncia.xaml.
+  Caminho do menu: atividade -> menu (≡) -> Edit Selector -> Validate / Indicate Element / Open in UI
+    Explorer.
+  Passo a passo:
+    1. Suba o AcessaCidade (D.5, passo 1) e abra http://localhost:8000/#/registrar?canal=rpa no Edge.
+    2. Para cada atividade com seletor (Type Into, Select Item, Click, Check, Get Text, Element Exists),
+       abra Edit Selector -> Validate.
+    3. Se ficar vermelho: Indicate Element -> clique no campo -> mantenha só id e tag -> Validate.
+    4. Para o diálogo de arquivo: clique manualmente em "Escolher arquivo", Indicate na caixa "Nome:",
+       copie o seletor (normalmente <wnd app='msedge.exe' cls='#32770' ... /><wnd ctrlid='1148' />).
+       Se não funcionar, use MODO_UPLOAD_FOTO = IGNORAR (e registre isso no relatório).
+    5. Salve.
+  Resultado esperado: todos os seletores verdes.
+  Como saber se deu certo: Validate verde em todos; Highlight mostra o campo correto.
+
+D.5 Executar contra localhost (teste)
+  Ação necessária: rodar o robô ponta a ponta.
+  Programa: AcessaCidade local + UiPath Studio + Excel.
+  Arquivos: Data\Config.xlsx, spreadsheet\denuncias_para_cadastro_SIMULADAS.xlsx,
+    spreadsheet\denuncias_resultado_RPA.xlsx (criada pelo robô).
+  Caminho do menu ou procedimento: UiPath Studio > Open > project.json > Main.xaml > aba Design > Debug File (seta) > Run File (Ctrl+F6).
+  Passo a passo:
+    1. Na raiz do repositório, suba a aplicação conforme o README da raiz (uvicorn ou docker compose) e
+       confirme que http://localhost:8000/#/registrar?canal=rpa abre com o selo "Canal: automação (RPA)".
+       (Backend e frontend prontos e testados em 15/11/2026: o E2E automatizado confirmou os ids do
+       formulário, o selo de canal RPA e a gravação de origem=RPA. Comando: Parte 3 do
+       PASSO_A_PASSO_PARA_CONCLUIR_O_PROJETO.txt.)
+    2. Confirme a pasta data\samples\fotos com sintetica_buraco_01.jpg, _02 e _03 (geradas pela
+       disciplina 04 - já existiam na conferência desta sessão).
+    3. Feche o Excel. Confirme URL_ACESSACIDADE = http://localhost:8000 no Config.xlsx.
+    4. Opcional: regenere as planilhas originais com scripts\gerar_planilhas.py e apague
+       denuncias_resultado_RPA.xlsx de execuções anteriores.
+    5. No Studio, abra Main.xaml -> Run File (Ctrl+F6). Não mexa no mouse/teclado.
+    6. Acompanhe o painel Output e, ao final, tire o print E6 (resumo).
+  Resultado esperado: linhas 1-10 = SUCESSO com protocolo AC-AAAA-NNNNNN; linhas 11 e 12 =
+    FALHA_NEGOCIO com mensagem; nenhuma FALHA_SISTEMA.
+  Como saber se deu certo: abra spreadsheet\denuncias_resultado_RPA.xlsx (aba Resultado) - print E8;
+    no AcessaCidade, #/consultar -> busque um protocolo -> a denúncia mostra origem RPA - print E9.
+    Se houver FALHA_SISTEMA, leia a coluna Mensagem e veja a tabela de depuração em
+    docs\INSTRUCOES_UIPATH_STUDIO.md.
+
+D.6 Executar contra a URL pública da Azure (apresentação)
+  Ação necessária: demonstrar integração com o MVP publicado.
+  Depende de: disciplina 06 (deploy). URL: [PREENCHER: URL pública].
+  Programa: navegador + Excel + UiPath Studio.
+  Arquivo: Data\Config.xlsx.
+  Caminho do menu ou procedimento: Excel > Data\Config.xlsx > aba Settings (URL_ACESSACIDADE); Studio > Run File (Ctrl+F6).
+  Passo a passo:
+    1. Quando a URL existir, abra-a no navegador e confirme #/registrar?canal=rpa.
+    2. Altere URL_ACESSACIDADE para a URL (sem barra no final) e TIMEOUT_SEGUNDOS para 60.
+    3. Apague/renomeie a planilha de saída anterior e execute Main.xaml.
+    4. Combine com a equipe se os registros de teste (marcados [TESTE SIMULADO RPA]) ficam no ambiente
+       público ou se a equipe de revisão os marca.
+  Resultado esperado: mesmo resultado de D.5, agora na URL pública.
+  Como saber se deu certo: protocolos na planilha abrem em <URL>/#/denuncia/<protocolo> com origem RPA.
+
+D.7 Revisar o assessment
+  Ação: revisar notas/justificativas com a equipe.
+  Programa: Microsoft Excel (ou LibreOffice Calc).
+  Arquivo: spreadsheet\assessment_rpa_AcessaCidade.xlsx.
+  Caminho do menu: Excel > Arquivo > Abrir > spreadsheet\assessment_rpa_AcessaCidade.xlsx > aba Assessment.
+  Passo a passo:
+    1. Abra o arquivo (o Excel recalcula as fórmulas; se aparecer "Habilitar edição", clique).
+    2. Na aba Assessment, revise as notas (coluna E) e justificativas (coluna H); preencha B4
+       (avaliadores e data).
+    3. Se as notas mudarem, atualize a tabela da seção 2.2 de docs\RELATORIO_RPA.md (ou altere
+       CRITERIOS em scripts\gerar_planilhas.py e rode o script de novo).
+    4. Tire o print E1 (aba Assessment com o resultado) e E2 (Processos candidatos).
+  Resultado esperado: aderência e classificação exibidas nas células D20/D21.
+  Como saber se deu certo: H18 mostra "Pesos OK (somam 100)" e D21 mostra a classificação.
+
+D.8 Imagens dos diagramas
+  Ação: exportar As-Is/To-Be para o relatório.
+  Site: https://demo.bpmn.io (ou Camunda Modeler).
+  Arquivos: process-mapping\AS-IS_cadastro_denuncias.bpmn e TO-BE_cadastro_denuncias.bpmn.
+  Caminho do menu: demo.bpmn.io > arrastar o .bpmn para a página > botões de download no rodapé (imagem).
+  Passo a passo: 1. Abra demo.bpmn.io; 2. arraste o .bpmn para a página; 3. confira raias e fluxos;
+    4. use o botão de download de imagem (PNG/SVG) no rodapé; 5. salve como evidencias\E3_as_is.png e
+    E3_to_be.png (ou use os .svg já gerados).
+  Resultado esperado: E3_as_is e E3_to_be (PNG ou os .svg já gerados em process-mapping\) salvos em evidencias\.
+  Como saber se deu certo: o diagrama aparece sem erro de importação e as imagens abrem.
+
+D.9 Gravar o vídeo (até 3 min)
+  Ação: gravar a explicação com a automação rodando.
+  Programa: OBS Studio, Xbox Game Bar (Win+G) ou Clipchamp; YouTube (não listado) ou Drive/OneDrive.
+  Arquivo: docs\ROTEIRO_VIDEO_RPA.md.
+  Caminho do menu: YouTube > Criar > Enviar vídeo > Visibilidade: Não listado (ou Drive > Compartilhar > Qualquer pessoa com o link).
+  Passo a passo: siga a seção "Preparação" e o roteiro com tempos; publique; teste o link em janela
+    anônima; grave o link em entrega\link_video.txt (uma linha) e no RELATORIO_RPA.md.
+  Resultado esperado: vídeo <= 3:00 com narração e o robô executando.
+  Como saber se deu certo: o link abre sem login e a duração é <= 3 minutos.
+
+D.10 Completar o relatório e gerar o PDF
+  Ação: preencher e converter.
+  Programa: editor de texto/VS Code + Python do .venv (Edge instalado).
+  Arquivo: docs\RELATORIO_RPA.md -> entrega\RELATORIO_RPA_AcessaCidade.pdf.
+  Caminho do menu: VS Code > Ctrl+F "[PREENCHER" no relatório; PowerShell na raiz do repositório para gerar o PDF.
+  Passo a passo:
+    1. Substitua todos os [PREENCHER] (equipe, RMs, link, URL, resultados reais, conclusão).
+    2. Troque os blocos [INSERIR PRINT ...] por imagens: ![E1](../evidencias/E1_assessment.png).
+    3. Rode: .\.venv\Scripts\python.exe 05-Robotic-Process-Automation\scripts\gerar_pdf_relatorio.py
+  Resultado esperado: "PDF gerado: ...RELATORIO_RPA_AcessaCidade.pdf" sem aviso de [PREENCHER].
+  Como saber se deu certo: abra o PDF e confira imagens, tabelas e acentos.
+
+D.11 Montar o ZIP e entregar no Teams
+  Ação: compactar e enviar.
+  Programa: PowerShell + Microsoft Teams.
+  Arquivos: scripts\gerar_zip_entrega.ps1 -> entrega\AcessaCidade_RPA_entrega.zip.
+  Caminho do menu: Teams > equipe da turma > Tarefas > atividade de RPA da GS > Adicionar trabalho > Carregar deste dispositivo > Entregar.
+  Passo a passo:
+    1. powershell -ExecutionPolicy Bypass -File .\05-Robotic-Process-Automation\scripts\gerar_zip_entrega.ps1
+    2. Se listar pendências, resolva-as e rode de novo.
+    3. Extraia o ZIP numa pasta temporária e abra o project.json no Studio para confirmar.
+    4. Teams -> equipe da turma -> Tarefas -> atividade de RPA da GS -> Adicionar trabalho -> carregar
+       o ZIP -> Entregar (um integrante pela equipe).
+    5. Print do comprovante de entrega.
+  Resultado esperado: atividade marcada como entregue antes de 19/11/2026 23h55.
+  Como saber se deu certo: o Teams mostra "Entregue" com o arquivo anexado.
+
+==========================================================================================================
+E. EVIDÊNCIAS QUE O USUÁRIO PRECISA PRODUZIR
+==========================================================================================================
+  (detalhes em docs\EVIDENCIAS_NECESSARIAS.md; salvar em evidencias\)
+  E1  Print da aba Assessment com resultado (obrigatório pelo PDF da GS).
+  E2  Print da aba Processos candidatos.
+  E3  Imagens dos diagramas As-Is e To-Be.
+  E4  Print do Main.xaml no Studio ("print da solução").
+  E5  Print do ProcessarDenuncia.xaml.
+  E6  Print do Output com o resumo da execução.
+  E7  Print do navegador sendo preenchido (selo "Canal: automação (RPA)").
+  E8  Planilha de saída preenchida (arquivo + print).
+  E9  Print de uma denúncia no AcessaCidade com origem RPA.
+  E10 Print do Error List.
+  E11 Link do vídeo (entrega\link_video.txt).
+  E12 PDF do relatório.
+  +   Comprovante de entrega no Teams.
+
+==========================================================================================================
+F. CHECKLIST DE ENTREGÁVEIS PENDENTES (PDF oficial da GS - disciplina 05)
+==========================================================================================================
+  Relatório em PDF (3 pts de documentação):
+  [ ] Escolha do processo com PRINT do resultado da planilha de assessment (E1)
+  [ ] Assessment revisado com a equipe (deixar de ser "preliminar")
+  [ ] Diagnóstico RPA vs integração nativa/API (texto pronto em docs\ANALISE_RPA_VS_API.md)
+  [ ] Fluxos As-Is e To-Be em BPM (arquivos prontos; inserir imagens E3)
+  [ ] Business Case (pronto em docs\BUSINESS_CASE.md; validar premissas ou declará-las no PDF)
+  [ ] [PREENCHER] substituídos (equipe, RMs, URL, resultados, link do vídeo, conclusão)
+  [ ] PDF gerado em entrega\RELATORIO_RPA_AcessaCidade.pdf
+  Automação no UiPath Studio (8 pts):
+  [ ] Projeto aberto no Studio sem erros (D.3)
+  [ ] Seletores validados (D.4)
+  [ ] Execução bem-sucedida contra localhost (D.5)
+  [ ] Execução contra a URL pública da Azure (D.6) - depende da disciplina 06
+  [ ] Print da solução no Studio (E4/E5) e arquivos .xaml no ZIP
+  [ ] Planilha de saída gerada pelo robô (E8)
+  Vídeo (3 pts):
+  [ ] Vídeo <= 3 min com narração e a automação rodando (D.9)
+  [ ] Link testado e salvo em entrega\link_video.txt
+  Entrega:
+  [ ] ZIP gerado por scripts\gerar_zip_entrega.ps1 sem pendências bloqueantes
+  [ ] ZIP entregue no Teams até 19/11/2026 23h55 (um envio por equipe) + comprovante

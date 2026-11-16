@@ -1,0 +1,244 @@
+AZURE PASSO A PASSO - ACESSACIDADE (publicar pelo NAVEGADOR, no portal.azure.com)
+Adaptado do roteiro "Checkpoint 2 - Calango TI" para o projeto AcessaCidade.
+
+Tudo e feito no https://portal.azure.com/ usando o Cloud Shell (modo Bash). Nao precisa instalar
+Docker, Azure CLI nem Terraform no seu computador.
+
+Diferencas em relacao ao roteiro da Calango TI
+  - Em vez de um httpd:2.4 do Docker Hub, o container e a SUA aplicacao (imagem "acessacidade").
+    Como a imagem nao existe no Docker Hub, ela e CONSTRUIDA na nuvem a partir do repositorio no GitHub
+    (az acr build), em vez de "az acr import".
+  - A aplicacao responde na porta 8000 (nao 80). A URL e http://<IP>:8000
+  - Pagina de teste: /health (deve responder ok) e a tela inicial do site; o assistente fica em #/assistente.
+  - Nomes: grupo rg-acessacidade, ACR acracessacidade553084fiap2026, containers acessacidade-01 e -02.
+
+PRE-REQUISITOS
+  [ ] O repositorio esta PUBLICO no GitHub (o Cloud Shell precisa conseguir clonar). Anote a URL:
+      https://github.com/<SUA-CONTA>/<SEU-REPO>.git
+  [ ] (Opcional, para o print "fonte = llm") ter a chave OPENROUTER_API_KEY em maos.
+      NUNCA cole a chave em arquivo do repositorio, print ou chat.
+  [ ] Abra um arquivo de texto no seu computador (fora do repositorio) para guardar: nome do ACR, senha do
+      ACR, IP dos containers. Esse arquivo NAO pode ir para o GitHub.
+
+Observacao sobre a regiao: o roteiro usa southafricanorth porque a assinatura Azure for Students costuma
+restringir regioes. Use a mesma regiao que funcionou no roteiro. Se o comando de criar o grupo recusar a
+regiao, troque por outra permitida (ex.: brazilsouth, eastus). Use SEMPRE a mesma regiao nos passos abaixo.
+
+
+======================================================================================================
+TAREFA 1 - PREPARAR O AMBIENTE
+======================================================================================================
+
+1. No portal, pesquise "Assinaturas", clique em "Azure for Students" e, em
+   "Configuracoes > Provedores de recurso":
+   a) procure "Microsoft.ContainerInstance" e clique em "Register", se ainda nao estiver registrado;
+   b) procure "Microsoft.ContainerRegistry" e clique em "Register", se ainda nao estiver registrado.
+   (Aguarde o estado ficar "Registered".)
+
+2. Abra o "Cloud Shell" (icone [>_] no topo do portal) no modo "Bash".
+   Na primeira vez ele pede para criar uma conta de armazenamento: aceite.
+
+3. Crie o grupo de recursos:
+   az group create --name rg-acessacidade --location southafricanorth
+
+4. Crie o Azure Container Registry (ACR):
+   az acr create --resource-group rg-acessacidade --name acracessacidade553084fiap2026 --sku Basic --admin-enabled true
+   Obs.: cole o nome acracessacidade553084fiap2026 no seu arquivo de texto.
+   (O nome do ACR so aceita letras minusculas e numeros, 5 a 50 caracteres, e precisa ser unico no mundo.
+   Se der "name already in use", acrescente algo, ex.: acracessacidade553084fiap2026b.)
+
+5. Traga o codigo e construa a imagem DENTRO do ACR (substitui o "az acr import" do roteiro):
+   git clone https://github.com/<SUA-CONTA>/<SEU-REPO>.git acessacidade
+   cd acessacidade
+   az acr build --registry acracessacidade553084fiap2026 --image acessacidade:v1 --file 06-Secure-DevOps-Cloud/docker/Dockerfile --build-arg VCS_REF=v1 .
+   (Leva alguns minutos. Termina com "Run ID: ... was successful".)
+
+   Se aparecer o erro "TasksOperationsNotAllowed" (a assinatura de estudante bloqueia ACR Tasks):
+   o build na nuvem nao e permitido. Alternativas:
+     a) Fazer o build no seu computador com Docker Desktop:
+          docker build -f 06-Secure-DevOps-Cloud/docker/Dockerfile -t acracessacidade553084fiap2026.azurecr.io/acessacidade:v1 .
+          az login ; az acr login --name acracessacidade553084fiap2026
+          docker push acracessacidade553084fiap2026.azurecr.io/acessacidade:v1
+     b) Deixar o GitHub Actions do projeto construir e enviar a imagem.
+
+6. Confirme que a imagem esta no ACR:
+   az acr repository show-tags --name acracessacidade553084fiap2026 --repository acessacidade -o table
+   (Deve listar a tag v1.)
+
+7. Obtenha a senha do ACR:
+   az acr credential show --name acracessacidade553084fiap2026 --query "passwords[0].value" -o tsv
+   Obs.: cole a senha no arquivo de texto (nunca no repositorio).
+
+
+======================================================================================================
+TAREFA 2 - CRIAR O TEMPLATE (acessacidade.yaml)
+======================================================================================================
+
+1. Volte para a pasta inicial do Cloud Shell e crie o arquivo do template (fora do repositorio clonado,
+   para nao correr o risco de enviar segredos ao Git):
+   cd ~
+   code acessacidade.yaml
+
+2. Cole no editor o conteudo abaixo (a indentacao com espacos importa; nao use TAB):
+
+------------------------------ INICIO DO acessacidade.yaml ------------------------------
+apiVersion: '2023-05-01'
+location: southafricanorth
+name: acessacidade-01
+type: Microsoft.ContainerInstance/containerGroups
+tags:
+  projeto: AcessaCidade
+  disciplina: 06-Secure-DevOps-Cloud
+properties:
+  osType: Linux
+  restartPolicy: Always
+  imageRegistryCredentials:
+    - server: acracessacidade553084fiap2026.azurecr.io
+      username: acracessacidade553084fiap2026
+      password: COLE_AQUI_A_SENHA_DO_ACR
+  ipAddress:
+    type: Public
+    ports:
+      - protocol: TCP
+        port: 8000
+  containers:
+    - name: web
+      properties:
+        image: acracessacidade553084fiap2026.azurecr.io/acessacidade:v1
+        resources:
+          requests:
+            cpu: 1.0
+            memoryInGB: 1.5
+        ports:
+          - protocol: TCP
+            port: 8000
+        environmentVariables:
+          - name: APP_ENV
+            value: production
+          - name: APP_PORT
+            value: '8000'
+          - name: LOG_LEVEL
+            value: INFO
+          - name: DATA_DIR
+            value: /app/data/runtime
+          - name: SEED_DEMO_DATA
+            value: 'true'
+          - name: ADMIN_TOKEN
+            secureValue: AcessaCidade2026
+          - name: PIPELINE_TOKEN
+            secureValue: AcessaCidade2026
+          - name: OPENROUTER_API_KEY
+            secureValue: COLE_AQUI_A_CHAVE_OPENROUTER
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: http
+          initialDelaySeconds: 40
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+------------------------------- FIM DO acessacidade.yaml --------------------------------
+
+3. Substitua os valores iniciados com "COLE_AQUI":
+   - COLE_AQUI_A_SENHA_DO_ACR ........... a senha obtida no passo 7 da Tarefa 1.
+   - AcessaCidade2026... ........ qualquer texto longo e aleatorio (ex.: 32+ caracteres). Guarde-o.
+   - AcessaCidade2026... ..... idem, outro valor.
+   - COLE_AQUI_A_CHAVE_OPENROUTER ....... sua chave real. SE NAO TIVER CHAVE: apague as 2 linhas
+     "- name: OPENROUTER_API_KEY" e "secureValue: ..." (o assistente funciona em modo alternativo, mas
+     entao NAO aparecera "fonte = llm" no print).
+   Os tres secureValue ficam ocultos no portal e na saida do "az container show".
+
+4. Clique em "File", depois em "Save" e depois em "Close editor".
+
+5. Se for o caso, cole os tokens tambem no seu arquivo de texto local (nao no repositorio).
+
+
+======================================================================================================
+TAREFA 3 - CRIAR E TESTAR A INSTANCIA A PARTIR DO TEMPLATE
+======================================================================================================
+
+1. Crie o container a partir do template:
+   az container create --resource-group rg-acessacidade --file acessacidade.yaml
+
+2. Verifique o estado e o IP publico. Aguarde o estado Running (1 a 2 minutos):
+   az container show -g rg-acessacidade -n acessacidade-01 --query "{estado:instanceView.state, ip:ipAddress.ip}" -o table
+
+   Se nao subir, veja os logs:
+   az container logs -g rg-acessacidade -n acessacidade-01
+   az container show -g rg-acessacidade -n acessacidade-01 --query "containers[0].instanceView.events" -o table
+
+3. Acesse no navegador digitando explicitamente http:// seguido do IP e da porta 8000*:
+     http://<IP>:8000            -> site do AcessaCidade
+     http://<IP>:8000/health     -> verificacao de saude (deve responder ok)
+     http://<IP>:8000/#/assistente -> tela do assistente (faca uma pergunta; com chave configurada o
+                                      campo deve mostrar fonte = llm)
+   * No Chrome, para permitir HTTP, acesse "chrome://settings/security" (sem as aspas) e desabilite
+     "Sempre usar conexoes seguras".
+
+4. EVIDENCIAS (faca os prints agora, com a URL visivel na barra do navegador):
+   - Portal > Instancias de conteiner > acessacidade-01 (estado Running e IP).
+   - Site aberto em http://<IP>:8000
+   - http://<IP>:8000/health
+   - http://<IP>:8000/#/assistente com "fonte = llm"
+   Salve em evidencias/06_devops/ (e o print do assistente tambem em evidencias/01_genai/) e
+   registre o nome dos arquivos nos documentos (marcadores [PREENCHER]).
+
+
+======================================================================================================
+TAREFA 4 - CRIAR E TESTAR OUTRA INSTANCIA (PROVA DE QUE O TEMPLATE E REUTILIZAVEL)
+======================================================================================================
+
+1. Abra o arquivo do template:
+   code acessacidade.yaml
+
+2. No inicio do arquivo, altere a variavel name para acessacidade-02.
+
+3. Clique em "File", depois em "Save" e depois em "Close editor".
+
+4. Crie o novo container a partir do template:
+   az container create --resource-group rg-acessacidade --file acessacidade.yaml
+
+5. Verifique o estado e o IP publico:
+   az container show -g rg-acessacidade -n acessacidade-02 --query "{estado:instanceView.state, ip:ipAddress.ip}" -o table
+
+6. Abra outra aba no navegador e acesse http://<IP-DO-02>:8000
+   Obs.: os dados da nova instancia devem ser diferentes (IP diferente, banco SQLite proprio, sem as
+   denuncias criadas na primeira), e ambas foram criadas a partir do MESMO template.
+   Dica: crie uma denuncia na instancia 01 e mostre que ela nao aparece na 02.
+
+
+======================================================================================================
+TAREFA 5 - APAGAR TODOS OS RECURSOS CRIADOS
+======================================================================================================
+
+ATENCAO: so apague DEPOIS de tirar todos os prints/videos e depois que a correcao da entrega acabar.
+Se a URL publica precisar continuar no ar ate a avaliacao, deixe apenas o acessacidade-01 rodando e
+apague o resto. Containers ligados consomem credito (cobranca por segundo).
+
+1. Pesquise por "containers" no Portal da Azure, clique em "Instancias de conteiner", clique em
+   "acessacidade-01", clique em "Delete" e clique em "Yes" (repita para "acessacidade-02").
+
+2. Pesquise por "acr", clique no "acracessacidade553084fiap2026" e clique em "Delete".
+
+3. Pesquise por "Resource groups" na busca do portal da Azure, clique em "Resource groups", clique no
+   "rg-acessacidade" e clique em "Delete resource group". (Apagar o grupo remove tudo que estiver dentro.)
+
+4. Confirme que nada sobrou: pesquise "Todos os recursos" e verifique que a lista esta vazia para este
+   projeto. No Cloud Shell, se quiser: az group list -o table
+
+
+======================================================================================================
+DEPOIS DE PUBLICAR - O QUE ATUALIZAR NO PROJETO
+======================================================================================================
+  - Copie a URL publica (http://<IP>:8000) para dados_entrega.yaml (campo do link do MVP) e rode
+    tools\preencher_marcadores.py. Como a URL e http (nao https), o script avisa e nao copia para os
+    arquivos que exigem https; trate isso conforme a orientacao da disciplina.
+  - O IP muda se o container for recriado. Se precisar de endereco estavel, acrescente ao template, dentro
+    de ipAddress:    dnsNameLabel: acessacidade-553084     (ficando http://acessacidade-553084.<regiao>.azurecontainer.io:8000)
+    O rotulo precisa ser unico na regiao.
+  - Seguranca: nunca versione acessacidade.yaml preenchido (tem senha do ACR e tokens). Ele fica so no
+    Cloud Shell. Se vazar, gire a senha do ACR (az acr credential renew) e troque os tokens.
+  - O caminho oficial/profissional do projeto (Terraform + GitHub Actions + identidade gerenciada, sem
+    senha) esta em 06-Secure-DevOps-Cloud/docs/PUBLICACAO_AZURE.md. Este roteiro e a alternativa manual
+    pelo navegador, no mesmo estilo do Checkpoint 2.

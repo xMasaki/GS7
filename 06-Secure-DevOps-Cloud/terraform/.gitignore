@@ -1,0 +1,11 @@
+# Reforço local (o .gitignore da raiz já cobre state e tfvars)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+backend.hcl
+*_override.tf
+tfplan
+*.tfplan
+crash.log

@@ -1,0 +1,150 @@
+{
+  "execucao_id": "manual__2026-11-15T06:27:02",
+  "gerado_em": "2026-11-15T06:27:02Z",
+  "situacao": "APROVADO",
+  "camadas": {
+    "raw": {
+      "denuncias_simuladas": 271,
+      "denuncias_app": 0,
+      "linhas_arquivo_simulado": 271
+    },
+    "bronze": {
+      "denuncias": 260
+    },
+    "silver": {
+      "denuncias": 250,
+      "denuncias_duplicadas": 10,
+      "registros_validos": 211
+    },
+    "gold": {
+      "denuncias_por_bairro": 9,
+      "denuncias_por_categoria": 8,
+      "denuncias_por_periodo": 19,
+      "denuncias_por_status": 5,
+      "resultado_visao": 4,
+      "qualidade_registros": 10
+    }
+  },
+  "qualidade_contrato": {
+    "linhas_raw": 271,
+    "linhas_bronze": 260,
+    "duplicatas_removidas": 11,
+    "datas_invalidas": 12,
+    "coordenadas_invalidas": 11,
+    "campos_obrigatorios_ausentes": 25,
+    "percentual_registros_validos": 84.4,
+    "linhas_silver": 250,
+    "duplicatas_negocio_removidas": 10,
+    "registros_validos": 211
+  },
+  "flags_bronze": {
+    "flag_possui_nome": 155,
+    "flag_data_ausente": 1,
+    "flag_data_invalida": 11,
+    "flag_coordenada_ausente": 116,
+    "flag_coordenada_invalida": 8,
+    "flag_pontuacao_invalida": 3,
+    "flag_logradouro_ausente": 5,
+    "flag_bairro_ausente": 3,
+    "flag_tipo_ausente": 2,
+    "flag_descricao_ausente": 2,
+    "flag_impacto_ausente": 14,
+    "flag_campo_obrigatorio_ausente": 25
+  },
+  "flags_silver": {
+    "flag_bairro_nao_padronizado": 3,
+    "flag_tipo_nao_reconhecido": 2,
+    "flag_impacto_nao_reconhecido": 1,
+    "flag_status_inferido": 16,
+    "flag_visao_inconsistente": 1,
+    "flag_coordenada_fora_area": 3,
+    "flag_data_invalida": 12
+  },
+  "motivos_invalidade": [
+    {
+      "motivo": "impacto ausente ou não reconhecido",
+      "total": 15
+    },
+    {
+      "motivo": "data de registro ausente ou inválida",
+      "total": 12
+    },
+    {
+      "motivo": "descrição ausente ou com menos de 10 caracteres",
+      "total": 7
+    },
+    {
+      "motivo": "logradouro ausente",
+      "total": 5
+    },
+    {
+      "motivo": "bairro ausente",
+      "total": 3
+    },
+    {
+      "motivo": "tipo de obstáculo ausente",
+      "total": 2
+    }
+  ],
+  "bairros_fora_do_dicionario": [
+    "Recanto Verde"
+  ],
+  "verificacoes": [
+    {
+      "verificacao": "RAW não vazia",
+      "ok": true,
+      "detalhe": "271 linhas na RAW"
+    },
+    {
+      "verificacao": "RAW fiel à fonte simulada",
+      "ok": true,
+      "detalhe": "arquivo=271 raw=271"
+    },
+    {
+      "verificacao": "BRONZE ≤ RAW",
+      "ok": true,
+      "detalhe": "260 ≤ 271"
+    },
+    {
+      "verificacao": "SILVER + duplicadas = BRONZE",
+      "ok": true,
+      "detalhe": "260 = 260"
+    },
+    {
+      "verificacao": "Sem coluna de nome fora da RAW",
+      "ok": true,
+      "detalhe": "nenhuma"
+    },
+    {
+      "verificacao": "Arquivos Gold sem dados pessoais",
+      "ok": true,
+      "detalhe": "nenhum"
+    },
+    {
+      "verificacao": "Snapshot no formato do contrato 4.8",
+      "ok": true,
+      "detalhe": "ok"
+    },
+    {
+      "verificacao": "Chaves Gold pertencem ao contrato (seção 3)",
+      "ok": true,
+      "detalhe": "ok"
+    },
+    {
+      "verificacao": "Agregados Gold somam os registros válidos",
+      "ok": true,
+      "detalhe": "válidos=211 somas={'por_bairro': 211, 'por_categoria': 211, 'por_periodo_mensal': 211, 'por_status': 211, 'resultado_visao': 211}"
+    },
+    {
+      "verificacao": "Percentual de válidos entre 0 e 100",
+      "ok": true,
+      "detalhe": "84.4%"
+    }
+  ],
+  "extracao_api": {
+    "status": "PULADA",
+    "mensagem": "Execução com --sem-api: somente a fonte simulada.",
+    "arquivo": null,
+    "linhas": 0
+  }
+}

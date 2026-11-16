@@ -1,0 +1,9 @@
+# Modelo de configuração do backend remoto (copie para backend.hcl — NÃO versionar).
+#   Copy-Item backend.hcl.example backend.hcl     (PowerShell)
+#   terraform init -backend-config=backend.hcl
+# Os nomes abaixo são exemplos: use os criados por infra/azure/02_state_remoto.(ps1|sh).
+resource_group_name  = "rg-acessacidade-tfstate"
+storage_account_name = "[PREENCHER: nome da storage account do state]"
+container_name       = "tfstate"
+key                  = "acessacidade.prod.tfstate"
+use_azuread_auth     = true

@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_AsIs" targetNamespace="http://bpmn.io/schema/bpmn" exporter="AcessaCidade gerar_bpmn.py" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_AsIs">
+    <bpmn:participant id="Participant_AsIs" name="AS-IS — Cadastro manual de denúncias recebidas de parceiros" processRef="Process_AsIs" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_AsIs" name="AS-IS — Cadastro manual de denúncias recebidas de parceiros" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_AsIs">
+      <bpmn:lane id="Lane_AsIs_Associacao" name="Cidadão / Associação">
+        <bpmn:flowNodeRef>Start_AsIs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsIs_Registrar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsIs_Enviar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsIs_Complementar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsIs_Receber</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_AsIs</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AsIs_Operador" name="Operador AcessaCidade">
+        <bpmn:flowNodeRef>Task_AsIs_Abrir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsIs_Padronizar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AsIs_Completo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsIs_Digitar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsIs_Conferir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AsIs_Informar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_AsIs_Sistema" name="AcessaCidade (web)">
+        <bpmn:flowNodeRef>Task_AsIs_Gerar</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_AsIs" name="Problema de acessibilidade identificado">
+      <bpmn:outgoing>Flow_AsIs_01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:manualTask id="Task_AsIs_Registrar" name="Registrar denúncia em papel, planilha ou e-mail">
+      <bpmn:incoming>Flow_AsIs_01</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_02</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sendTask id="Task_AsIs_Enviar" name="Enviar planilha ou e-mail ao operador">
+      <bpmn:incoming>Flow_AsIs_02</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_03</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="Task_AsIs_Abrir" name="Abrir planilha ou e-mail recebido">
+      <bpmn:incoming>Flow_AsIs_03</bpmn:incoming>
+      <bpmn:incoming>Flow_AsIs_07</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_AsIs_Padronizar" name="Interpretar e padronizar endereço, tipo e impacto">
+      <bpmn:incoming>Flow_AsIs_04</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_05</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_AsIs_Completo" name="Dados completos?">
+      <bpmn:incoming>Flow_AsIs_05</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_06</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AsIs_08</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:manualTask id="Task_AsIs_Complementar" name="Complementar informações solicitadas">
+      <bpmn:incoming>Flow_AsIs_06</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_07</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Task_AsIs_Digitar" name="Digitar a denúncia campo a campo no formulário web">
+      <bpmn:incoming>Flow_AsIs_08</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_09</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_AsIs_Gerar" name="Validar, registrar e gerar protocolo">
+      <bpmn:incoming>Flow_AsIs_09</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_AsIs_Conferir" name="Conferir cadastro e copiar protocolo manualmente">
+      <bpmn:incoming>Flow_AsIs_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_AsIs_Informar" name="Informar protocolo à associação por e-mail">
+      <bpmn:incoming>Flow_AsIs_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_12</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="Task_AsIs_Receber" name="Receber protocolo para acompanhamento">
+      <bpmn:incoming>Flow_AsIs_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_AsIs_13</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:endEvent id="End_AsIs" name="Denúncia registrada e protocolo entregue">
+      <bpmn:incoming>Flow_AsIs_13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_AsIs_01" sourceRef="Start_AsIs" targetRef="Task_AsIs_Registrar" />
+    <bpmn:sequenceFlow id="Flow_AsIs_02" sourceRef="Task_AsIs_Registrar" targetRef="Task_AsIs_Enviar" />
+    <bpmn:sequenceFlow id="Flow_AsIs_03" sourceRef="Task_AsIs_Enviar" targetRef="Task_AsIs_Abrir" />
+    <bpmn:sequenceFlow id="Flow_AsIs_04" sourceRef="Task_AsIs_Abrir" targetRef="Task_AsIs_Padronizar" />
+    <bpmn:sequenceFlow id="Flow_AsIs_05" sourceRef="Task_AsIs_Padronizar" targetRef="Gateway_AsIs_Completo" />
+    <bpmn:sequenceFlow id="Flow_AsIs_06" name="Não" sourceRef="Gateway_AsIs_Completo" targetRef="Task_AsIs_Complementar" />
+    <bpmn:sequenceFlow id="Flow_AsIs_07" sourceRef="Task_AsIs_Complementar" targetRef="Task_AsIs_Abrir" />
+    <bpmn:sequenceFlow id="Flow_AsIs_08" name="Sim" sourceRef="Gateway_AsIs_Completo" targetRef="Task_AsIs_Digitar" />
+    <bpmn:sequenceFlow id="Flow_AsIs_09" sourceRef="Task_AsIs_Digitar" targetRef="Task_AsIs_Gerar" />
+    <bpmn:sequenceFlow id="Flow_AsIs_10" sourceRef="Task_AsIs_Gerar" targetRef="Task_AsIs_Conferir" />
+    <bpmn:sequenceFlow id="Flow_AsIs_11" sourceRef="Task_AsIs_Conferir" targetRef="Task_AsIs_Informar" />
+    <bpmn:sequenceFlow id="Flow_AsIs_12" sourceRef="Task_AsIs_Informar" targetRef="Task_AsIs_Receber" />
+    <bpmn:sequenceFlow id="Flow_AsIs_13" sourceRef="Task_AsIs_Receber" targetRef="End_AsIs" />
+    <bpmn:textAnnotation id="Annotation_AsIs_Fila">
+      <bpmn:text>GARGALO: planilhas acumulam na caixa de e-mail; depende da agenda do operador.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Annotation_AsIs_Fila" associationDirection="None" sourceRef="Annotation_AsIs_Fila" targetRef="Task_AsIs_Abrir" />
+    <bpmn:textAnnotation id="Annotation_AsIs_Digitar">
+      <bpmn:text>GARGALO: ~10 campos digitados por denúncia; erros de digitação e de categoria.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Annotation_AsIs_Digitar" associationDirection="None" sourceRef="Annotation_AsIs_Digitar" targetRef="Task_AsIs_Digitar" />
+    <bpmn:textAnnotation id="Annotation_AsIs_Conferir">
+      <bpmn:text>GARGALO: cópia manual do protocolo; risco de enviar o protocolo errado.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Annotation_AsIs_Conferir" associationDirection="None" sourceRef="Annotation_AsIs_Conferir" targetRef="Task_AsIs_Conferir" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_AsIs">
+    <bpmndi:BPMNPlane id="BPMNPlane_AsIs" bpmnElement="Collaboration_AsIs">
+      <bpmndi:BPMNShape id="Participant_AsIs_di" bpmnElement="Participant_AsIs" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="2110" height="600" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIs_Associacao_di" bpmnElement="Lane_AsIs_Associacao" isHorizontal="true">
+        <dc:Bounds x="180" y="80" width="2080" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIs_Operador_di" bpmnElement="Lane_AsIs_Operador" isHorizontal="true">
+        <dc:Bounds x="180" y="280" width="2080" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_AsIs_Sistema_di" bpmnElement="Lane_AsIs_Sistema" isHorizontal="true">
+        <dc:Bounds x="180" y="480" width="2080" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_AsIs_di" bpmnElement="Start_AsIs">
+        <dc:Bounds x="282" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="230" y="224" width="140" height="42" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Registrar_di" bpmnElement="Task_AsIs_Registrar">
+        <dc:Bounds x="405" y="160" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Enviar_di" bpmnElement="Task_AsIs_Enviar">
+        <dc:Bounds x="570" y="160" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Abrir_di" bpmnElement="Task_AsIs_Abrir">
+        <dc:Bounds x="735" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Padronizar_di" bpmnElement="Task_AsIs_Padronizar">
+        <dc:Bounds x="900" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AsIs_Completo_di" bpmnElement="Gateway_AsIs_Completo" isMarkerVisible="true">
+        <dc:Bounds x="1100" y="375" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1055" y="355" width="140" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Complementar_di" bpmnElement="Task_AsIs_Complementar">
+        <dc:Bounds x="1065" y="160" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Digitar_di" bpmnElement="Task_AsIs_Digitar">
+        <dc:Bounds x="1230" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Gerar_di" bpmnElement="Task_AsIs_Gerar">
+        <dc:Bounds x="1395" y="560" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Conferir_di" bpmnElement="Task_AsIs_Conferir">
+        <dc:Bounds x="1560" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Informar_di" bpmnElement="Task_AsIs_Informar">
+        <dc:Bounds x="1725" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AsIs_Receber_di" bpmnElement="Task_AsIs_Receber">
+        <dc:Bounds x="1890" y="160" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_AsIs_di" bpmnElement="End_AsIs">
+        <dc:Bounds x="2097" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2045" y="224" width="140" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Annotation_AsIs_Fila_di" bpmnElement="Annotation_AsIs_Fila">
+        <dc:Bounds x="803" y="286" width="175" height="62" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Annotation_AsIs_Digitar_di" bpmnElement="Annotation_AsIs_Digitar">
+        <dc:Bounds x="1298" y="286" width="175" height="62" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Annotation_AsIs_Conferir_di" bpmnElement="Annotation_AsIs_Conferir">
+        <dc:Bounds x="1628" y="286" width="175" height="62" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_AsIs_01_di" bpmnElement="Flow_AsIs_01">
+        <di:waypoint x="318" y="200" />
+        <di:waypoint x="405" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_02_di" bpmnElement="Flow_AsIs_02">
+        <di:waypoint x="525" y="200" />
+        <di:waypoint x="570" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_03_di" bpmnElement="Flow_AsIs_03">
+        <di:waypoint x="690" y="200" />
+        <di:waypoint x="712" y="200" />
+        <di:waypoint x="712" y="400" />
+        <di:waypoint x="735" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_04_di" bpmnElement="Flow_AsIs_04">
+        <di:waypoint x="855" y="400" />
+        <di:waypoint x="900" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_05_di" bpmnElement="Flow_AsIs_05">
+        <di:waypoint x="1020" y="400" />
+        <di:waypoint x="1100" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_06_di" bpmnElement="Flow_AsIs_06">
+        <di:waypoint x="1125" y="375" />
+        <di:waypoint x="1125" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1129" y="290" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_07_di" bpmnElement="Flow_AsIs_07">
+        <di:waypoint x="1065" y="200" />
+        <di:waypoint x="795" y="200" />
+        <di:waypoint x="795" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_08_di" bpmnElement="Flow_AsIs_08">
+        <di:waypoint x="1150" y="400" />
+        <di:waypoint x="1230" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1194" y="382" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_09_di" bpmnElement="Flow_AsIs_09">
+        <di:waypoint x="1350" y="400" />
+        <di:waypoint x="1372" y="400" />
+        <di:waypoint x="1372" y="600" />
+        <di:waypoint x="1395" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_10_di" bpmnElement="Flow_AsIs_10">
+        <di:waypoint x="1515" y="600" />
+        <di:waypoint x="1538" y="600" />
+        <di:waypoint x="1538" y="400" />
+        <di:waypoint x="1560" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_11_di" bpmnElement="Flow_AsIs_11">
+        <di:waypoint x="1680" y="400" />
+        <di:waypoint x="1725" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_12_di" bpmnElement="Flow_AsIs_12">
+        <di:waypoint x="1845" y="400" />
+        <di:waypoint x="1868" y="400" />
+        <di:waypoint x="1868" y="200" />
+        <di:waypoint x="1890" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AsIs_13_di" bpmnElement="Flow_AsIs_13">
+        <di:waypoint x="2010" y="200" />
+        <di:waypoint x="2097" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Annotation_AsIs_Fila_di" bpmnElement="Association_Annotation_AsIs_Fila">
+        <di:waypoint x="813" y="348" />
+        <di:waypoint x="815" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Annotation_AsIs_Digitar_di" bpmnElement="Association_Annotation_AsIs_Digitar">
+        <di:waypoint x="1308" y="348" />
+        <di:waypoint x="1310" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Annotation_AsIs_Conferir_di" bpmnElement="Association_Annotation_AsIs_Conferir">
+        <di:waypoint x="1638" y="348" />
+        <di:waypoint x="1640" y="360" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

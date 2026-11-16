@@ -1,0 +1,11 @@
+# Links da entrega da disciplina 01 (Generative AI for Engineering)
+# Preencha com os links PÚBLICOS reais e rode (na raiz do repositório):
+#   .\.venv\Scripts\python.exe 01-Generative-AI-Engineering\docs\gerar_pdf_relatorio.py --estrito
+# Os links substituem os marcadores [PREENCHER: URL_VIDEO], [PREENCHER: URL_MVP] e
+# [PREENCHER: URL_REPOSITORIO] do RELATORIO_ENTREGA_GENAI.md e viram links clicáveis no PDF.
+# Todos devem começar com https:// e abrir em janela anônima, sem login.
+
+url_video: ""        # link do vídeo (se o professor exigir) — YouTube público ou não listado
+url_mvp: ""          # URL pública do MVP (publicada pela disciplina 06)
+url_repositorio: ""  # URL do repositório público no GitHub (sem barra no final)
+ramo: "main"         # ramo usado nos links para arquivos do repositório

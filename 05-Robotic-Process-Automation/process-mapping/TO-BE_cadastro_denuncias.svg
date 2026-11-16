@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3290" height="1070" viewBox="0 0 3290 1070" font-family="Segoe UI, Arial, sans-serif" font-size="11">
+<defs><marker id="seta" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker></defs>
+<rect x="0" y="0" width="3290" height="1070" fill="#FFFFFF"/>
+<text x="150" y="50" font-size="16" font-weight="bold" fill="#1F4E79">TO-BE — Cadastro automatizado pelo robô UiPath (operador trata exceções)</text>
+<text x="150" y="68" font-size="11" fill="#555">Renderização simplificada gerada por scripts/gerar_bpmn.py a partir do mesmo layout do arquivo .bpmn (abra o .bpmn no bpmn.io para a versão oficial).</text>
+<rect x="150" y="80" width="3100" height="930" fill="none" stroke="#333" stroke-width="1.5"/>
+<text transform="translate(169,545) rotate(-90)" text-anchor="middle" font-weight="bold">TO-BE — Cadastro automatizado pelo robô UiPath (operador trata exceções)</text>
+<rect x="180" y="80" width="3070" height="200" fill="none" stroke="#333"/>
+<line x1="210" y1="80" x2="210" y2="280" stroke="#333"/>
+<text transform="translate(199,180) rotate(-90)" text-anchor="middle">Cidadão / Associação</text>
+<rect x="180" y="280" width="3070" height="200" fill="none" stroke="#333"/>
+<line x1="210" y1="280" x2="210" y2="480" stroke="#333"/>
+<text transform="translate(199,380) rotate(-90)" text-anchor="middle">Operador AcessaCidade</text>
+<rect x="180" y="480" width="3070" height="330" fill="none" stroke="#333"/>
+<line x1="210" y1="480" x2="210" y2="810" stroke="#333"/>
+<text transform="translate(199,645) rotate(-90)" text-anchor="middle">Robô UiPath (AcessaCidade.RPA)</text>
+<rect x="180" y="810" width="3070" height="200" fill="none" stroke="#333"/>
+<line x1="210" y1="810" x2="210" y2="1010" stroke="#333"/>
+<text transform="translate(199,910) rotate(-90)" text-anchor="middle">AcessaCidade (web)</text>
+<path d="M815,286 L803,286 L803,348 L815,348" fill="none" stroke="#C00000"/>
+<line x1="813" y1="348" x2="815" y2="360" stroke="#C00000" stroke-dasharray="4,3"/>
+<text x="808" y="299" fill="#C00000" font-size="10">Futuro: disparo agendado</text>
+<text x="808" y="312" fill="#C00000" font-size="10">(Orchestrator ou Agendador do</text>
+<text x="808" y="325" fill="#C00000" font-size="10">Windows).</text>
+<path d="M1640,486 L1628,486 L1628,548 L1640,548" fill="none" stroke="#C00000"/>
+<line x1="1638" y1="548" x2="1640" y2="560" stroke="#C00000" stroke-dasharray="4,3"/>
+<text x="1633" y="499" fill="#C00000" font-size="10">Seletores pelos ids estáveis do</text>
+<text x="1633" y="512" fill="#C00000" font-size="10">contrato (seção 7).</text>
+<path d="M2630,286 L2618,286 L2618,348 L2630,348" fill="none" stroke="#C00000"/>
+<line x1="2628" y1="348" x2="2630" y2="360" stroke="#C00000" stroke-dasharray="4,3"/>
+<text x="2623" y="299" fill="#C00000" font-size="10">Operador só atua nas linhas com</text>
+<text x="2623" y="312" fill="#C00000" font-size="10">FALHA_* (corrige e reprocessa).</text>
+<polyline points="318,200 405,200" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="525,200 570,200" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="690,200 712,200 712,400 735,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="855,400 878,400 878,600 900,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1020,600 1065,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1185,600 1230,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1350,600 1430,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1480,600 1560,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<text x="1524" y="595" font-size="10" fill="#1F4E79">Sim</text>
+<polyline points="1455,625 1455,730 2055,730" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<text x="1459" y="672" font-size="10" fill="#1F4E79">Não</text>
+<polyline points="1680,600 1702,600 1702,930 1725,930" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1845,930 1885,930 1885,600 1925,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1975,600 2055,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<text x="2019" y="595" font-size="10" fill="#1F4E79">Sim</text>
+<polyline points="1950,625 1950,730 2055,730" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<text x="1954" y="672" font-size="10" fill="#1F4E79">Não (erro/tempo)</text>
+<polyline points="2175,600 2255,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="2175,730 2280,730 2280,625" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="2280,575 2280,554 1290,554 1290,560" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<text x="2284" y="560" font-size="10" fill="#1F4E79">Sim</text>
+<polyline points="2305,600 2385,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<text x="2349" y="595" font-size="10" fill="#1F4E79">Não</text>
+<polyline points="2505,600 2528,600 2528,400 2550,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="2670,400 2715,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="2835,400 2858,400 2858,200 2880,200" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="3000,200 3087,200" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<circle cx="300" cy="200" r="18" fill="#FFF" stroke="#333" stroke-width="1.5"/>
+<text x="300" y="234" text-anchor="middle">Denúncias coletadas</text>
+<text x="300" y="247" text-anchor="middle">pela associação</text>
+<rect x="405" y="160" width="120" height="80" rx="10" fill="#FFF2CC" stroke="#333" stroke-width="1.3"/>
+<text x="410" y="171" font-size="8" fill="#666">Manual</text>
+<text x="465" y="191" text-anchor="middle">Preencher a</text>
+<text x="465" y="204" text-anchor="middle">planilha-modelo</text>
+<text x="465" y="217" text-anchor="middle">padronizada</text>
+<rect x="570" y="160" width="120" height="80" rx="10" fill="#FFFFFF" stroke="#333" stroke-width="1.3"/>
+<text x="630" y="198" text-anchor="middle">Enviar a planilha ao</text>
+<text x="630" y="210" text-anchor="middle">AcessaCidade</text>
+<rect x="735" y="360" width="120" height="80" rx="10" fill="#DDEBF7" stroke="#333" stroke-width="1.3"/>
+<text x="740" y="371" font-size="8" fill="#666">Usuário</text>
+<text x="795" y="391" text-anchor="middle">Salvar planilha na</text>
+<text x="795" y="404" text-anchor="middle">pasta de entrada e</text>
+<text x="795" y="417" text-anchor="middle">iniciar o robô</text>
+<rect x="900" y="560" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="905" y="571" font-size="8" fill="#666">Automática</text>
+<text x="960" y="591" text-anchor="middle">Carregar</text>
+<text x="960" y="604" text-anchor="middle">configuração</text>
+<text x="960" y="617" text-anchor="middle">(Config.xlsx)</text>
+<rect x="1065" y="560" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="1070" y="571" font-size="8" fill="#666">Automática</text>
+<text x="1125" y="598" text-anchor="middle">Ler planilha de</text>
+<text x="1125" y="610" text-anchor="middle">entrada (Read Range)</text>
+<rect x="1230" y="560" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="1235" y="571" font-size="8" fill="#666">Automática</text>
+<text x="1290" y="591" text-anchor="middle">Validar a linha</text>
+<text x="1290" y="604" text-anchor="middle">(regras e rótulos do</text>
+<text x="1290" y="617" text-anchor="middle">contrato)</text>
+<polygon points="1455,575 1480,600 1455,625 1430,600" fill="#FFF" stroke="#333" stroke-width="1.3"/>
+<text x="1455" y="606" text-anchor="middle" font-size="18" font-weight="bold">×</text>
+<text x="1455" y="567" text-anchor="middle">Linha válida?</text>
+<rect x="1560" y="560" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="1565" y="571" font-size="8" fill="#666">Automática</text>
+<text x="1620" y="598" text-anchor="middle">Preencher e enviar #</text>
+<text x="1620" y="610" text-anchor="middle">/registrar?canal=rpa</text>
+<rect x="1725" y="890" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="1730" y="901" font-size="8" fill="#666">Automática</text>
+<text x="1785" y="921" text-anchor="middle">Validar, registrar</text>
+<text x="1785" y="934" text-anchor="middle">(origem=RPA) e gerar</text>
+<text x="1785" y="947" text-anchor="middle">protocolo</text>
+<polygon points="1950,575 1975,600 1950,625 1925,600" fill="#FFF" stroke="#333" stroke-width="1.3"/>
+<text x="1950" y="606" text-anchor="middle" font-size="18" font-weight="bold">×</text>
+<text x="1950" y="567" text-anchor="middle">Protocolo capturado?</text>
+<rect x="2055" y="560" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="2060" y="571" font-size="8" fill="#666">Automática</text>
+<text x="2115" y="591" text-anchor="middle">Gravar SUCESSO e</text>
+<text x="2115" y="604" text-anchor="middle">protocolo na</text>
+<text x="2115" y="617" text-anchor="middle">planilha de saída</text>
+<rect x="2055" y="690" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="2060" y="701" font-size="8" fill="#666">Automática</text>
+<text x="2115" y="721" text-anchor="middle">Gravar FALHA_NEGOCIO</text>
+<text x="2115" y="734" text-anchor="middle">ou FALHA_SISTEMA e</text>
+<text x="2115" y="747" text-anchor="middle">mensagem</text>
+<polygon points="2280,575 2305,600 2280,625 2255,600" fill="#FFF" stroke="#333" stroke-width="1.3"/>
+<text x="2280" y="606" text-anchor="middle" font-size="18" font-weight="bold">×</text>
+<text x="2280" y="567" text-anchor="middle">Há mais linhas?</text>
+<rect x="2385" y="560" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="2390" y="571" font-size="8" fill="#666">Automática</text>
+<text x="2445" y="598" text-anchor="middle">Gerar resumo com</text>
+<text x="2445" y="610" text-anchor="middle">totais (log)</text>
+<rect x="2550" y="360" width="120" height="80" rx="10" fill="#DDEBF7" stroke="#333" stroke-width="1.3"/>
+<text x="2555" y="371" font-size="8" fill="#666">Usuário</text>
+<text x="2610" y="398" text-anchor="middle">Tratar somente as</text>
+<text x="2610" y="410" text-anchor="middle">exceções (FALHA_*)</text>
+<rect x="2715" y="360" width="120" height="80" rx="10" fill="#FFFFFF" stroke="#333" stroke-width="1.3"/>
+<text x="2775" y="391" text-anchor="middle">Enviar planilha de</text>
+<text x="2775" y="404" text-anchor="middle">saída com protocolos</text>
+<text x="2775" y="417" text-anchor="middle">à associação</text>
+<rect x="2880" y="160" width="120" height="80" rx="10" fill="#FFFFFF" stroke="#333" stroke-width="1.3"/>
+<text x="2940" y="198" text-anchor="middle">Receber protocolos</text>
+<text x="2940" y="210" text-anchor="middle">para acompanhamento</text>
+<circle cx="3105" cy="200" r="18" fill="#FFF" stroke="#333" stroke-width="3.5"/>
+<text x="3105" y="234" text-anchor="middle">Denúncias registradas</text>
+<text x="3105" y="247" text-anchor="middle">e protocolos entregues</text>
+</svg>

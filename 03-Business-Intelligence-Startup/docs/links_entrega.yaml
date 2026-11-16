@@ -1,0 +1,10 @@
+# Links da entrega da disciplina 03 (Business Intelligence & Startup Development)
+# Preencha com os links PÚBLICOS reais e rode:
+#   .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\scripts\gerar_pdf_entrega.py --estrito
+# Os links substituem os marcadores [PREENCHER: URL_VIDEO], [PREENCHER: URL_MVP] e [PREENCHER: URL_REPOSITORIO]
+# do DOCUMENTO_DE_ENTREGA_BI.md e viram links clicáveis no PDF único.
+# Todos devem começar com https:// e abrir em janela anônima, sem login.
+
+url_video: ""        # ex.: link do YouTube (não listado ou público) — copie do YouTube Studio
+url_mvp: ""          # URL pública do MVP publicada pela disciplina 06 (Secure DevOps & Cloud)
+url_repositorio: ""  # URL do repositório público no GitHub

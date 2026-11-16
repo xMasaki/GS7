@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_ToBe" targetNamespace="http://bpmn.io/schema/bpmn" exporter="AcessaCidade gerar_bpmn.py" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_ToBe">
+    <bpmn:participant id="Participant_ToBe" name="TO-BE — Cadastro automatizado pelo robô UiPath (operador trata exceções)" processRef="Process_ToBe" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_ToBe" name="TO-BE — Cadastro automatizado pelo robô UiPath (operador trata exceções)" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_ToBe">
+      <bpmn:lane id="Lane_ToBe_Associacao" name="Cidadão / Associação">
+        <bpmn:flowNodeRef>Start_ToBe</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Preencher</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Enviar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Receber</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>End_ToBe</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ToBe_Operador" name="Operador AcessaCidade">
+        <bpmn:flowNodeRef>Task_ToBe_Iniciar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Excecoes</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Informar</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ToBe_Robo" name="Robô UiPath (AcessaCidade.RPA)">
+        <bpmn:flowNodeRef>Task_ToBe_Config</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Ler</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Validar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ToBe_Valida</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Formulario</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ToBe_Protocolo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Sucesso</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Falha</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ToBe_Mais</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ToBe_Resumo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_ToBe_Sistema" name="AcessaCidade (web)">
+        <bpmn:flowNodeRef>Task_ToBe_Registrar</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Start_ToBe" name="Denúncias coletadas pela associação">
+      <bpmn:outgoing>Flow_ToBe_01</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:manualTask id="Task_ToBe_Preencher" name="Preencher a planilha-modelo padronizada">
+      <bpmn:incoming>Flow_ToBe_01</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_02</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sendTask id="Task_ToBe_Enviar" name="Enviar a planilha ao AcessaCidade">
+      <bpmn:incoming>Flow_ToBe_02</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_03</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:userTask id="Task_ToBe_Iniciar" name="Salvar planilha na pasta de entrada e iniciar o robô">
+      <bpmn:incoming>Flow_ToBe_03</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_04</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Task_ToBe_Config" name="Carregar configuração (Config.xlsx)">
+      <bpmn:incoming>Flow_ToBe_04</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_05</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_ToBe_Ler" name="Ler planilha de entrada (Read Range)">
+      <bpmn:incoming>Flow_ToBe_05</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_ToBe_Validar" name="Validar a linha (regras e rótulos do contrato)">
+      <bpmn:incoming>Flow_ToBe_06</bpmn:incoming>
+      <bpmn:incoming>Flow_ToBe_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_ToBe_Valida" name="Linha válida?">
+      <bpmn:incoming>Flow_ToBe_07</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_08</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToBe_09</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_ToBe_Formulario" name="Preencher e enviar #/registrar?canal=rpa">
+      <bpmn:incoming>Flow_ToBe_08</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_ToBe_Registrar" name="Validar, registrar (origem=RPA) e gerar protocolo">
+      <bpmn:incoming>Flow_ToBe_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_11</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_ToBe_Protocolo" name="Protocolo capturado?">
+      <bpmn:incoming>Flow_ToBe_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_12</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToBe_13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_ToBe_Sucesso" name="Gravar SUCESSO e protocolo na planilha de saída">
+      <bpmn:incoming>Flow_ToBe_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_ToBe_Falha" name="Gravar FALHA_NEGOCIO ou FALHA_SISTEMA e mensagem">
+      <bpmn:incoming>Flow_ToBe_09</bpmn:incoming>
+      <bpmn:incoming>Flow_ToBe_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_ToBe_Mais" name="Há mais linhas?">
+      <bpmn:incoming>Flow_ToBe_14</bpmn:incoming>
+      <bpmn:incoming>Flow_ToBe_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_16</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToBe_17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Task_ToBe_Resumo" name="Gerar resumo com totais (log)">
+      <bpmn:incoming>Flow_ToBe_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_18</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_ToBe_Excecoes" name="Tratar somente as exceções (FALHA_*)">
+      <bpmn:incoming>Flow_ToBe_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_19</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sendTask id="Task_ToBe_Informar" name="Enviar planilha de saída com protocolos à associação">
+      <bpmn:incoming>Flow_ToBe_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_20</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:receiveTask id="Task_ToBe_Receber" name="Receber protocolos para acompanhamento">
+      <bpmn:incoming>Flow_ToBe_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToBe_21</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:endEvent id="End_ToBe" name="Denúncias registradas e protocolos entregues">
+      <bpmn:incoming>Flow_ToBe_21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_ToBe_01" sourceRef="Start_ToBe" targetRef="Task_ToBe_Preencher" />
+    <bpmn:sequenceFlow id="Flow_ToBe_02" sourceRef="Task_ToBe_Preencher" targetRef="Task_ToBe_Enviar" />
+    <bpmn:sequenceFlow id="Flow_ToBe_03" sourceRef="Task_ToBe_Enviar" targetRef="Task_ToBe_Iniciar" />
+    <bpmn:sequenceFlow id="Flow_ToBe_04" sourceRef="Task_ToBe_Iniciar" targetRef="Task_ToBe_Config" />
+    <bpmn:sequenceFlow id="Flow_ToBe_05" sourceRef="Task_ToBe_Config" targetRef="Task_ToBe_Ler" />
+    <bpmn:sequenceFlow id="Flow_ToBe_06" sourceRef="Task_ToBe_Ler" targetRef="Task_ToBe_Validar" />
+    <bpmn:sequenceFlow id="Flow_ToBe_07" sourceRef="Task_ToBe_Validar" targetRef="Gateway_ToBe_Valida" />
+    <bpmn:sequenceFlow id="Flow_ToBe_08" name="Sim" sourceRef="Gateway_ToBe_Valida" targetRef="Task_ToBe_Formulario" />
+    <bpmn:sequenceFlow id="Flow_ToBe_09" name="Não" sourceRef="Gateway_ToBe_Valida" targetRef="Task_ToBe_Falha" />
+    <bpmn:sequenceFlow id="Flow_ToBe_10" sourceRef="Task_ToBe_Formulario" targetRef="Task_ToBe_Registrar" />
+    <bpmn:sequenceFlow id="Flow_ToBe_11" sourceRef="Task_ToBe_Registrar" targetRef="Gateway_ToBe_Protocolo" />
+    <bpmn:sequenceFlow id="Flow_ToBe_12" name="Sim" sourceRef="Gateway_ToBe_Protocolo" targetRef="Task_ToBe_Sucesso" />
+    <bpmn:sequenceFlow id="Flow_ToBe_13" name="Não (erro/tempo)" sourceRef="Gateway_ToBe_Protocolo" targetRef="Task_ToBe_Falha" />
+    <bpmn:sequenceFlow id="Flow_ToBe_14" sourceRef="Task_ToBe_Sucesso" targetRef="Gateway_ToBe_Mais" />
+    <bpmn:sequenceFlow id="Flow_ToBe_15" sourceRef="Task_ToBe_Falha" targetRef="Gateway_ToBe_Mais" />
+    <bpmn:sequenceFlow id="Flow_ToBe_16" name="Sim" sourceRef="Gateway_ToBe_Mais" targetRef="Task_ToBe_Validar" />
+    <bpmn:sequenceFlow id="Flow_ToBe_17" name="Não" sourceRef="Gateway_ToBe_Mais" targetRef="Task_ToBe_Resumo" />
+    <bpmn:sequenceFlow id="Flow_ToBe_18" sourceRef="Task_ToBe_Resumo" targetRef="Task_ToBe_Excecoes" />
+    <bpmn:sequenceFlow id="Flow_ToBe_19" sourceRef="Task_ToBe_Excecoes" targetRef="Task_ToBe_Informar" />
+    <bpmn:sequenceFlow id="Flow_ToBe_20" sourceRef="Task_ToBe_Informar" targetRef="Task_ToBe_Receber" />
+    <bpmn:sequenceFlow id="Flow_ToBe_21" sourceRef="Task_ToBe_Receber" targetRef="End_ToBe" />
+    <bpmn:textAnnotation id="Annotation_ToBe_Inicio">
+      <bpmn:text>Futuro: disparo agendado (Orchestrator ou Agendador do Windows).</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Annotation_ToBe_Inicio" associationDirection="None" sourceRef="Annotation_ToBe_Inicio" targetRef="Task_ToBe_Iniciar" />
+    <bpmn:textAnnotation id="Annotation_ToBe_Seletores">
+      <bpmn:text>Seletores pelos ids estáveis do contrato (seção 7).</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Annotation_ToBe_Seletores" associationDirection="None" sourceRef="Annotation_ToBe_Seletores" targetRef="Task_ToBe_Formulario" />
+    <bpmn:textAnnotation id="Annotation_ToBe_Excecoes">
+      <bpmn:text>Operador só atua nas linhas com FALHA_* (corrige e reprocessa).</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_Annotation_ToBe_Excecoes" associationDirection="None" sourceRef="Annotation_ToBe_Excecoes" targetRef="Task_ToBe_Excecoes" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_ToBe">
+    <bpmndi:BPMNPlane id="BPMNPlane_ToBe" bpmnElement="Collaboration_ToBe">
+      <bpmndi:BPMNShape id="Participant_ToBe_di" bpmnElement="Participant_ToBe" isHorizontal="true">
+        <dc:Bounds x="150" y="80" width="3100" height="930" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ToBe_Associacao_di" bpmnElement="Lane_ToBe_Associacao" isHorizontal="true">
+        <dc:Bounds x="180" y="80" width="3070" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ToBe_Operador_di" bpmnElement="Lane_ToBe_Operador" isHorizontal="true">
+        <dc:Bounds x="180" y="280" width="3070" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ToBe_Robo_di" bpmnElement="Lane_ToBe_Robo" isHorizontal="true">
+        <dc:Bounds x="180" y="480" width="3070" height="330" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_ToBe_Sistema_di" bpmnElement="Lane_ToBe_Sistema" isHorizontal="true">
+        <dc:Bounds x="180" y="810" width="3070" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Start_ToBe_di" bpmnElement="Start_ToBe">
+        <dc:Bounds x="282" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="230" y="224" width="140" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Preencher_di" bpmnElement="Task_ToBe_Preencher">
+        <dc:Bounds x="405" y="160" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Enviar_di" bpmnElement="Task_ToBe_Enviar">
+        <dc:Bounds x="570" y="160" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Iniciar_di" bpmnElement="Task_ToBe_Iniciar">
+        <dc:Bounds x="735" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Config_di" bpmnElement="Task_ToBe_Config">
+        <dc:Bounds x="900" y="560" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Ler_di" bpmnElement="Task_ToBe_Ler">
+        <dc:Bounds x="1065" y="560" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Validar_di" bpmnElement="Task_ToBe_Validar">
+        <dc:Bounds x="1230" y="560" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ToBe_Valida_di" bpmnElement="Gateway_ToBe_Valida" isMarkerVisible="true">
+        <dc:Bounds x="1430" y="575" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1385" y="555" width="140" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Formulario_di" bpmnElement="Task_ToBe_Formulario">
+        <dc:Bounds x="1560" y="560" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Registrar_di" bpmnElement="Task_ToBe_Registrar">
+        <dc:Bounds x="1725" y="890" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ToBe_Protocolo_di" bpmnElement="Gateway_ToBe_Protocolo" isMarkerVisible="true">
+        <dc:Bounds x="1925" y="575" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1880" y="555" width="140" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Sucesso_di" bpmnElement="Task_ToBe_Sucesso">
+        <dc:Bounds x="2055" y="560" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Falha_di" bpmnElement="Task_ToBe_Falha">
+        <dc:Bounds x="2055" y="690" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ToBe_Mais_di" bpmnElement="Gateway_ToBe_Mais" isMarkerVisible="true">
+        <dc:Bounds x="2255" y="575" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2210" y="555" width="140" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Resumo_di" bpmnElement="Task_ToBe_Resumo">
+        <dc:Bounds x="2385" y="560" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Excecoes_di" bpmnElement="Task_ToBe_Excecoes">
+        <dc:Bounds x="2550" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Informar_di" bpmnElement="Task_ToBe_Informar">
+        <dc:Bounds x="2715" y="360" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ToBe_Receber_di" bpmnElement="Task_ToBe_Receber">
+        <dc:Bounds x="2880" y="160" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="End_ToBe_di" bpmnElement="End_ToBe">
+        <dc:Bounds x="3087" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3035" y="224" width="140" height="28" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Annotation_ToBe_Inicio_di" bpmnElement="Annotation_ToBe_Inicio">
+        <dc:Bounds x="803" y="286" width="175" height="62" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Annotation_ToBe_Seletores_di" bpmnElement="Annotation_ToBe_Seletores">
+        <dc:Bounds x="1628" y="486" width="175" height="62" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Annotation_ToBe_Excecoes_di" bpmnElement="Annotation_ToBe_Excecoes">
+        <dc:Bounds x="2618" y="286" width="175" height="62" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_ToBe_01_di" bpmnElement="Flow_ToBe_01">
+        <di:waypoint x="318" y="200" />
+        <di:waypoint x="405" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_02_di" bpmnElement="Flow_ToBe_02">
+        <di:waypoint x="525" y="200" />
+        <di:waypoint x="570" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_03_di" bpmnElement="Flow_ToBe_03">
+        <di:waypoint x="690" y="200" />
+        <di:waypoint x="712" y="200" />
+        <di:waypoint x="712" y="400" />
+        <di:waypoint x="735" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_04_di" bpmnElement="Flow_ToBe_04">
+        <di:waypoint x="855" y="400" />
+        <di:waypoint x="878" y="400" />
+        <di:waypoint x="878" y="600" />
+        <di:waypoint x="900" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_05_di" bpmnElement="Flow_ToBe_05">
+        <di:waypoint x="1020" y="600" />
+        <di:waypoint x="1065" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_06_di" bpmnElement="Flow_ToBe_06">
+        <di:waypoint x="1185" y="600" />
+        <di:waypoint x="1230" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_07_di" bpmnElement="Flow_ToBe_07">
+        <di:waypoint x="1350" y="600" />
+        <di:waypoint x="1430" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_08_di" bpmnElement="Flow_ToBe_08">
+        <di:waypoint x="1480" y="600" />
+        <di:waypoint x="1560" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1524" y="582" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_09_di" bpmnElement="Flow_ToBe_09">
+        <di:waypoint x="1455" y="625" />
+        <di:waypoint x="1455" y="730" />
+        <di:waypoint x="2055" y="730" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1459" y="660" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_10_di" bpmnElement="Flow_ToBe_10">
+        <di:waypoint x="1680" y="600" />
+        <di:waypoint x="1702" y="600" />
+        <di:waypoint x="1702" y="930" />
+        <di:waypoint x="1725" y="930" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_11_di" bpmnElement="Flow_ToBe_11">
+        <di:waypoint x="1845" y="930" />
+        <di:waypoint x="1885" y="930" />
+        <di:waypoint x="1885" y="600" />
+        <di:waypoint x="1925" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_12_di" bpmnElement="Flow_ToBe_12">
+        <di:waypoint x="1975" y="600" />
+        <di:waypoint x="2055" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2019" y="582" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_13_di" bpmnElement="Flow_ToBe_13">
+        <di:waypoint x="1950" y="625" />
+        <di:waypoint x="1950" y="730" />
+        <di:waypoint x="2055" y="730" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1954" y="660" width="112" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_14_di" bpmnElement="Flow_ToBe_14">
+        <di:waypoint x="2175" y="600" />
+        <di:waypoint x="2255" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_15_di" bpmnElement="Flow_ToBe_15">
+        <di:waypoint x="2175" y="730" />
+        <di:waypoint x="2280" y="730" />
+        <di:waypoint x="2280" y="625" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_16_di" bpmnElement="Flow_ToBe_16">
+        <di:waypoint x="2280" y="575" />
+        <di:waypoint x="2280" y="554" />
+        <di:waypoint x="1290" y="554" />
+        <di:waypoint x="1290" y="560" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2284" y="546" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_17_di" bpmnElement="Flow_ToBe_17">
+        <di:waypoint x="2305" y="600" />
+        <di:waypoint x="2385" y="600" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2349" y="582" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_18_di" bpmnElement="Flow_ToBe_18">
+        <di:waypoint x="2505" y="600" />
+        <di:waypoint x="2528" y="600" />
+        <di:waypoint x="2528" y="400" />
+        <di:waypoint x="2550" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_19_di" bpmnElement="Flow_ToBe_19">
+        <di:waypoint x="2670" y="400" />
+        <di:waypoint x="2715" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_20_di" bpmnElement="Flow_ToBe_20">
+        <di:waypoint x="2835" y="400" />
+        <di:waypoint x="2858" y="400" />
+        <di:waypoint x="2858" y="200" />
+        <di:waypoint x="2880" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToBe_21_di" bpmnElement="Flow_ToBe_21">
+        <di:waypoint x="3000" y="200" />
+        <di:waypoint x="3087" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Annotation_ToBe_Inicio_di" bpmnElement="Association_Annotation_ToBe_Inicio">
+        <di:waypoint x="813" y="348" />
+        <di:waypoint x="815" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Annotation_ToBe_Seletores_di" bpmnElement="Association_Annotation_ToBe_Seletores">
+        <di:waypoint x="1638" y="548" />
+        <di:waypoint x="1640" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Association_Annotation_ToBe_Excecoes_di" bpmnElement="Association_Annotation_ToBe_Excecoes">
+        <di:waypoint x="2628" y="348" />
+        <di:waypoint x="2630" y="360" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

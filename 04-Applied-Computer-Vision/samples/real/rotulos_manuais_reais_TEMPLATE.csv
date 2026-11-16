@@ -1,0 +1,4 @@
+arquivo,rotulo_manual,cenario,descricao,data_coleta,tipo_local,autorizacao_uso,sem_pessoas_ou_placas,metadados_removidos,rotulado_por,segundo_rotulador,rotulo_segundo_rotulador,observacao
+real_001.jpg,POSSIBLE_POTHOLE,buraco,[PREENCHER: descrição objetiva do que aparece na foto],[PREENCHER: AAAA-MM-DD],[PREENCHER: calçada | travessia | rampa],[PREENCHER: sim/não],[PREENCHER: sim/não],[PREENCHER: sim/não],[PREENCHER: nome ou iniciais do integrante],[PREENCHER: nome ou iniciais],[PREENCHER: rótulo dado pela segunda pessoa],[PREENCHER: dúvidas ou condições da foto]
+real_002.jpg,NOT_IDENTIFIED,calcada_lisa,[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER]
+real_003.jpg,INCONCLUSIVE,foto_escura,[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER],[PREENCHER]

@@ -1,0 +1,9 @@
+Pasta de montagem da entrega da disciplina 05 (RPA).
+
+Coloque aqui (a equipe produz estes arquivos; nada aqui e gerado com conteudo inventado):
+  RELATORIO_RPA_AcessaCidade.pdf  -> gerado por scripts\gerar_pdf_relatorio.py a partir de docs\RELATORIO_RPA.md (depois de preenchido)
+  link_video.txt                  -> UMA linha com o link real do video (YouTube nao listado, Drive ou OneDrive)
+
+Depois rode:  powershell -ExecutionPolicy Bypass -File ..\scripts\gerar_zip_entrega.ps1
+O ZIP sai em: entrega\AcessaCidade_RPA_entrega.zip
+Instrucoes completas: docs\INSTRUCOES_ZIP_ENTREGA.md

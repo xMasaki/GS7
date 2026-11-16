@@ -1,0 +1,3 @@
+Pasta para os prints e evidencias da disciplina 05 (RPA).
+Nomes sugeridos e como produzir cada um: docs\EVIDENCIAS_NECESSARIAS.md (E1 a E12).
+Somente dados SIMULADOS nos prints. Nenhum print foi gerado automaticamente.

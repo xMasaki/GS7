@@ -1,0 +1,74 @@
+# =====================================================================
+# Regras de alerta — AcessaCidade
+# Métricas: docs/CONTRATOS_DE_INTEGRACAO.md, seção 10.
+# Os jobs da aplicação começam com "acessacidade-" (local ou azure).
+# =====================================================================
+groups:
+  - name: acessacidade-disponibilidade
+    rules:
+      - alert: AcessaCidadeIndisponivel
+        expr: up{job=~"acessacidade-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          sinal_de_ouro: erros
+        annotations:
+          summary: "AcessaCidade fora do ar ({{ $labels.job }})"
+          description: "O Prometheus não consegue coletar {{ $labels.instance }}/metrics há mais de 1 minuto. Cidadãos não conseguem registrar nem consultar denúncias."
+          acao: "Verifique o container (docker compose ps / az container show), os logs (docker compose logs app / az container logs) e o endpoint /health."
+
+  - name: acessacidade-sinais-de-ouro
+    rules:
+      - alert: AcessaCidadeTaxaErros5xxAlta
+        expr: |
+          (
+            sum by (job) (rate(acessacidade_http_requests_total{status=~"5.."}[5m]))
+            /
+            sum by (job) (rate(acessacidade_http_requests_total[5m]))
+          ) > 0.05
+          and
+          sum by (job) (rate(acessacidade_http_requests_total[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          sinal_de_ouro: erros
+        annotations:
+          summary: "Mais de 5% das requisições com erro 5xx ({{ $labels.job }})"
+          description: "Taxa de erros 5xx em {{ $value | humanizePercentage }} nos últimos 5 minutos."
+          acao: "Consulte os logs da aplicação e o painel de erros do dashboard 'AcessaCidade — Sinais de Ouro'."
+
+      - alert: AcessaCidadeLatenciaP95Alta
+        expr: |
+          histogram_quantile(0.95,
+            sum by (job, le) (rate(acessacidade_http_request_duration_seconds_bucket{route!~"/metrics|/health"}[5m]))
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+          sinal_de_ouro: latencia
+        annotations:
+          summary: "Latência p95 acima de 2 s ({{ $labels.job }})"
+          description: "O percentil 95 da duração das requisições está em {{ $value | humanizeDuration }} há 5 minutos."
+          acao: "Verifique a saturação (CPU, memória, requisições em andamento) e a duração da triagem de imagens (acessacidade_visao_duracao_seconds)."
+
+      - alert: AcessaCidadeMuitas4xx
+        expr: sum by (job) (rate(acessacidade_http_requests_total{status=~"4.."}[2m])) > 0.5
+        for: 1m
+        labels:
+          severity: warning
+          sinal_de_ouro: erros
+        annotations:
+          summary: "Muitas respostas 4xx ({{ $labels.job }})"
+          description: "Mais de 30 respostas 4xx por minuto ({{ $value | humanize }} req/s). Pode indicar varredura, links quebrados ou cliente com erro. Também é o alerta usado na demonstração segura (scripts/gerar_trafego_demo.py --modo erros404)."
+          acao: "Identifique a rota no painel de erros 4xx por rota. Se for a demonstração, aguarde o fim do script: o alerta volta a 'inactive' sozinho."
+
+      - alert: AcessaCidadeSaturacaoMemoria
+        expr: process_resident_memory_bytes{job=~"acessacidade-.*"} > 1.2e9
+        for: 5m
+        labels:
+          severity: warning
+          sinal_de_ouro: saturacao
+        annotations:
+          summary: "Uso de memória acima de 1,2 GB ({{ $labels.job }})"
+          description: "Memória residente em {{ $value | humanize1024 }}B; o container tem 1,5 GB. Risco de reinício por falta de memória."
+          acao: "Avalie aumentar container_memory no Terraform ou investigar uploads muito grandes."

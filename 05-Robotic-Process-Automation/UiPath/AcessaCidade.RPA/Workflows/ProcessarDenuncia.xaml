@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AcessaCidade.RPA - Workflows/ProcessarDenuncia.xaml
+  Cadastra UMA denuncia (uma linha da planilha) no formulario web do AcessaCidade:
+  <URL_ACESSACIDADE>/#/registrar?canal=rpa  (o formulario envia origem=RPA).
+  Seletores pelos ids do contrato (docs/CONTRATOS_DE_INTEGRACAO.md, secao 7).
+  Atividades UI "classicas" (Attach Browser / Type Into / Select Item / Click / Get Text / Element Exists).
+  Estrutura escrita fora do UiPath Studio: valide os seletores com "Indicate on screen"/UI Explorer
+  (ver docs/CONFIGURACAO_SELETORES.md).
+-->
+<Activity mc:Ignorable="sap sap2010" x:Class="ProcessarDenuncia" mva:VisualBasic.Settings="{x:Null}"
+ sap2010:WorkflowViewState.IdRef="ActivityBuilder_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+ xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common"
+ xmlns:ui="http://schemas.uipath.com/workflow/activities"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_Linha" Type="InArgument(sd:DataRow)" />
+    <x:Property Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+    <x:Property Name="in_Navegador" Type="InArgument(ui:Browser)" />
+    <x:Property Name="out_Protocolo" Type="OutArgument(x:String)" />
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text.RegularExpressions</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Processar denúncia (uma linha)" sap2010:WorkflowViewState.IdRef="Sequence_1"
+   sap2010:Annotation.AnnotationText="Fluxo de UMA linha: ler campos → validar regras de negócio (BusinessRuleException se inválida) → abrir #/registrar?canal=rpa → preencher campos pelos ids do contrato → anexar foto (opcional) → marcar consentimento → enviar → aguardar #protocolo-gerado ou #erro-envio → devolver o protocolo.">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="urlBase" />
+      <Variable x:TypeArguments="x:String" Name="urlFormulario" />
+      <Variable x:TypeArguments="x:String" Name="nome" />
+      <Variable x:TypeArguments="x:String" Name="logradouro" />
+      <Variable x:TypeArguments="x:String" Name="numero" />
+      <Variable x:TypeArguments="x:String" Name="bairro" />
+      <Variable x:TypeArguments="x:String" Name="cidade" />
+      <Variable x:TypeArguments="x:String" Name="referencia" />
+      <Variable x:TypeArguments="x:String" Name="tipoObstaculo" />
+      <Variable x:TypeArguments="x:String" Name="descricao" />
+      <Variable x:TypeArguments="x:String" Name="impacto" />
+      <Variable x:TypeArguments="x:String" Name="arquivoImagem" />
+      <Variable x:TypeArguments="x:String" Name="caminhoImagem" />
+      <Variable x:TypeArguments="x:String" Name="modoUpload" />
+      <Variable x:TypeArguments="x:String" Name="appNavegador" />
+      <Variable x:TypeArguments="x:Int32" Name="timeoutMs" />
+      <Variable x:TypeArguments="s:String[]" Name="tiposValidos" />
+      <Variable x:TypeArguments="s:String[]" Name="impactosValidos" />
+      <Variable x:TypeArguments="x:String" Name="errosValidacao" />
+      <Variable x:TypeArguments="x:Boolean" Name="formularioCarregado" />
+      <Variable x:TypeArguments="x:Boolean" Name="finalizado" />
+      <Variable x:TypeArguments="s:DateTime" Name="limiteEspera" />
+      <Variable x:TypeArguments="x:String" Name="protocolo" />
+      <Variable x:TypeArguments="x:String" Name="mensagemErro" />
+      <Variable x:TypeArguments="x:Boolean" Name="caixaSucessoExiste" />
+    </Sequence.Variables>
+
+    <!-- ===================== 1. Ler dados da linha e da configuração ===================== -->
+    <Sequence DisplayName="1. Ler dados da linha e da configuração" sap2010:WorkflowViewState.IdRef="Sequence_2"
+     sap2010:Annotation.AnnotationText="Copia as colunas da planilha para variáveis (com Trim) e lê URL, timeout, navegador e modo de upload do Config.">
+      <Assign DisplayName="urlBase" sap2010:WorkflowViewState.IdRef="Assign_1">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[urlBase]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Config("URL_ACESSACIDADE").ToString.Trim.TrimEnd("/"c)]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="urlFormulario (#/registrar?canal=rpa)" sap2010:WorkflowViewState.IdRef="Assign_2"
+       sap2010:Annotation.AnnotationText="canal=rpa faz o formulário enviar origem=RPA (contrato, seção 7).">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[urlFormulario]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[urlBase + "/#/registrar?canal=rpa"]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="timeoutMs" sap2010:WorkflowViewState.IdRef="Assign_3"
+       sap2010:Annotation.AnnotationText="TIMEOUT_SEGUNDOS do Config (mínimo de 5 s) convertido para milissegundos.">
+        <Assign.To><OutArgument x:TypeArguments="x:Int32">[timeoutMs]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:Int32">[CInt(Math.Max(5, Val(in_Config("TIMEOUT_SEGUNDOS").ToString))) * 1000]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="modoUpload" sap2010:WorkflowViewState.IdRef="Assign_4"
+       sap2010:Annotation.AnnotationText="DIALOGO (padrão), TYPEINTO ou IGNORAR. Ver docs/CONFIGURACAO_SELETORES.md, seção Fotografia.">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[modoUpload]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[If(in_Config.ContainsKey("MODO_UPLOAD_FOTO"), in_Config("MODO_UPLOAD_FOTO").ToString.Trim.ToUpper, "DIALOGO")]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="appNavegador (processo do navegador)" sap2010:WorkflowViewState.IdRef="Assign_5"
+       sap2010:Annotation.AnnotationText="Nome do executável usado no seletor do diálogo 'Abrir' do Windows.">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[appNavegador]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[If(in_Config("NAVEGADOR").ToString.Trim.ToUpper = "CHROME", "chrome.exe", "msedge.exe")]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="nome" sap2010:WorkflowViewState.IdRef="Assign_6">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[nome]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Nome").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="logradouro" sap2010:WorkflowViewState.IdRef="Assign_7">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[logradouro]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Logradouro").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="numero" sap2010:WorkflowViewState.IdRef="Assign_8">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[numero]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Numero").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="bairro" sap2010:WorkflowViewState.IdRef="Assign_9">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[bairro]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Bairro").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="cidade" sap2010:WorkflowViewState.IdRef="Assign_10">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[cidade]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Cidade").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="referencia" sap2010:WorkflowViewState.IdRef="Assign_11">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[referencia]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Ponto_Referencia").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="tipoObstaculo (rótulo)" sap2010:WorkflowViewState.IdRef="Assign_12">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[tipoObstaculo]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Tipo_Obstaculo").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="descricao" sap2010:WorkflowViewState.IdRef="Assign_13">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[descricao]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Descricao").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="impacto (rótulo)" sap2010:WorkflowViewState.IdRef="Assign_14">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[impacto]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Impacto").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="arquivoImagem" sap2010:WorkflowViewState.IdRef="Assign_15">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[arquivoImagem]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Linha("Caminho_Imagem").ToString.Trim]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="caminhoImagem (absoluto)" sap2010:WorkflowViewState.IdRef="Assign_16"
+       sap2010:Annotation.AnnotationText="Caminho_Imagem é relativo a PASTA_IMAGENS (data\samples\fotos); se já for absoluto, Path.Combine o mantém. Vazio = denúncia sem foto.">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[caminhoImagem]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[If(arquivoImagem = "", "", Path.GetFullPath(Path.Combine(in_Config("PASTA_IMAGENS").ToString, arquivoImagem)))]</InArgument></Assign.Value>
+      </Assign>
+    </Sequence>
+
+    <!-- ===================== 2. Validar regras de negócio ===================== -->
+    <Sequence DisplayName="2. Validar regras de negócio" sap2010:WorkflowViewState.IdRef="Sequence_3"
+     sap2010:Annotation.AnnotationText="Mesmas regras da API (contrato, seção 4.2) + rótulos exatos das seções 3.1/3.2. Linha inválida NÃO é enviada: lança BusinessRuleException (status FALHA_NEGOCIO na planilha de saída) para o operador corrigir.">
+      <Assign DisplayName="tiposValidos (contrato 3.1)" sap2010:WorkflowViewState.IdRef="Assign_17">
+        <Assign.To><OutArgument x:TypeArguments="s:String[]">[tiposValidos]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="s:String[]">[New String() {"Buraco na calçada", "Buraco na via ou travessia", "Calçada quebrada ou desnivelada", "Rampa ausente ou irregular", "Piso tátil ausente ou danificado", "Obstáculo fixo (poste, lixeira, placa)", "Obstáculo temporário (entulho, veículo, obra)", "Outro"}]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="impactosValidos (contrato 3.2)" sap2010:WorkflowViewState.IdRef="Assign_18">
+        <Assign.To><OutArgument x:TypeArguments="s:String[]">[impactosValidos]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="s:String[]">[New String() {"Impede a passagem", "Dificulta a passagem", "Risco de queda ou acidente", "Baixo impacto"}]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="errosValidacao" sap2010:WorkflowViewState.IdRef="Assign_19"
+       sap2010:Annotation.AnnotationText="Junta todas as mensagens de erro da linha separadas por '; ' (vazio = linha válida).">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[errosValidacao]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[String.Join("; ", New String() {If(logradouro.Length &lt; 3 OrElse logradouro.Length &gt; 120, "Logradouro deve ter de 3 a 120 caracteres (tem " + logradouro.Length.ToString + ")", ""), If(bairro.Length &lt; 2 OrElse bairro.Length &gt; 80, "Bairro deve ter de 2 a 80 caracteres", ""), If(descricao.Length &lt; 10 OrElse descricao.Length &gt; 1000, "Descrição deve ter de 10 a 1000 caracteres (tem " + descricao.Length.ToString + ")", ""), If(numero.Length &gt; 10, "Número deve ter até 10 caracteres", ""), If(nome.Length &gt; 80, "Nome deve ter até 80 caracteres", ""), If(cidade.Length &gt; 80, "Cidade deve ter até 80 caracteres", ""), If(referencia.Length &gt; 150, "Ponto de referência deve ter até 150 caracteres", ""), If(Not tiposValidos.Contains(tipoObstaculo), "Tipo_Obstaculo '" + tipoObstaculo + "' não é um rótulo válido do formulário", ""), If(Not impactosValidos.Contains(impacto), "Impacto '" + impacto + "' não é um rótulo válido do formulário", ""), If(caminhoImagem &lt;&gt; "" AndAlso modoUpload &lt;&gt; "IGNORAR" AndAlso Not File.Exists(caminhoImagem), "Imagem não encontrada: " + caminhoImagem, "")}.Where(Function(m) m &lt;&gt; "").ToArray())]</InArgument></Assign.Value>
+      </Assign>
+      <If Condition="[errosValidacao &lt;&gt; &quot;&quot;]" DisplayName="Linha inválida?" sap2010:WorkflowViewState.IdRef="If_1">
+        <If.Then>
+          <Throw DisplayName="Throw BusinessRuleException - dados inválidos" sap2010:WorkflowViewState.IdRef="Throw_1"
+           sap2010:Annotation.AnnotationText="Exceção de NEGÓCIO: não adianta tentar de novo; o operador corrige a planilha.">
+            <Throw.Exception>
+              <InArgument x:TypeArguments="s:Exception">[New BusinessRuleException("Dados inválidos na planilha: " + errosValidacao)]</InArgument>
+            </Throw.Exception>
+          </Throw>
+        </If.Then>
+      </If>
+    </Sequence>
+
+    <!-- ===================== 3. Abrir formulário e preencher campos ===================== -->
+    <ui:BrowserScope Browser="[in_Navegador]" Selector="{x:Null}" UiBrowser="{x:Null}"
+     DisplayName="3. Attach Browser - abrir formulário e preencher" sap2010:WorkflowViewState.IdRef="BrowserScope_1"
+     sap2010:Annotation.AnnotationText="Usa o navegador aberto no Main.xaml. Navega para #/ e depois para #/registrar?canal=rpa (garante formulário limpo a cada linha). Seletores parciais por id (contrato, seção 7).">
+      <ui:BrowserScope.Body>
+        <ActivityAction x:TypeArguments="x:Object">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="x:Object" Name="ContextTarget" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Do" sap2010:WorkflowViewState.IdRef="Sequence_4">
+            <ui:NavigateTo DisplayName="Navigate To - início (#/)" Url="[urlBase + &quot;/#/&quot;]" sap2010:WorkflowViewState.IdRef="NavigateTo_1"
+             sap2010:Annotation.AnnotationText="Sai da rota do formulário para forçar a SPA a recriar o formulário vazio." />
+            <ui:NavigateTo DisplayName="Navigate To - #/registrar?canal=rpa" Url="[urlFormulario]" sap2010:WorkflowViewState.IdRef="NavigateTo_2" />
+            <ui:ElementExists DisplayName="Element Exists - #form-denuncia" Exists="[formularioCarregado]" sap2010:WorkflowViewState.IdRef="ElementExists_1"
+             sap2010:Annotation.AnnotationText="Espera o formulário aparecer (até TIMEOUT_SEGUNDOS).">
+              <ui:ElementExists.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='form-denuncia' tag='FORM' /&gt;" TimeoutMS="[timeoutMs]" WaitForReady="INTERACTIVE" />
+              </ui:ElementExists.Target>
+            </ui:ElementExists>
+            <If Condition="[Not formularioCarregado]" DisplayName="Formulário carregou?" sap2010:WorkflowViewState.IdRef="If_2">
+              <If.Then>
+                <Throw DisplayName="Throw - formulário não carregou" sap2010:WorkflowViewState.IdRef="Throw_2"
+                 sap2010:Annotation.AnnotationText="Exceção de SISTEMA (aplicação fora do ar, URL errada ou extensão do navegador desativada).">
+                  <Throw.Exception>
+                    <InArgument x:TypeArguments="s:Exception">[New Exception("O formulário #form-denuncia não apareceu em " + (timeoutMs \ 1000).ToString + " s. Verifique URL_ACESSACIDADE (" + urlFormulario + ") e a extensão UiPath do navegador.")]</InArgument>
+                  </Throw.Exception>
+                </Throw>
+              </If.Then>
+            </If>
+            <ui:TypeInto Activate="False" ClickBeforeTyping="False" EmptyField="True" SimulateType="True" Text="[nome]"
+             DisplayName="Type Into - #campo-nome" sap2010:WorkflowViewState.IdRef="TypeInto_1"
+             sap2010:Annotation.AnnotationText="Opcional (até 80). Planilha usa identificação fictícia 'Robô Teste NN'. A API nunca devolve o nome.">
+              <ui:TypeInto.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-nome' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:TypeInto.Target>
+            </ui:TypeInto>
+            <ui:TypeInto Activate="False" ClickBeforeTyping="False" EmptyField="True" SimulateType="True" Text="[logradouro]"
+             DisplayName="Type Into - #campo-logradouro" sap2010:WorkflowViewState.IdRef="TypeInto_2"
+             sap2010:Annotation.AnnotationText="Obrigatório (3 a 120 caracteres).">
+              <ui:TypeInto.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-logradouro' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:TypeInto.Target>
+            </ui:TypeInto>
+            <ui:TypeInto Activate="False" ClickBeforeTyping="False" EmptyField="True" SimulateType="True" Text="[numero]"
+             DisplayName="Type Into - #campo-numero" sap2010:WorkflowViewState.IdRef="TypeInto_3"
+             sap2010:Annotation.AnnotationText="Opcional (até 10; ex.: 120 ou S/N).">
+              <ui:TypeInto.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-numero' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:TypeInto.Target>
+            </ui:TypeInto>
+            <ui:TypeInto Activate="False" ClickBeforeTyping="False" EmptyField="True" SimulateType="True" Text="[bairro]"
+             DisplayName="Type Into - #campo-bairro" sap2010:WorkflowViewState.IdRef="TypeInto_4"
+             sap2010:Annotation.AnnotationText="Obrigatório (2 a 80 caracteres).">
+              <ui:TypeInto.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-bairro' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:TypeInto.Target>
+            </ui:TypeInto>
+            <ui:TypeInto Activate="False" ClickBeforeTyping="False" EmptyField="True" SimulateType="True" Text="[cidade]"
+             DisplayName="Type Into - #campo-cidade" sap2010:WorkflowViewState.IdRef="TypeInto_5"
+             sap2010:Annotation.AnnotationText="Opcional. Dados simulados usam a cidade fictícia 'Cidade Exemplo'.">
+              <ui:TypeInto.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-cidade' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:TypeInto.Target>
+            </ui:TypeInto>
+            <ui:TypeInto Activate="False" ClickBeforeTyping="False" EmptyField="True" SimulateType="True" Text="[referencia]"
+             DisplayName="Type Into - #campo-referencia" sap2010:WorkflowViewState.IdRef="TypeInto_6"
+             sap2010:Annotation.AnnotationText="Opcional (até 150).">
+              <ui:TypeInto.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-referencia' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:TypeInto.Target>
+            </ui:TypeInto>
+            <ui:SelectItem DisplayName="Select Item - #campo-tipo" Item="[tipoObstaculo]" sap2010:WorkflowViewState.IdRef="SelectItem_1"
+             sap2010:Annotation.AnnotationText="Seleciona pelo TEXTO VISÍVEL da opção (rótulo do contrato 3.1, ex.: 'Buraco na calçada').">
+              <ui:SelectItem.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-tipo' tag='SELECT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:SelectItem.Target>
+            </ui:SelectItem>
+            <ui:TypeInto Activate="False" ClickBeforeTyping="False" EmptyField="True" SimulateType="True" Text="[descricao]"
+             DisplayName="Type Into - #campo-descricao" sap2010:WorkflowViewState.IdRef="TypeInto_7"
+             sap2010:Annotation.AnnotationText="Obrigatório (10 a 1000 caracteres). Textarea.">
+              <ui:TypeInto.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-descricao' tag='TEXTAREA' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:TypeInto.Target>
+            </ui:TypeInto>
+            <ui:SelectItem DisplayName="Select Item - #campo-impacto" Item="[impacto]" sap2010:WorkflowViewState.IdRef="SelectItem_2"
+             sap2010:Annotation.AnnotationText="Seleciona pelo TEXTO VISÍVEL da opção (rótulo do contrato 3.2, ex.: 'Impede a passagem').">
+              <ui:SelectItem.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-impacto' tag='SELECT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:SelectItem.Target>
+            </ui:SelectItem>
+          </Sequence>
+        </ActivityAction>
+      </ui:BrowserScope.Body>
+    </ui:BrowserScope>
+
+    <!-- ===================== 4. Fotografia (opcional) ===================== -->
+    <If Condition="[caminhoImagem &lt;&gt; &quot;&quot; AndAlso modoUpload &lt;&gt; &quot;IGNORAR&quot;]" DisplayName="4. Linha tem fotografia?" sap2010:WorkflowViewState.IdRef="If_3"
+     sap2010:Annotation.AnnotationText="Fotografia é opcional. Duas opções (MODO_UPLOAD_FOTO no Config.xlsx): DIALOGO = clique real em #campo-foto + digitar o caminho no diálogo 'Abrir' do Windows (funciona em Edge/Chrome); TYPEINTO = digitar o caminho direto no input file (só se o seu navegador/versão da extensão suportar).">
+      <If.Then>
+        <If Condition="[modoUpload = &quot;TYPEINTO&quot;]" DisplayName="Modo de upload = TYPEINTO?" sap2010:WorkflowViewState.IdRef="If_4">
+          <If.Then>
+            <ui:BrowserScope Browser="[in_Navegador]" Selector="{x:Null}" UiBrowser="{x:Null}"
+             DisplayName="Attach Browser - foto via Type Into" sap2010:WorkflowViewState.IdRef="BrowserScope_2">
+              <ui:BrowserScope.Body>
+                <ActivityAction x:TypeArguments="x:Object">
+                  <ActivityAction.Argument>
+                    <DelegateInArgument x:TypeArguments="x:Object" Name="ContextTarget" />
+                  </ActivityAction.Argument>
+                  <ui:TypeInto Activate="False" ClickBeforeTyping="False" EmptyField="False" SimulateType="True" Text="[caminhoImagem]"
+                   DisplayName="Type Into - #campo-foto (input file)" sap2010:WorkflowViewState.IdRef="TypeInto_8"
+                   sap2010:Annotation.AnnotationText="Opção 2 (TYPEINTO). Navegadores Chromium normalmente bloqueiam valor programático em input file; teste antes de usar.">
+                    <ui:TypeInto.Target>
+                      <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-foto' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+                    </ui:TypeInto.Target>
+                  </ui:TypeInto>
+                </ActivityAction>
+              </ui:BrowserScope.Body>
+            </ui:BrowserScope>
+          </If.Then>
+          <If.Else>
+            <Sequence DisplayName="Foto via diálogo 'Abrir' do Windows" sap2010:WorkflowViewState.IdRef="Sequence_5"
+             sap2010:Annotation.AnnotationText="Opção 1 (DIALOGO, padrão). Clique com mouse real (SimulateClick=False) abre o seletor de arquivos; o caminho absoluto é digitado no campo 'Nome' do diálogo e confirmado com Enter.">
+              <ui:BrowserScope Browser="[in_Navegador]" Selector="{x:Null}" UiBrowser="{x:Null}"
+               DisplayName="Attach Browser - clicar em #campo-foto" sap2010:WorkflowViewState.IdRef="BrowserScope_3">
+                <ui:BrowserScope.Body>
+                  <ActivityAction x:TypeArguments="x:Object">
+                    <ActivityAction.Argument>
+                      <DelegateInArgument x:TypeArguments="x:Object" Name="ContextTarget" />
+                    </ActivityAction.Argument>
+                    <ui:Click ClickType="CLICK_SINGLE" MouseButton="BTN_LEFT" SimulateClick="False" SendWindowMessages="False" KeyModifiers="None"
+                     DisplayName="Click - #campo-foto (abre o diálogo)" sap2010:WorkflowViewState.IdRef="Click_1"
+                     sap2010:Annotation.AnnotationText="Clique de hardware: navegadores só abrem o seletor de arquivos com interação real. Se o input estiver estilizado/oculto, indique o rótulo/botão visível que o aciona.">
+                      <ui:Click.Target>
+                        <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-foto' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+                      </ui:Click.Target>
+                    </ui:Click>
+                  </ActivityAction>
+                </ui:BrowserScope.Body>
+              </ui:BrowserScope>
+              <ui:TypeInto Activate="True" ClickBeforeTyping="True" EmptyField="True" SimulateType="False" Text="[caminhoImagem + &quot;[k(enter)]&quot;]"
+               DisplayName="Type Into - diálogo Abrir (campo Nome do arquivo)" sap2010:WorkflowViewState.IdRef="TypeInto_9"
+               sap2010:Annotation.AnnotationText="Seletor COMPLETO (janela de diálogo #32770 do processo do navegador; ctrlid 1148 = caixa 'Nome:'). Reindique com Indicate on screen se o seu Windows usar outro layout.">
+                <ui:TypeInto.Target>
+                  <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="[&quot;&lt;wnd app='&quot; + appNavegador + &quot;' cls='#32770' /&gt;&lt;wnd ctrlid='1148' /&gt;&quot;]" TimeoutMS="[timeoutMs]" WaitForReady="INTERACTIVE" />
+                </ui:TypeInto.Target>
+              </ui:TypeInto>
+              <Delay DisplayName="Delay - aguardar anexar a foto" Duration="00:00:01.5000000" sap2010:WorkflowViewState.IdRef="Delay_1" />
+            </Sequence>
+          </If.Else>
+        </If>
+      </If.Then>
+      <If.Else>
+        <ui:LogMessage DisplayName="Log - sem fotografia" Level="Trace" Message="[&quot;Linha sem fotografia (ou MODO_UPLOAD_FOTO=IGNORAR).&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_1" />
+      </If.Else>
+    </If>
+
+    <!-- ===================== 5. Consentimento, envio e confirmação ===================== -->
+    <ui:BrowserScope Browser="[in_Navegador]" Selector="{x:Null}" UiBrowser="{x:Null}"
+     DisplayName="5. Attach Browser - enviar e capturar protocolo" sap2010:WorkflowViewState.IdRef="BrowserScope_4"
+     sap2010:Annotation.AnnotationText="Marca o consentimento, envia e aguarda (até TIMEOUT_SEGUNDOS) o protocolo em #protocolo-gerado (formato AC-AAAA-NNNNNN) ou uma mensagem em #erro-envio.">
+      <ui:BrowserScope.Body>
+        <ActivityAction x:TypeArguments="x:Object">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="x:Object" Name="ContextTarget" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Do" sap2010:WorkflowViewState.IdRef="Sequence_6">
+            <ui:Check Action="Check" DisplayName="Check - #campo-consentimento" sap2010:WorkflowViewState.IdRef="Check_1"
+             sap2010:Annotation.AnnotationText="Consentimento obrigatório (a API exige consentimento=true). Os dados são de teste/simulados.">
+              <ui:Check.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='campo-consentimento' tag='INPUT' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:Check.Target>
+            </ui:Check>
+            <ui:Click ClickType="CLICK_SINGLE" MouseButton="BTN_LEFT" SimulateClick="True" SendWindowMessages="False" KeyModifiers="None"
+             DisplayName="Click - #botao-enviar" sap2010:WorkflowViewState.IdRef="Click_2">
+              <ui:Click.Target>
+                <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='botao-enviar' /&gt;" WaitForReady="INTERACTIVE" />
+              </ui:Click.Target>
+            </ui:Click>
+            <Assign DisplayName="limiteEspera" sap2010:WorkflowViewState.IdRef="Assign_20">
+              <Assign.To><OutArgument x:TypeArguments="s:DateTime">[limiteEspera]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="s:DateTime">[DateTime.Now.AddMilliseconds(timeoutMs)]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="finalizado = False" sap2010:WorkflowViewState.IdRef="Assign_21">
+              <Assign.To><OutArgument x:TypeArguments="x:Boolean">[finalizado]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:Boolean">False</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="protocolo = vazio" sap2010:WorkflowViewState.IdRef="Assign_22">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[protocolo]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
+            </Assign>
+            <Assign DisplayName="mensagemErro = vazio" sap2010:WorkflowViewState.IdRef="Assign_23">
+              <Assign.To><OutArgument x:TypeArguments="x:String">[mensagemErro]</OutArgument></Assign.To>
+              <Assign.Value><InArgument x:TypeArguments="x:String">[String.Empty]</InArgument></Assign.Value>
+            </Assign>
+            <DoWhile Condition="[Not finalizado AndAlso DateTime.Now &lt; limiteEspera]" DisplayName="Do While - aguardar resultado do envio" sap2010:WorkflowViewState.IdRef="DoWhile_1"
+             sap2010:Annotation.AnnotationText="Polling a cada 0,5 s. Não depende de visibilidade: verifica o TEXTO de #protocolo-gerado (regex do contrato 3.7) e de #erro-envio, que ficam vazios até o envio terminar.">
+              <Sequence DisplayName="Verificar sucesso ou erro" sap2010:WorkflowViewState.IdRef="Sequence_7">
+                <ui:GetValue ContinueOnError="True" DisplayName="Get Text - #protocolo-gerado" Value="[protocolo]" sap2010:WorkflowViewState.IdRef="GetValue_1">
+                  <ui:GetValue.Target>
+                    <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='protocolo-gerado' /&gt;" TimeoutMS="2000" WaitForReady="NONE" />
+                  </ui:GetValue.Target>
+                </ui:GetValue>
+                <If Condition="[Regex.IsMatch(If(protocolo, String.Empty).Trim, &quot;^AC-\d{4}-\d{6}$&quot;)]" DisplayName="Protocolo válido?" sap2010:WorkflowViewState.IdRef="If_5">
+                  <If.Then>
+                    <Assign DisplayName="finalizado = True (sucesso)" sap2010:WorkflowViewState.IdRef="Assign_24">
+                      <Assign.To><OutArgument x:TypeArguments="x:Boolean">[finalizado]</OutArgument></Assign.To>
+                      <Assign.Value><InArgument x:TypeArguments="x:Boolean">True</InArgument></Assign.Value>
+                    </Assign>
+                  </If.Then>
+                  <If.Else>
+                    <Sequence DisplayName="Verificar #erro-envio" sap2010:WorkflowViewState.IdRef="Sequence_8">
+                      <ui:GetValue ContinueOnError="True" DisplayName="Get Text - #erro-envio" Value="[mensagemErro]" sap2010:WorkflowViewState.IdRef="GetValue_2">
+                        <ui:GetValue.Target>
+                          <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='erro-envio' /&gt;" TimeoutMS="1000" WaitForReady="NONE" />
+                        </ui:GetValue.Target>
+                      </ui:GetValue>
+                      <If Condition="[Not String.IsNullOrWhiteSpace(mensagemErro)]" DisplayName="Apareceu erro?" sap2010:WorkflowViewState.IdRef="If_6">
+                        <If.Then>
+                          <Assign DisplayName="finalizado = True (erro)" sap2010:WorkflowViewState.IdRef="Assign_25">
+                            <Assign.To><OutArgument x:TypeArguments="x:Boolean">[finalizado]</OutArgument></Assign.To>
+                            <Assign.Value><InArgument x:TypeArguments="x:Boolean">True</InArgument></Assign.Value>
+                          </Assign>
+                        </If.Then>
+                        <If.Else>
+                          <Delay DisplayName="Delay 0,5 s" Duration="00:00:00.5000000" sap2010:WorkflowViewState.IdRef="Delay_2" />
+                        </If.Else>
+                      </If>
+                    </Sequence>
+                  </If.Else>
+                </If>
+              </Sequence>
+            </DoWhile>
+            <If Condition="[Regex.IsMatch(If(protocolo, String.Empty).Trim, &quot;^AC-\d{4}-\d{6}$&quot;)]" DisplayName="Cadastro confirmado?" sap2010:WorkflowViewState.IdRef="If_7">
+              <If.Then>
+                <Sequence DisplayName="Sucesso" sap2010:WorkflowViewState.IdRef="Sequence_9">
+                  <Assign DisplayName="out_Protocolo" sap2010:WorkflowViewState.IdRef="Assign_26">
+                    <Assign.To><OutArgument x:TypeArguments="x:String">[out_Protocolo]</OutArgument></Assign.To>
+                    <Assign.Value><InArgument x:TypeArguments="x:String">[protocolo.Trim]</InArgument></Assign.Value>
+                  </Assign>
+                  <ui:ElementExists DisplayName="Element Exists - #resultado-envio (confirmação)" Exists="[caixaSucessoExiste]" sap2010:WorkflowViewState.IdRef="ElementExists_2"
+                   sap2010:Annotation.AnnotationText="Confirma o cadastro: a caixa de sucesso #resultado-envio deve existir junto com o protocolo. Se não existir, apenas registra aviso (o protocolo no formato do contrato já é a evidência principal).">
+                    <ui:ElementExists.Target>
+                      <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='resultado-envio' /&gt;" TimeoutMS="3000" WaitForReady="NONE" />
+                    </ui:ElementExists.Target>
+                  </ui:ElementExists>
+                  <If Condition="[Not caixaSucessoExiste]" DisplayName="Caixa de sucesso ausente?" sap2010:WorkflowViewState.IdRef="If_9">
+                    <If.Then>
+                      <ui:LogMessage DisplayName="Log - aviso caixa de sucesso" Level="Warn" Message="[&quot;Protocolo capturado, mas #resultado-envio não foi encontrado. Revise o seletor.&quot;]" sap2010:WorkflowViewState.IdRef="LogMessage_3" />
+                    </If.Then>
+                  </If>
+                  <ui:LogMessage DisplayName="Log - protocolo capturado" Level="Info" Message="[&quot;Denúncia cadastrada. Protocolo: &quot; + protocolo.Trim]" sap2010:WorkflowViewState.IdRef="LogMessage_2" />
+                  <ui:Click ClickType="CLICK_SINGLE" MouseButton="BTN_LEFT" SimulateClick="True" SendWindowMessages="False" KeyModifiers="None" ContinueOnError="True"
+                   DisplayName="Click - #botao-nova-denuncia" sap2010:WorkflowViewState.IdRef="Click_3"
+                   sap2010:Annotation.AnnotationText="Limpa e reexibe o formulário. ContinueOnError: a próxima linha navega de novo para o formulário de qualquer forma.">
+                    <ui:Click.Target>
+                      <ui:Target ClippingRegion="{x:Null}" Element="{x:Null}" Selector="&lt;webctrl id='botao-nova-denuncia' /&gt;" TimeoutMS="5000" WaitForReady="INTERACTIVE" />
+                    </ui:Click.Target>
+                  </ui:Click>
+                </Sequence>
+              </If.Then>
+              <If.Else>
+                <If Condition="[Not String.IsNullOrWhiteSpace(mensagemErro)]" DisplayName="AcessaCidade recusou?" sap2010:WorkflowViewState.IdRef="If_8">
+                  <If.Then>
+                    <Throw DisplayName="Throw BusinessRuleException - erro do AcessaCidade" sap2010:WorkflowViewState.IdRef="Throw_3"
+                     sap2010:Annotation.AnnotationText="O sistema validou e recusou os dados (#erro-envio): exceção de NEGÓCIO com a mensagem exibida.">
+                      <Throw.Exception>
+                        <InArgument x:TypeArguments="s:Exception">[New BusinessRuleException("O AcessaCidade recusou o cadastro: " + mensagemErro.Trim)]</InArgument>
+                      </Throw.Exception>
+                    </Throw>
+                  </If.Then>
+                  <If.Else>
+                    <Throw DisplayName="Throw TimeoutException - sem resposta" sap2010:WorkflowViewState.IdRef="Throw_4"
+                     sap2010:Annotation.AnnotationText="Nem protocolo nem erro dentro do tempo: exceção de SISTEMA (lentidão, aplicação fora do ar ou seletor desatualizado).">
+                      <Throw.Exception>
+                        <InArgument x:TypeArguments="s:Exception">[New TimeoutException("Nem #protocolo-gerado nem #erro-envio apareceram em " + (timeoutMs \ 1000).ToString + " s após o envio.")]</InArgument>
+                      </Throw.Exception>
+                    </Throw>
+                  </If.Else>
+                </If>
+              </If.Else>
+            </If>
+          </Sequence>
+        </ActivityAction>
+      </ui:BrowserScope.Body>
+    </ui:BrowserScope>
+  </Sequence>
+</Activity>

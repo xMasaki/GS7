@@ -1,0 +1,38 @@
+2026-11-15 10:23:00,071 INFO    acessacidade_pipeline - AcessaCidade pipeline v1.0.0 | Python 3.11.9 | modo: com API (se configurada)
+2026-11-15 10:23:00,073 INFO    acessacidade_pipeline - === tarefa extract_and_load_raw: início ===
+2026-11-15 10:23:00,075 INFO    acessacidade_pipeline - [extract] execução manual__2026-11-15T13:23:00 | configuração: {'data_dir': 'data', 'samples_csv': 'denuncias_simuladas.csv', 'exports_dir': 'exports', 'gold_dir': 'gold', 'warehouse_path': 'acessacidade.duckdb', 'api_url': 'http://127.0.0.1:8011', 'pipeline_token': '(configurado)'}
+2026-11-15 10:23:00,316 INFO    httpx - HTTP Request: GET http://127.0.0.1:8011/api/export/denuncias?formato=csv "HTTP/1.1 200 OK"
+2026-11-15 10:23:00,318 INFO    acessacidade_pipeline - [extract] API: Exportação da API salva com 28 linhas. Arquivo: denuncias_api_20261115T132300Z.csv
+2026-11-15 10:23:00,378 INFO    acessacidade_pipeline - [raw] raw.denuncias_simuladas: 271 linhas | raw.denuncias_app: 28 linhas
+2026-11-15 10:23:00,406 INFO    acessacidade_pipeline - === tarefa extract_and_load_raw: concluída em 0.33 s ===
+2026-11-15 10:23:00,406 INFO    acessacidade_pipeline - === tarefa transform_bronze: início ===
+2026-11-15 10:23:00,538 INFO    acessacidade_pipeline - [bronze] {'linhas_raw': 299, 'linhas_bronze': 288, 'duplicatas_tecnicas_simuladas': 11, 'duplicatas_tecnicas_app': 0, 'duplicatas_removidas': 11}
+2026-11-15 10:23:00,559 INFO    acessacidade_pipeline - === tarefa transform_bronze: concluída em 0.15 s ===
+2026-11-15 10:23:00,559 INFO    acessacidade_pipeline - === tarefa curate_silver: início ===
+2026-11-15 10:23:00,659 INFO    acessacidade_pipeline - [silver] {'linhas_silver': 278, 'duplicatas_negocio_removidas': 10, 'registros_validos': 239, 'registros_invalidos': 39}
+2026-11-15 10:23:00,706 INFO    acessacidade_pipeline - === tarefa curate_silver: concluída em 0.15 s ===
+2026-11-15 10:23:00,706 INFO    acessacidade_pipeline - === tarefa build_gold: início ===
+2026-11-15 10:23:00,766 INFO    acessacidade_pipeline - [gold] {'linhas_gold_denuncias_por_bairro': 13, 'linhas_gold_denuncias_por_categoria': 8, 'linhas_gold_denuncias_por_periodo': 19, 'linhas_gold_denuncias_por_status': 5, 'linhas_gold_resultado_visao': 4, 'linhas_gold_qualidade_registros': 10}
+2026-11-15 10:23:00,781 INFO    acessacidade_pipeline - [gold] arquivos exportados: denuncias_por_bairro.csv, denuncias_por_categoria.csv, denuncias_por_periodo.csv, denuncias_por_status.csv, resultado_visao.csv, qualidade_registros.csv, gold_snapshot.json
+2026-11-15 10:23:00,803 INFO    acessacidade_pipeline - === tarefa build_gold: concluída em 0.10 s ===
+2026-11-15 10:23:00,803 INFO    acessacidade_pipeline - === tarefa quality_report: início ===
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] RAW não vazia: OK (299 linhas na RAW)
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] RAW fiel à fonte simulada: OK (arquivo=271 raw=271)
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] BRONZE ≤ RAW: OK (288 ≤ 299)
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] SILVER + duplicadas = BRONZE: OK (288 = 288)
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] Sem coluna de nome fora da RAW: OK (nenhuma)
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] Arquivos Gold sem dados pessoais: OK (nenhum)
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] Snapshot no formato do contrato 4.8: OK (ok)
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] Chaves Gold pertencem ao contrato (seção 3): OK (ok)
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] Agregados Gold somam os registros válidos: OK (válidos=239 somas={'por_bairro': 239, 'por_categoria': 239, 'por_periodo_mensal': 239, 'por_status': 239, 'resultado_visao': 239})
+2026-11-15 10:23:00,851 INFO    acessacidade_pipeline - [qualidade] Percentual de válidos entre 0 e 100: OK (86.0%)
+2026-11-15 10:23:00,854 INFO    acessacidade_pipeline - [qualidade] situação: APROVADO | relatório: relatorio_qualidade.json e relatorio_qualidade.md
+2026-11-15 10:23:00,854 INFO    acessacidade_pipeline - === tarefa quality_report: concluída em 0.05 s ===
+2026-11-15 10:23:00,854 INFO    acessacidade_pipeline - === tarefa publish_gold: início ===
+2026-11-15 10:23:01,046 INFO    httpx - HTTP Request: POST http://127.0.0.1:8011/api/pipeline/gold "HTTP/1.1 200 OK"
+2026-11-15 10:23:01,046 INFO    acessacidade_pipeline - [publish] Snapshot manual__2026-11-15T13:23:00 publicado (HTTP 200).
+2026-11-15 10:23:01,047 INFO    acessacidade_pipeline - === tarefa publish_gold: concluída em 0.19 s ===
+2026-11-15 10:23:01,047 INFO    acessacidade_pipeline - Pipeline concluído em 0.97 s. Execução manual__2026-11-15T13:23:00.
+2026-11-15 10:23:01,047 INFO    acessacidade_pipeline - Resumo: {'linhas_raw': 299, 'linhas_bronze': 288, 'linhas_silver': 278, 'registros_validos': 239, 'situacao_qualidade': 'APROVADO'}
+2026-11-15 10:23:01,047 INFO    acessacidade_pipeline - Qualidade (contrato 4.8): {'linhas_raw': 299, 'linhas_bronze': 288, 'duplicatas_removidas': 11, 'datas_invalidas': 12, 'coordenadas_invalidas': 11, 'campos_obrigatorios_ausentes': 25, 'percentual_registros_validos': 86.0, 'linhas_silver': 278, 'duplicatas_negocio_removidas': 10, 'registros_validos': 239}
+2026-11-15 10:23:01,047 INFO    acessacidade_pipeline - Publicação: OK

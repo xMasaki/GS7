@@ -1,0 +1,9 @@
+categoria,rotulo,total,possiveis_buracos,percentual
+BURACO_CALCADA,Buraco na calçada,53,21,25.1
+CALCADA_DANIFICADA,Calçada quebrada ou desnivelada,51,5,24.2
+RAMPA_IRREGULAR,Rampa ausente ou irregular,29,4,13.7
+OBSTACULO_TEMPORARIO,"Obstáculo temporário (entulho, veículo, obra)",27,3,12.8
+OBSTACULO_FIXO,"Obstáculo fixo (poste, lixeira, placa)",20,2,9.5
+BURACO_VIA,Buraco na via ou travessia,15,5,7.1
+PISO_TATIL,Piso tátil ausente ou danificado,9,0,4.3
+OUTRO,Outro,7,0,3.3

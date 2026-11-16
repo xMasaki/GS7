@@ -1,0 +1,36 @@
+2026-11-15 03:27:02,415 INFO    acessacidade_pipeline - AcessaCidade pipeline v1.0.0 | Python 3.11.9 | modo: sem API (--sem-api)
+2026-11-15 03:27:02,416 INFO    acessacidade_pipeline - === tarefa extract_and_load_raw: início ===
+2026-11-15 03:27:02,418 INFO    acessacidade_pipeline - [extract] execução manual__2026-11-15T06:27:02 | configuração: {'data_dir': 'data', 'samples_csv': 'data/samples/denuncias_simuladas.csv', 'exports_dir': 'data/exports', 'gold_dir': 'data/processed/gold', 'warehouse_path': 'data/processed/warehouse/acessacidade.duckdb', 'api_url': '(não configurada)', 'pipeline_token': '(não configurado)'}
+2026-11-15 03:27:02,418 WARNING acessacidade_pipeline - [extract] API PULADA: Execução com --sem-api: somente a fonte simulada.
+2026-11-15 03:27:02,484 INFO    acessacidade_pipeline - [raw] raw.denuncias_simuladas: 271 linhas | raw.denuncias_app: 0 linhas
+2026-11-15 03:27:02,520 INFO    acessacidade_pipeline - === tarefa extract_and_load_raw: concluída em 0.10 s ===
+2026-11-15 03:27:02,520 INFO    acessacidade_pipeline - === tarefa transform_bronze: início ===
+2026-11-15 03:27:02,634 INFO    acessacidade_pipeline - [bronze] {'linhas_raw': 271, 'linhas_bronze': 260, 'duplicatas_tecnicas_simuladas': 11, 'duplicatas_tecnicas_app': 0, 'duplicatas_removidas': 11}
+2026-11-15 03:27:02,665 INFO    acessacidade_pipeline - === tarefa transform_bronze: concluída em 0.14 s ===
+2026-11-15 03:27:02,665 INFO    acessacidade_pipeline - === tarefa curate_silver: início ===
+2026-11-15 03:27:02,791 INFO    acessacidade_pipeline - [silver] {'linhas_silver': 250, 'duplicatas_negocio_removidas': 10, 'registros_validos': 211, 'registros_invalidos': 39}
+2026-11-15 03:27:02,846 INFO    acessacidade_pipeline - === tarefa curate_silver: concluída em 0.18 s ===
+2026-11-15 03:27:02,846 INFO    acessacidade_pipeline - === tarefa build_gold: início ===
+2026-11-15 03:27:02,916 INFO    acessacidade_pipeline - [gold] {'linhas_gold_denuncias_por_bairro': 9, 'linhas_gold_denuncias_por_categoria': 8, 'linhas_gold_denuncias_por_periodo': 19, 'linhas_gold_denuncias_por_status': 5, 'linhas_gold_resultado_visao': 4, 'linhas_gold_qualidade_registros': 10}
+2026-11-15 03:27:02,936 INFO    acessacidade_pipeline - [gold] arquivos exportados: denuncias_por_bairro.csv, denuncias_por_categoria.csv, denuncias_por_periodo.csv, denuncias_por_status.csv, resultado_visao.csv, qualidade_registros.csv, gold_snapshot.json
+2026-11-15 03:27:02,968 INFO    acessacidade_pipeline - === tarefa build_gold: concluída em 0.12 s ===
+2026-11-15 03:27:02,968 INFO    acessacidade_pipeline - === tarefa quality_report: início ===
+2026-11-15 03:27:03,021 INFO    acessacidade_pipeline - [qualidade] RAW não vazia: OK (271 linhas na RAW)
+2026-11-15 03:27:03,021 INFO    acessacidade_pipeline - [qualidade] RAW fiel à fonte simulada: OK (arquivo=271 raw=271)
+2026-11-15 03:27:03,023 INFO    acessacidade_pipeline - [qualidade] BRONZE ≤ RAW: OK (260 ≤ 271)
+2026-11-15 03:27:03,023 INFO    acessacidade_pipeline - [qualidade] SILVER + duplicadas = BRONZE: OK (260 = 260)
+2026-11-15 03:27:03,023 INFO    acessacidade_pipeline - [qualidade] Sem coluna de nome fora da RAW: OK (nenhuma)
+2026-11-15 03:27:03,023 INFO    acessacidade_pipeline - [qualidade] Arquivos Gold sem dados pessoais: OK (nenhum)
+2026-11-15 03:27:03,023 INFO    acessacidade_pipeline - [qualidade] Snapshot no formato do contrato 4.8: OK (ok)
+2026-11-15 03:27:03,023 INFO    acessacidade_pipeline - [qualidade] Chaves Gold pertencem ao contrato (seção 3): OK (ok)
+2026-11-15 03:27:03,023 INFO    acessacidade_pipeline - [qualidade] Agregados Gold somam os registros válidos: OK (válidos=211 somas={'por_bairro': 211, 'por_categoria': 211, 'por_periodo_mensal': 211, 'por_status': 211, 'resultado_visao': 211})
+2026-11-15 03:27:03,023 INFO    acessacidade_pipeline - [qualidade] Percentual de válidos entre 0 e 100: OK (84.4%)
+2026-11-15 03:27:03,029 INFO    acessacidade_pipeline - [qualidade] situação: APROVADO | relatório: data/processed/relatorio_qualidade.json e data/processed/relatorio_qualidade.md
+2026-11-15 03:27:03,030 INFO    acessacidade_pipeline - === tarefa quality_report: concluída em 0.06 s ===
+2026-11-15 03:27:03,030 INFO    acessacidade_pipeline - === tarefa publish_gold: início ===
+2026-11-15 03:27:03,030 WARNING acessacidade_pipeline - [publish] Execução com --sem-api: publicação na API não realizada.
+2026-11-15 03:27:03,031 INFO    acessacidade_pipeline - === tarefa publish_gold: concluída em 0.00 s ===
+2026-11-15 03:27:03,031 INFO    acessacidade_pipeline - Pipeline concluído em 0.61 s. Execução manual__2026-11-15T06:27:02.
+2026-11-15 03:27:03,031 INFO    acessacidade_pipeline - Resumo: {'linhas_raw': 271, 'linhas_bronze': 260, 'linhas_silver': 250, 'registros_validos': 211, 'situacao_qualidade': 'APROVADO'}
+2026-11-15 03:27:03,031 INFO    acessacidade_pipeline - Qualidade (contrato 4.8): {'linhas_raw': 271, 'linhas_bronze': 260, 'duplicatas_removidas': 11, 'datas_invalidas': 12, 'coordenadas_invalidas': 11, 'campos_obrigatorios_ausentes': 25, 'percentual_registros_validos': 84.4, 'linhas_silver': 250, 'duplicatas_negocio_removidas': 10, 'registros_validos': 211}
+2026-11-15 03:27:03,031 INFO    acessacidade_pipeline - Publicação: PULADA

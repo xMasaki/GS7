@@ -1,0 +1,315 @@
+AcessaCidade - Disciplina 07 - Project-Based Maker Lab ("CitizenTech: Cidade remodelada")
+PENDENCIAS E ACOES MANUAIS
+Projeto: PLACA DE SINALIZACAO ACESSIVEL PARA PONTO DE ONIBUS
+Pasta: 07-Project-Based-Maker-Lab\
+Prazo oficial: 19/11, 23h55, portal da disciplina (um envio por equipe; PDF unico com links clicaveis).
+Pontuacao: Diagnostico 2 | CAD original 2 | CAD redesign 3 | Fabricacao 3 | Impacto 2 | MakerWorld 1,5 | PDF 0,5
+Bonus: +0,5 peca baixada integrada e creditada | +0,5 video ate 2 min (nota maxima 14).
+
+AVISO IMPORTANTE: NADA foi fabricado, medido em campo, fotografado ou publicado. Tudo abaixo que
+depende do mundo fisico, de contas pessoais ou da URL publica do sistema esta na secao D.
+
+==========================================================================================
+A. O QUE FOI DESENVOLVIDO
+==========================================================================================
+Codigo CAD parametrico (CadQuery 2.5.2, Python 3.11) - pasta cad\
+  - parametros.py ........ TODAS as dimensoes (mm), comentadas. Bloco "OBJETO ORIGINAL" com valores
+                            ESTIMADOS ("a substituir apos medicao em campo") e a chave
+                            ORIGINAL_MEDIDO_EM_CAMPO = False. Funcao verificar_coerencia().
+                            Novo nesta etapa: BRAILLE_APARO_TOPO = 0.02 mm (ver B).
+  - geometria_2d.py ...... layout 2D da placa; textos convertidos em contornos (fonte DejaVu Sans Bold
+                            embutida no matplotlib); escritores DXF (ezdxf) e SVG (mm).
+  - modelo_original.py ... placa generica de ponto de onibus (450x300x2 mm ESTIMADO, borda inferior a
+                            2200 mm, poste D76,2, 2 abracadeiras; sem relevo/Braille/QR; baixo contraste).
+  - modelo_redesign.py ... placa principal (laser), modulo tatil (3D), suporte para tubo (3D), montagem.
+                            Corrigido nesta etapa: pontos Braille com topo aparado 0,02 mm (o polo da
+                            esfera gerava triangulos degenerados e o STL do modulo NAO era estanque).
+  - cq_util.py, imagens.py  utilitarios e geracao de imagens/croquis (renderizador melhorado: subdivide
+                            triangulos longos para evitar sobreposicoes erradas).
+  - gerar_todos.py ....... NOVO. Gera tudo e cad\relatorio_geracao.txt. Opcoes: --sem-imagens, --so-laser.
+Arquivos gerados (mantidos no repositorio):
+  - cad\original_placa_ESTIMADO.step, cad\original_montagem_ESTIMADO.step
+  - cad\redesign_placa_principal_laser.step, cad\redesign_modulo_tatil_3d.step,
+    cad\redesign_suporte_tubo_3d.step, cad\redesign_montagem.step (~18 MB)
+  - 3d-print\modulo_tatil.stl + .3mf (76 x 70 x 5,5 mm, ja orientado: verso na mesa)
+  - 3d-print\suporte_tubo.stl + .3mf (36 x 88 x 24,9 mm, ja orientado: flange na mesa)
+  - laser-cut\placa_principal_laser.dxf + .svg (200 x 150 mm; camadas CORTE vermelho,
+    GRAVACAO_VETORIAL azul, GRAVACAO_RASTER preto, AREA_QR cinza (guia, nao gravar),
+    TEXTO_REFERENCIA verde (nao gravar)); SOMENTE a AREA reservada do QR, sem QR.
+  - docs\imagens\: comparacao_lado_a_lado_3d.png, comparacao_vistas_frontais.png,
+    comparacao_instalacao_escala_real.png, previa_arquivo_laser.png, detalhe_braille_seta.png,
+    peca_modulo_tatil.png, peca_suporte_tubo.png, peca_placa_laser.png, croqui_redesign.svg,
+    croqui_original_A_PREENCHER.svg
+Script do QR - laser-cut\gerar_qrcode.py (NOVO)
+  - --url <URL_PUBLICA> (obrigatorio). Recusa placeholder, URL sem https/http, localhost e IP privado
+    (exceto com --permitir-local), e URL longa demais (modulo < 0,8 mm). Acrescenta #/registrar
+    (contrato secao 7) se a URL nao tiver '#'; --sem-rota desliga. --correcao L/M/Q/H.
+  - Gera qrcode_acessacidade.svg/.dxf, placa_principal_laser_com_qr.svg/.dxf e
+    qrcode_acessacidade_info.txt na pasta laser-cut\ (ou em --saida).
+Testes - tests\ (NOVOS)
+  - test_maker_parametros_laser.py (nao precisa de CadQuery): coerencia, layout, furos dentro da placa,
+    Braille "PONTO" e dimensoes, relevos >= 1 mm, DXF (camadas, cores, unidade mm, contorno 200x150,
+    furos, textos em curvas, sem QR), SVG valido em mm, croqui, QR gerado e DECODIFICADO com OpenCV,
+    recusa de URLs invalidas.
+  - test_maker_cad_arquivos.py: STEP validos, STL estanques e dentro da mesa 200 mm, 3MF validos,
+    imagens, relatorio; com CadQuery (importorskip): solidos validos, um unico solido por peca impressa,
+    volume da placa confere com todos os furos, original estimado.
+Documentacao - README.md e docs\ (NOVOS)
+  DIAGNOSTICO_OBJETO_ORIGINAL.md, GUIA_FOTOGRAFAR_E_MEDIR.md, CROQUI_MEDIDAS.md, TUTORIAL_ONSHAPE.md,
+  COMPARACAO_ANTES_DEPOIS.md, FABRICACAO.md, IMPACTO_E_ODS.md, MAKERWORLD_PUBLICACAO.md,
+  BONUS_PECA_TERCEIROS.md, ROTEIRO_VIDEO_MAKER.md, FOTOS_A_REALIZAR.md, RELATORIO_ENTREGA_MAKER.md
+
+==========================================================================================
+B. O QUE FOI TESTADO (comandos exatos e resultados reais)
+==========================================================================================
+(cwd = c:\Users\masak\Desktop\GS7-4ESPR)
+1) .\.venv\Scripts\python.exe 07-Project-Based-Maker-Lab\cad\gerar_todos.py
+   Resultado: rc=0, 107 s a 239 s (com imagens; o renderizador melhorado e mais lento). Trechos reais de cad\relatorio_geracao.txt:
+     Placa principal (laser): 200.00 x 150.00 x 3.00 mm
+     Modulo tatil (3D): 76.00 x 70.00 x 5.50 mm
+     Suporte para tubo (3D): 36.00 x 88.00 x 24.90 mm
+     modulo_tatil.stl: 76.00 x 70.00 x 5.50 mm, 70422 triangulos, estanque=True, volume=21.88 cm3; 3MF via cadquery
+     suporte_tubo.stl: 36.00 x 88.00 x 24.90 mm, 1900 triangulos, estanque=True, volume=32.69 cm3; 3MF via cadquery
+   Na primeira execucao o modulo_tatil.stl saiu estanque=False (18 arestas abertas no topo dos 18
+   pontos Braille). Corrigido aparando 0,02 mm do topo dos pontos; regenerado: estanque=True.
+2) QR (teste fora do repositorio, dominio reservado .invalid):
+   .\.venv\Scripts\python.exe 07-Project-Based-Maker-Lab\laser-cut\gerar_qrcode.py --url https://teste.invalid --saida <scratchpad>
+   Resultado: "QR gerado para: https://teste.invalid/#/registrar", "Versao 3 (29x29), modulo 1.243 mm".
+   O SVG do QR e o SVG da placa com QR foram rasterizados e decodificados com OpenCV: ambos retornaram
+   'https://teste.invalid/#/registrar'. Com --url "[PREENCHER: url]": "ERRO: Informe a URL publica REAL..." rc=2.
+3) .\.venv\Scripts\python.exe -m pytest 07-Project-Based-Maker-Lab\tests
+   Resultado real: "45 passed in 5.01s".
+4) Simulacao do CI sem CadQuery (cadquery bloqueado em sys.modules):
+   .\.venv\Scripts\python.exe -c "import sys; sys.modules['cadquery']=None; import pytest; sys.exit(pytest.main(['07-Project-Based-Maker-Lab/tests','-rs']))"
+   Resultado real: "42 passed, 3 skipped" (os 3 testes que reconstroem solidos CadQuery sao pulados).
+NAO testado: leitura do QR em celular, abertura dos arquivos em LightBurn/RDWorks/fatiador/Onshape
+(softwares nao disponiveis aqui), fabricacao real.
+
+==========================================================================================
+C. O QUE NAO FOI POSSIVEL FAZER (e por que)
+==========================================================================================
+- Visitar o ponto de onibus, fotografar e medir: exige presenca fisica da equipe.
+- Fabricar (laser e 3D), montar e fotografar o prototipo: exige laboratorio e maquinas.
+- Gerar o QR definitivo: a URL publica do AcessaCidade ainda nao existe/ nao foi informada (depende do
+  deploy da disciplina 06). Nao foi gerado QR com URL inventada, de proposito.
+- Publicar no MakerWorld, criar documento no Onshape, gravar video: exigem contas pessoais.
+- Escolher a peca de terceiros (bonus): exige escolha/teste/licenca pela equipe; nenhum link foi inventado.
+- Verificar conformidade com ABNT NBR 9050 / NBR 16537: normas pagas, nao consultadas; o projeto usa
+  valores usuais de referencia e NAO declara conformidade.
+- Exportar o PDF final: depende dos [PREENCHER] (fotos, links, medidas).
+
+==========================================================================================
+D. O QUE DEPENDE DO USUARIO (cada atividade)
+==========================================================================================
+D1. IR AO PONTO DE ONIBUS, FOTOGRAFAR E MEDIR
+  Acao necessaria: diagnostico no local (fotos + medidas + quem e afetado).
+  Programa ou site: camera do celular; trena, fita metrica, paquimetro.
+  Arquivo envolvido: docs\GUIA_FOTOGRAFAR_E_MEDIR.md; docs\imagens\croqui_original_A_PREENCHER.svg
+  Caminho/procedimento: imprimir o croqui (abrir o SVG no navegador > Ctrl+P > tamanho real).
+  Passo a passo:
+    1. Escolher um ponto de onibus publico (sem endereco residencial).
+    2. Seguir as regras de seguranca (ficar na calcada, nao subir em nada, nao fotografar pessoas).
+    3. Tirar as fotos 1 a 8 da tabela do guia, com nomes local_01...local_08.
+    4. Medir A-L e anotar no croqui impresso; medir 2x cada uma.
+    5. Fotografar o croqui preenchido (croqui_original_preenchido.jpg).
+    6. Salvar tudo em 07-Project-Based-Maker-Lab\docs\fotos\ (criar a pasta).
+    7. Preencher a coluna "Resultado observado" de docs\DIAGNOSTICO_OBJETO_ORIGINAL.md e a tabela de
+       CROQUI_MEDIDAS.md; apagar falhas nao confirmadas.
+  Resultado esperado: >= 8 fotos sem pessoas, croqui com 12 medidas.
+  Como saber se deu certo: toda linha [PREENCHER] do diagnostico e do croqui tem valor real.
+
+D2. ATUALIZAR parametros.py COM AS MEDIDAS REAIS E REGENERAR
+  Acao necessaria: substituir estimativas do original.
+  Programa: VS Code + PowerShell.
+  Arquivo: 07-Project-Based-Maker-Lab\cad\parametros.py (bloco "1. OBJETO ORIGINAL").
+  Caminho do menu ou procedimento: VS Code > File > Open File > cad\parametros.py; PowerShell na raiz do repositorio.
+  Passo a passo:
+    1. ORIGINAL_PLACA_LARGURA=A, ORIGINAL_PLACA_ALTURA=B, ORIGINAL_ALTURA_BORDA_INFERIOR=C,
+       ORIGINAL_POSTE_DIAMETRO=E, ORIGINAL_TEXTO_ALTURA=F, ORIGINAL_PLACA_ESPESSURA=G,
+       ORIGINAL_AFASTAMENTO_PLACA_POSTE=H, ORIGINAL_TEXTO="texto real".
+    2. Trocar ORIGINAL_MEDIDO_EM_CAMPO = True e remover o comentario "ESTIMADO" das linhas medidas.
+    3. Medir o tubo de PVC comprado e ajustar TUBO_DIAMETRO (diametro externo).
+    4. Definir SETA_SENTIDO ("direita"/"esquerda") conforme o sentido de embarque no local.
+    5. cd c:\Users\masak\Desktop\GS7-4ESPR
+       .\.venv\Scripts\python.exe 07-Project-Based-Maker-Lab\cad\gerar_todos.py
+       .\.venv\Scripts\python.exe -m pytest 07-Project-Based-Maker-Lab\tests
+    6. Se a legenda das imagens ainda disser "ESTIMADAS", ajustar AVISO_ESTIMADO em cad\imagens.py.
+  Resultado esperado: "[ok] parametros coerentes" e "Concluido"; todos os testes passam.
+  Como saber se deu certo: cad\relatorio_geracao.txt mostra "medido em campo = True" e as novas medidas.
+  Observacao: o teste test_maker_original_marcado_como_estimado so verifica os comentarios enquanto
+  ORIGINAL_MEDIDO_EM_CAMPO = False.
+
+D3. ONSHAPE (opcional/recomendado para apresentacao e Drawing)
+  Acao: importar STEP/DXF, criar Drawing e link publico.
+  Programa: https://cad.onshape.com
+  Arquivo: cad\*.step, laser-cut\placa_principal_laser.dxf
+  Caminho do menu ou procedimento: Onshape > Create > Document; botao + (canto inferior esquerdo) > Import;
+    botao direito na aba da peca > Create drawing; Share > Make public.
+  Passo a passo: seguir docs\TUTORIAL_ONSHAPE.md secoes 1, 5, 6 e 7 (secao 4 se a professora exigir
+  modelagem nativa).
+  Resultado esperado: documento com original e redesign lado a lado + Drawing em PDF.
+  Como saber se deu certo: Measure na placa redesign = 200 x 150 x 3 mm; link abre em janela anonima.
+
+D4. GERAR O QR COM A URL PUBLICA REAL
+  Acao: gravar o QR que leva ao AcessaCidade.
+  Pre-requisito: URL publica do AcessaCidade funcionando (deploy da disciplina 06) - AINDA NAO DISPONIVEL.
+  Programa: PowerShell.
+  Arquivo: laser-cut\gerar_qrcode.py
+  Caminho do menu ou procedimento: PowerShell na raiz do repositorio; navegador para abrir o SVG gerado.
+  Passo a passo:
+    1. Abrir a URL publica no celular e confirmar que a tela #/registrar carrega.
+    2. .\.venv\Scripts\python.exe 07-Project-Based-Maker-Lab\laser-cut\gerar_qrcode.py --url https://<URL_PUBLICA_REAL>
+    3. Abrir laser-cut\qrcode_acessacidade.svg no navegador e ler com 2 celulares diferentes.
+    4. Usar laser-cut\placa_principal_laser_com_qr.svg (ou .dxf) no laser no lugar do arquivo sem QR.
+  Resultado esperado: 5 arquivos novos em laser-cut\ e mensagem "QR gerado para: .../#/registrar".
+  Como saber se deu certo: os celulares abrem a tela de registro; qrcode_acessacidade_info.txt
+  mostra a URL correta e modulo >= 0,8 mm.
+  Se a URL mudar depois: rodar de novo e regravar a placa.
+
+D5. FABRICAR A PLACA NO LASER
+  Acao necessaria: gravar e cortar a placa principal no laser do laboratorio.
+  Programa: LightBurn (ou RDWorks/LaserCAD) na maquina do laboratorio.
+  Arquivo: laser-cut\placa_principal_laser_com_qr.svg (ou placa_principal_laser.svg se ainda nao houver URL)
+  Caminho do menu: LightBurn > File > Import > SVG; janela Cuts/Layers.
+  Passo a passo:
+    1. Pedir autorizacao/treinamento do lab; confirmar material permitido (MDF ou acrilico; NUNCA PVC).
+    2. Importar, conferir 200 x 150 mm.
+    3. Desligar saida das camadas cinza (AREA_QR) e verde (TEXTO_REFERENCIA).
+    4. Configurar preto=Fill, azul=Line baixa potencia, vermelho=Line corte (docs\FABRICACAO.md secao 2).
+    5. Teste 20x20 mm no mesmo material; ajustar potencia/velocidade; medir kerf.
+    6. Ordem: raster > vetorial > corte. Nao sair de perto da maquina.
+    7. Fotografar (fab_01 a fab_03) e anotar parametros reais na secao 6 de FABRICACAO.md.
+  Resultado esperado: placa 200x150 com textos legiveis, QR nitido, 8 furos limpos.
+  Como saber se deu certo: paquimetro confere 200x150 (+-0,5); QR gravado le no celular.
+
+D6. IMPRIMIR EM 3D (modulo tatil e suporte)
+  Acao necessaria: imprimir o modulo tatil e o suporte do tubo.
+  Programa: fatiador do laboratorio (Bambu Studio, PrusaSlicer, Cura...).
+  Arquivos: 3d-print\modulo_tatil.3mf, 3d-print\suporte_tubo.3mf (ou .stl)
+  Caminho do menu ou procedimento: fatiador > File > Import (3MF/STL) > Slice (fatiar) > enviar/exportar G-code.
+  Passo a passo:
+    1. Importar sem girar (ja orientados). Conferir dimensoes (76x70x5,5 e 36x88x24,9).
+    2. Modulo: PLA/PETG amarelo, camada 0,12, 3 perimetros, 20% giroide, sem suporte.
+    3. Suporte: PETG, camada 0,2, 4 perimetros, 40%, verificar pontes dos tuneis na pre-visualizacao.
+    4. Print do fatiador (tempo/massa) - fab_04, fab_05.
+    5. Imprimir; conferir Braille (pontos separados e nitidos) com paquimetro e com o dedo.
+  Resultado esperado: duas pecas sem falhas, Braille legivel ao tato.
+  Como saber se deu certo: 18 pontos Braille distintos; tubo de 25 mm encaixa no berco.
+
+D7. MONTAR E FOTOGRAFAR O PROTOTIPO
+  Acao necessaria: montar placa, modulo tatil e suporte no tubo e registrar fotos e testes REAIS.
+  Programa: ferramentas manuais (chave Phillips, alicate), paquimetro e camera do celular.
+  Arquivo: docs\FABRICACAO.md secao 4; docs\FOTOS_A_REALIZAR.md secoes D e E.
+  Materiais: 2 M4x16 + porcas + arruelas, 2 M3x6, 2 abracadeiras de nylon, tubo PVC 25 mm.
+  Caminho do menu ou procedimento: docs\FABRICACAO.md secao 4 (sequencia de montagem); salvar as fotos em
+    07-Project-Based-Maker-Lab\docs\fotos\ com os nomes de docs\FOTOS_A_REALIZAR.md.
+  Passo a passo: seguir os 6 passos de montagem; fazer os testes de impacto (IMPACTO_E_ODS.md secao 1)
+  e registrar resultados REAIS.
+  Resultado esperado: prototipo montado, fotos das secoes D e E feitas e resultados reais dos testes
+    anotados em docs\IMPACTO_E_ODS.md.
+  Como saber se deu certo: placa firme no tubo, nenhuma ponta de parafuso na frente, QR le no celular.
+
+D8. PECA DE TERCEIROS (BONUS +0,5)
+  Acao necessaria: (bonus) integrar uma peca de terceiros, com credito e licenca conferidos.
+  Programa: https://makerworld.com
+  Arquivo: docs\BONUS_PECA_TERCEIROS.md
+  Caminho do menu ou procedimento: makerworld.com > busca (lupa) > abrir o modelo > conferir License > Download.
+  Passo a passo: secao 2 do arquivo (buscar abracadeira/clip para tubo 25 mm, checar licenca e medidas,
+  imprimir, integrar, fotografar) e preencher a tabela de credito.
+  Resultado esperado: peca impressa e montada + tabela de credito preenchida.
+  Como saber se deu certo: peca com funcao real (prende o suporte ao tubo), credito com link em
+  MakerWorld + PDF + README.
+
+D9. PUBLICAR NO MAKERWORLD (OBRIGATORIO, 1,5)
+  Acao necessaria: publicar o projeto no MakerWorld (obrigatorio).
+  Programa: https://makerworld.com (conta Bambu Lab)
+  Arquivo: docs\MAKERWORLD_PUBLICACAO.md
+  Caminho do menu ou procedimento: makerworld.com > Upload (topo) > Upload Model > Publish.
+  Passo a passo: secao 9 do arquivo (upload, titulo, descricao, tags, licenca, fotos reais, credito).
+  Resultado esperado: pagina publica com fotos do prototipo e arquivos.
+  Como saber se deu certo: link abre em janela anonima; arquivos baixam.
+
+D10. VIDEO ATE 2 MIN (BONUS +0,5)
+  Acao necessaria: (bonus) gravar e publicar video de ate 2 min do prototipo em uso.
+  Arquivo: docs\ROTEIRO_VIDEO_MAKER.md
+  Programa: celular + editor (CapCut, Clipchamp, etc.); publicar no YouTube (nao listado) ou Drive.
+  Caminho do menu ou procedimento: YouTube > Criar > Enviar video > Visibilidade: Nao listado.
+  Passo a passo: 1. ensaiar o roteiro com cronometro; 2. gravar as cenas do roteiro; 3. editar e exportar MP4;
+    4. publicar e copiar o link para docs\RELATORIO_ENTREGA_MAKER.md.
+  Resultado esperado: video <= 2:00 publicado, com link.
+  Como saber se deu certo: duracao <= 2:00; link abre em janela anonima.
+
+D11. PDF UNICO DE ENTREGA (0,5)
+  Acao necessaria: gerar o PDF unico da disciplina e envia-lo.
+  Arquivo: docs\RELATORIO_ENTREGA_MAKER.md
+  Programa: VS Code + extensao "Markdown PDF" (ou Google Docs/Word > Exportar PDF).
+  Caminho do menu ou procedimento: PowerShell na raiz do repositorio (gerador testado em 15/11/2026):
+    .\.venv\Scripts\python.exe tools\gerar_pdf_markdown.py 07-Project-Based-Maker-Lab\docs\RELATORIO_ENTREGA_MAKER.md --saida entregas\pdf\AcessaCidade_07_Maker.pdf --titulo "AcessaCidade - Project-Based Maker Lab" --repo-url https://github.com/<conta>/<repositorio> --estrito
+    (ou .\tools\gerar_todos_pdfs.ps1 para todas as disciplinas; alternativa: VS Code > Ctrl+Shift+P > "Markdown PDF: Export (pdf)")
+  Passo a passo:
+    1. Substituir TODOS os [PREENCHER] (buscar com Ctrl+F).
+    2. Inserir fotos reais nas secoes 1, 2, 5, 6, 7.
+    3. Exportar PDF; abrir e clicar em cada link (MakerWorld, repositorio, video, app).
+    4. Enviar no portal da disciplina ate 19/11 23h55 (um integrante).
+  Resultado esperado: PDF com fotos reais, links clicaveis e sem [PREENCHER].
+  Como saber se deu certo: nenhum "[PREENCHER" no PDF; todos os links abrem.
+
+D12. TORNAR O REPOSITORIO PUBLICO
+  Acao necessaria: publicar o repositorio da equipe como publico (os links do PDF apontam para ele).
+  Programa: GitHub (navegador).
+  Arquivo: repositorio inteiro, em especial 07-Project-Based-Maker-Lab\cad, laser-cut, 3d-print e docs.
+  Caminho do menu ou procedimento: GitHub > repositorio > Settings > General > Danger Zone > Change visibility > Public.
+  Passo a passo:
+    1. Seguir as Partes 5.1 e 5.2 do PASSO_A_PASSO_PARA_CONCLUIR_O_PROJETO.txt (revisar o que vai para o Git e publicar).
+    2. Abrir o link da pasta 07 em janela anonima.
+  Resultado esperado: pasta 07 acessivel sem login.
+  Como saber se deu certo: os links do PDF abrem em janela anonima. Manter publico durante a correcao
+    (ate 1 semana apos o prazo). Depende do repositorio geral da equipe.
+
+==========================================================================================
+E. EVIDENCIAS QUE O USUARIO PRECISA PRODUZIR
+==========================================================================================
+- Fotos no local (>= 8) e do croqui preenchido (docs\FOTOS_A_REALIZAR.md, secoes A e B).
+- Prints do software do laser e do fatiador com parametros/tempos.
+- Fotos do laser/impressora em operacao, das pecas e do prototipo montado (secoes C e D).
+- Foto/print do celular lendo o QR gravado e abrindo #/registrar (sem dados pessoais).
+- Fotos antes x depois lado a lado (secao E).
+- Link do MakerWorld + print da pagina publicada.
+- Link do documento Onshape (se usado) + PDF do Drawing.
+- Link do video (bonus) + link da peca de terceiros com autor e licenca (bonus).
+- Tabela com resultados reais dos testes do prototipo (IMPACTO_E_ODS.md).
+- Link publico do repositorio.
+
+==========================================================================================
+F. CHECKLIST DE ENTREGAVEIS PENDENTES (alinhado ao PDF oficial, pagina 43/45)
+==========================================================================================
+Diagnostico (2,0)
+[ ] Fotos no local
+[ ] Medidas em croqui (croqui preenchido + tabela)
+[ ] Quem e afetado (diagnostico confirmado no local)
+CAD (5,0)
+[x] Modelo CAD do original (gerado; dimensoes ESTIMADAS)
+[ ] Modelo CAD do original atualizado com medidas reais e regenerado
+[x] Modelo CAD do redesign (placa + modulo tatil + suporte + montagem)
+[x] Comparacao lado a lado (imagens geradas em docs\imagens)
+[ ] (Opcional) Documento Onshape com link
+Fabricacao (3,0)
+[x] Arquivos laser DXF/SVG (sem QR)
+[ ] QR gerado com URL publica real (depende do deploy - disciplina 06)
+[x] Arquivos 3D STL/3MF
+[ ] Peca a laser fabricada + fotos
+[ ] Peca impressa em 3D fabricada + fotos
+[ ] Prototipo montado + fotos
+Impacto (2,0)
+[x] Texto antes x depois + ODS (docs\IMPACTO_E_ODS.md, COMPARACAO_ANTES_DEPOIS.md)
+[ ] Fotos reais antes x depois
+[ ] Resultados reais dos testes com o prototipo
+MakerWorld (1,5)
+[x] Rascunho de titulo/descricao/tags/licenca
+[ ] Publicacao feita, fotos reais, arquivos, credito da peca baixada, link no PDF
+PDF (0,5)
+[x] Fonte do PDF (docs\RELATORIO_ENTREGA_MAKER.md)
+[ ] PDF exportado com todos os links clicaveis testados e enviado no portal
+Bonus
+[ ] Peca baixada integrada e creditada (+0,5)
+[ ] Video ate 2 min (+0,5)

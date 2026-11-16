@@ -1,0 +1,295 @@
+ACESSACIDADE — DISCIPLINA 06: SECURE DEVOPS TOOLS & CLOUD COMPUTING ("DEPLOY BLINDADO", 14 PONTOS)
+PENDÊNCIAS E AÇÕES MANUAIS
+Atualizado em: 15/11/2026
+Entrega no portal: 19/11, 23h55 — PDF único com links clicáveis, um envio por equipe.
+
+======================================================================================
+A. O QUE FOI DESENVOLVIDO
+======================================================================================
+Container
+  - 06-Secure-DevOps-Cloud/docker/Dockerfile: multi-stage (builder + runtime), base python:3.11-slim-bookworm,
+    venv em /opt/venv, pip/setuptools/wheel removidos da imagem final, usuário 10001 sem shell, código
+    somente leitura, DATA_DIR=/app/data/runtime gravável, PYTHONPATH do contrato, HEALTHCHECK em /health,
+    EXPOSE 8000, CMD uvicorn acessacidade_api.main:app --proxy-headers, labels OCI, nenhum segredo.
+  - .dockerignore (raiz): exclui .env, .venv, .git, data/runtime, bancos, tfstate/tfvars, testes,
+    disciplinas fora do runtime, PDFs/CAD/planilhas.
+  - docker-compose.yml (raiz): serviço app (read_only, tmpfs /tmp, cap_drop ALL, no-new-privileges,
+    mem_limit, pids_limit, volume nomeado, healthcheck, restart unless-stopped, .env opcional);
+    profile "monitoring": prometheus v3.5.0, alertmanager v0.28.1, grafana-oss 12.1.1, todos só em 127.0.0.1;
+    Grafana recusa iniciar sem GRAFANA_ADMIN_PASSWORD (sem senha padrão).
+IaC
+  - 06-Secure-DevOps-Cloud/terraform/: versions.tf (terraform >= 1.6, azurerm ~> 4.0, random ~> 3.6),
+    providers.tf, backend.tf (azurerm parcial), variables.tf (validações, segredos sensitive), main.tf
+    (RG, ACR Basic admin off, identidade gerenciada + AcrPull, ACI só porta 8000 com probes e
+    secure_environment_variables, Log Analytics opcional), outputs.tf, terraform.tfvars.example,
+    backend.hcl.example, backend_override.tf.example, .terraform.lock.hcl, tests/acessacidade.tftest.hcl
+    (3 testes com provider simulado).
+  - infra/: aci-deployment.template.yaml (alternativa az container create --file), render_aci_template.py,
+    scripts azure/01..06 e 99 em .ps1 e .sh, com cada comando classificado; infra/README.md.
+Pipeline
+  - .github/workflows/ci-devsecops.yml: jobs testes, gitleaks (histórico completo), semgrep, iac
+    (terraform fmt/validate/test + trivy config), imagem (build + checagem não root/sem segredo + trivy
+    image + smoke test), deploy (OIDC, Terraform fase 1/fase 2, push da imagem testada, smoke test público).
+  - 06-Secure-DevOps-Cloud/github-actions/requirements-ci.txt e README.md.
+  - .gitleaks.toml (regras padrão + acessacidade-demo-token; exclusões compatíveis com Windows e Linux).
+  - .semgrep/acessacidade.yml (8 regras: eval/exec, requests sem timeout, httpx timeout=None,
+    subprocess shell=True/os.system, segredo hardcoded, default sensível em os.getenv, innerHTML, eval JS)
+    + .semgrep/tests/ (arquivos de teste das regras) + 06-Secure-DevOps-Cloud/tools/testar_regras_semgrep.py.
+Observabilidade
+  - 06-Secure-DevOps-Cloud/monitoring/: prometheus.yml (app:8000), prometheus.azure.yml ([PREENCHER] do FQDN),
+    alert_rules.yml (5 alertas em pt-BR), alertmanager.yml, provisioning do Grafana, dashboard
+    acessacidade-golden-signals.json (26 painéis: latência, tráfego, erros, saturação, negócio).
+  - scripts/gerar_trafego_demo.py (--url --duracao --modo normal|erros404 --rps --com-visao).
+Execução local
+  - scripts/run_local.ps1 e scripts/run_local.sh (venv, .env, PYTHONPATH, uvicorn porta 8000).
+Testes
+  - 06-Secure-DevOps-Cloud/tests/test_devops_container.py, test_devops_pipeline.py,
+    test_devops_terraform.py, test_devops_observabilidade.py (38 testes).
+Documentação (06-Secure-DevOps-Cloud/docs/)
+  - ARQUITETURA_CLOUD.md, RESPONSABILIDADE_COMPARTILHADA.md, LGPD_MAPEAMENTO_DADOS_PESSOAIS.md,
+    ESTIMATIVA_DE_CUSTOS.md, PUBLICACAO_AZURE.md, CI_CD_DEVSECOPS.md, OBSERVABILIDADE.md,
+    DEMONSTRACAO_EXECUCAO_BARRADA.md, EVIDENCIAS_NECESSARIAS.md, RELATORIO_ENTREGA_DEVOPS.md (fonte do PDF),
+    evidencias/validacoes_locais.md; 06-Secure-DevOps-Cloud/README.md (com Ficha Técnica resumida).
+
+======================================================================================
+B. O QUE FOI TESTADO (comandos exatos e resultados reais — detalhes em docs/evidencias/validacoes_locais.md)
+======================================================================================
+  1. terraform fmt -check -recursive ............................ exit 0
+  2. terraform init -backend=false; terraform validate ............ "Success! The configuration is valid."
+  3. terraform test ............................................... "Success! 3 passed, 0 failed."
+  4. trivy config 06-Secure-DevOps-Cloud/docker ................... 0 más configurações
+  5. trivy config 06-Secure-DevOps-Cloud/terraform ................ 0 más configurações
+  6. trivy fs --scanners vuln (requirements.txt) .................. 1ª execução: 3 HIGH + 1 MEDIUM em python-multipart
+     0.0.20 (+ starlette 0.46.2). APÓS a atualização de 15/11/2026 (fastapi 0.162.0, starlette 1.10.0,
+     python-multipart 0.0.33, uvicorn 0.54.0): --severity HIGH,CRITICAL -> 0 vulnerabilidades.
+  7. gitleaks dir . --config .gitleaks.toml --redact .............. "no leaks found" (após corrigir exclusões)
+  8. gitleaks com token fictício gerado fora do repo .............. "leaks found: 1", RuleID acessacidade-demo-token
+  9. testar_regras_semgrep.py ..................................... 13/13 achados esperados
+ 10. semgrep (p/python, p/javascript, p/secrets, p/dockerfile, .semgrep/) nas pastas da disciplina 06 ... 0 achados
+ 11. semgrep no repositório inteiro ............................... 1ª execução: 1 achado ERROR em 05-.../gerar_pdf_relatorio.py;
+     após a exceção justificada (15/11/2026): 0 achados, exit 0.
+ 12. .\.venv\Scripts\python.exe -m pytest 06-Secure-DevOps-Cloud\tests ... 38 passed
+ 13. .\.venv\Scripts\python.exe -m pytest (repositório inteiro) ......... 485 passed
+
+======================================================================================
+C. O QUE NÃO FOI POSSÍVEL FAZER (E POR QUÊ)
+======================================================================================
+  - docker build / docker compose up / smoke test / Trivy image: não há Docker nesta máquina. O CI faz isso.
+  - Varredura da imagem base Debian: depende do docker build (será feita no job "imagem").
+  - terraform plan/apply, push no ACR, URL pública: sem credenciais Azure e proibido criar recursos nesta etapa.
+  - Execuções do GitHub Actions (verde, barrada, corrigida): o repositório ainda não está no GitHub.
+  - Prometheus/Grafana rodando e alerta disparado: dependem do Docker Desktop.
+  - gitleaks git (histórico): a pasta ainda não é um repositório Git.
+  - Preços da Azure: usados valores de referência (East US); a conferência na calculadora é manual.
+  - Bloqueios que existiam em áreas de outros componentes — TODOS RESOLVIDOS em 15/11/2026:
+      * requirements.txt com CVEs HIGH → atualizado (ver D2 e validacoes_locais.md §3.1).
+      * Achado ERROR do Semgrep em 05-.../gerar_pdf_relatorio.py → exceção justificada (ver D3).
+      * .env.example sem GRAFANA_ADMIN_PASSWORD/PROMETHEUS_CONFIG → variáveis incluídas (valor da senha vazio:
+        defina no seu .env local).
+
+======================================================================================
+D. O QUE DEPENDE DO USUÁRIO
+======================================================================================
+D1. Instalar as ferramentas
+  Ação necessária: instalar Docker Desktop, Azure CLI, Terraform e Git.
+  Programa ou site: https://www.docker.com/products/docker-desktop/ ; https://learn.microsoft.com/cli/azure/install-azure-cli ;
+                    https://developer.hashicorp.com/terraform/install ; https://git-scm.com
+  Arquivo envolvido: nenhum.
+  Caminho do menu ou procedimento: instaladores do Windows (Docker Desktop exige WSL 2 — o instalador oferece ativar).
+  Passo a passo:
+    1. Instale o Docker Desktop, reinicie o Windows se pedido e abra o Docker Desktop até aparecer "Engine running".
+    2. Instale a Azure CLI (MSI).
+    3. Baixe o Terraform 1.9.x (zip), extraia terraform.exe para uma pasta (ex.: C:\Ferramentas) e inclua no PATH
+       (Configurações → Sistema → Sobre → Configurações avançadas → Variáveis de Ambiente → Path → Novo).
+    4. Abra um PowerShell NOVO.
+  Resultado esperado: docker --version, docker compose version (≥ 2.24), az --version, terraform version respondem.
+  Como saber se deu certo: os quatro comandos mostram versão sem erro.
+
+D2. [RESOLVIDO em 15/11/2026] Dependências vulneráveis — nenhuma ação necessária, só conferir no CI
+  O que foi feito: requirements.txt atualizado para fastapi 0.162.0, starlette 1.10.0, python-multipart 0.0.33 e
+    uvicorn 0.54.0 (todas publicadas no PyPI há mais de duas semanas na data da atualização).
+  Verificação real: pytest da raiz -> 485 passed; trivy fs --scanners vuln --severity HIGH,CRITICAL requirements.txt
+    -> 0 vulnerabilidades.
+  Ainda não verificado: a imagem Docker completa (camadas do sistema operacional da imagem base) — só o job
+    "Build da imagem + Trivy image + smoke test" do Actions comprova. Se ele acusar CVE do Debian com correção
+    disponível, reconstrua a imagem (a base python:3.11-slim recebe atualizações) e rode de novo.
+  Como saber se deu certo: job "Build da imagem + Trivy image + smoke test" verde no Actions.
+
+D3. [RESOLVIDO em 15/11/2026] Achado do Semgrep na pasta 05 — nenhuma ação necessária
+  O que foi feito: em 05-Robotic-Process-Automation/scripts/gerar_pdf_relatorio.py a chamada subprocess.run
+    (lista de argumentos, sem shell, executável = navegador escolhido pelo usuário, ferramenta local de documentação)
+    recebeu exceção justificada "# nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args...".
+  Verificação real: semgrep scan --config p/python --config p/javascript --config p/secrets --config p/dockerfile
+    --config .semgrep/acessacidade.yml --error na raiz (excluindo .venv e .semgrep/tests) -> 0 achados, exit 0.
+  Como saber se deu certo: job "SAST (Semgrep)" verde no Actions.
+
+D4. Testar localmente com Docker Compose
+  Ação necessária: subir a stack e conferir a imagem.
+  Programa ou site: Docker Desktop + PowerShell.
+  Arquivo envolvido: docker-compose.yml, .env (criar a partir de .env.example).
+  Caminho do menu ou procedimento: PowerShell na raiz do repositório.
+  Passo a passo:
+    1. Copy-Item .env.example .env
+    2. Add-Content .env "GRAFANA_ADMIN_PASSWORD=<senha forte escolhida pela equipe>"
+    3. docker compose up -d --build
+    4. docker compose ps          (app deve ficar "healthy" em até ~1 min)
+    5. docker compose exec app id (deve mostrar uid=10001)
+    6. Abra http://localhost:8000 e http://localhost:8000/health
+    7. docker image ls acessacidade (anote o tamanho para o PDF)
+  Resultado esperado: SPA abre, /health retorna "ok", usuário 10001.
+  Como saber se deu certo: status "healthy" e prints 01 e 02 de docs/EVIDENCIAS_NECESSARIAS.md.
+
+D5. Criar conta/assinatura Azure
+  Ação necessária: ativar Azure for Students (ou outra assinatura com crédito).
+  Programa ou site: https://azure.microsoft.com/free/students/ e https://portal.azure.com
+  Arquivo envolvido: nenhum.
+  Caminho do menu ou procedimento: Portal → Subscriptions (anotar o Subscription ID) → Cost Management → Budgets.
+  Passo a passo:
+    1. Ative a oferta com o e-mail institucional.
+    2. Anote o Subscription ID (não colocar em arquivo versionado).
+    3. Crie um orçamento (Budget) de US$ 10 com alertas em 50% e 90%.
+  Resultado esperado: assinatura "Active".
+  Como saber se deu certo: az login; az account show mostra a assinatura.
+
+D6. Publicar o repositório no GitHub
+  Ação necessária: criar repositório PÚBLICO e enviar o código.
+  Programa ou site: https://github.com/new + Git.
+  Arquivo envolvido: todo o repositório (.gitignore já bloqueia .env, .venv, tfstate, tfvars, data/runtime).
+  Caminho do menu ou procedimento: PowerShell na raiz.
+  Passo a passo:
+    1. git init; git add .; git status   (CONFIRA que .env, .venv, *.tfstate, *.tfvars, data/runtime NÃO aparecem)
+    2. gitleaks git . --config .gitleaks.toml --redact (opcional, antes do primeiro push)
+    3. git commit -m "AcessaCidade: versão inicial"
+    4. git branch -M main; git remote add origin https://github.com/<owner>/<repo>.git; git push -u origin main
+  Resultado esperado: workflow "CI DevSecOps" inicia sozinho (job deploy é pulado — ainda desligado).
+  Como saber se deu certo: aba Actions mostra a execução; com D2/D3 resolvidos, todos os jobs verdes.
+
+D7. State remoto, OIDC e GitHub Secrets
+  Ação necessária: preparar a Azure para o deploy automático.
+  Programa ou site: PowerShell (Azure CLI) + GitHub (Settings).
+  Arquivo envolvido: infra/azure/01_login_e_providers.ps1, 02_state_remoto.ps1, 03_oidc_github.ps1.
+  Caminho do menu ou procedimento: docs/PUBLICACAO_AZURE.md §1–2 e docs/CI_CD_DEVSECOPS.md §3–4.
+  Passo a passo:
+    1. .\infra\azure\01_login_e_providers.ps1 -SubscriptionId "<id>"
+    2. .\infra\azure\02_state_remoto.ps1 -StorageAccount "acessacidadetf<sufixo>"   (anote os valores TFSTATE_*)
+    3. .\infra\azure\03_oidc_github.ps1 -Repositorio "<owner>/<repo>" -StorageAccount "<mesmo nome>"   (anote AZURE_*)
+    4. GitHub → Settings → Environments → New environment → "production".
+    5. Cadastre os Secrets: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, TFSTATE_RESOURCE_GROUP,
+       TFSTATE_STORAGE_ACCOUNT, TFSTATE_CONTAINER, TFSTATE_KEY, ADMIN_TOKEN, PIPELINE_TOKEN, OPENROUTER_API_KEY (opcional).
+       Gere tokens com: python -c "import secrets; print(secrets.token_urlsafe(32))"
+    6. Cadastre a Variable AZURE_DEPLOY_ENABLED = true (opcional: AZURE_LOCATION, AZURE_NAME_SUFFIX).
+  Resultado esperado: credencial federada criada; secrets listados (só nomes aparecem).
+  Como saber se deu certo: Entra ID → App registrations → gh-acessacidade-deploy → Federated credentials mostra
+    "repo:<owner>/<repo>:environment:production".
+
+D8. Primeira publicação (CI ou manual)
+  Ação necessária: executar o deploy.
+  Programa ou site: GitHub Actions (ou PowerShell + Terraform, docs/PUBLICACAO_AZURE.md §3–6).
+  Arquivo envolvido: .github/workflows/ci-devsecops.yml, 06-Secure-DevOps-Cloud/terraform/.
+  Caminho do menu ou procedimento: Actions → CI DevSecOps → Run workflow (branch main) ou um push na main.
+  Passo a passo:
+    1. Rode o workflow na main.
+    2. Acompanhe o job "Deploy na Azure": fase 1, push da imagem, fase 2, smoke test.
+    3. Copie a URL do resumo da execução (app_url).
+    4. Abra http://<fqdn>:8000 e http://<fqdn>:8000/health.
+  Resultado esperado: smoke test "OK na tentativa N" e a SPA abrindo na URL pública.
+  Como saber se deu certo: job verde + /health "ok" no navegador. Se falhar: docs/PUBLICACAO_AZURE.md §7.
+  Depende de: D2, D3, D6, D7.
+
+D9. Execução barrada e corrigida
+  Ação necessária: provocar uma falha segura e corrigi-la.
+  Programa ou site: Git + GitHub Actions.
+  Arquivo envolvido: docs/DEMONSTRACAO_EXECUCAO_BARRADA.md (arquivo temporário demo_segredo_vazado.py — NÃO deixar no repo).
+  Caminho do menu ou procedimento: seguir o roteiro do documento (branch demo/...).
+  Passo a passo: itens 1 a 7 do roteiro principal (Gitleaks) ou alternativas Semgrep/Trivy.
+  Resultado esperado: uma execução vermelha com motivo visível e outra verde.
+  Como saber se deu certo: duas execuções no Actions com links anotados; branch de demonstração apagada.
+
+D10. Monitoramento e alerta disparado
+  Ação necessária: subir Prometheus/Grafana apontando para o MVP publicado e disparar um alerta.
+  Programa ou site: Docker Desktop, navegador.
+  Arquivo envolvido: monitoring/prometheus/prometheus.azure.yml, .env, scripts/gerar_trafego_demo.py.
+  Caminho do menu ou procedimento: docs/OBSERVABILIDADE.md §3.2 e §4.
+  Passo a passo:
+    1. Troque o [PREENCHER] de prometheus.azure.yml pelo <fqdn>:8000 (terraform output -raw container_fqdn).
+    2. No .env: PROMETHEUS_CONFIG=prometheus.azure.yml
+    3. docker compose --profile monitoring up -d prometheus alertmanager grafana
+    4. http://127.0.0.1:9090/targets → acessacidade-azure UP.
+    5. Tráfego normal: .\.venv\Scripts\python.exe scripts\gerar_trafego_demo.py --url http://<fqdn>:8000 --duracao 300 --modo normal --com-visao
+    6. Grafana http://127.0.0.1:3000 → dashboard "AcessaCidade — Sinais de Ouro" (print).
+    7. Alerta: ... --modo erros404 --duracao 240 → Prometheus /alerts: AcessaCidadeMuitas4xx FIRING (print) e Alertmanager (print).
+  Resultado esperado: dashboard com dados nos 4 sinais e um alerta FIRING.
+  Como saber se deu certo: prints 16–19 de docs/EVIDENCIAS_NECESSARIAS.md.
+  Depende de: URL pública (D8). Alternativa sem nuvem: mesma demonstração com docker compose local.
+
+D11. Custos
+  Ação necessária: conferir preços e o gasto real.
+  Programa ou site: https://azure.microsoft.com/pricing/calculator/ e Portal → Cost Management.
+  Arquivo envolvido: docs/ESTIMATIVA_DE_CUSTOS.md.
+  Caminho do menu ou procedimento: calculadora → Container Instances (1 vCPU, 1,5 GB, 730 h) + Container Registry Basic.
+  Passo a passo: 1. montar a estimativa na região usada; 2. print; 3. substituir os [PREENCHER] do documento.
+  Resultado esperado: valores conferidos com data e região.
+  Como saber se deu certo: documento sem [PREENCHER] na seção de custos.
+
+D12. Gerar o PDF único
+  Ação necessária: montar o PDF com arquitetura, evidências (prints), custo e links clicáveis.
+  Programa ou site: editor de Markdown/Word ou navegador (imprimir para PDF).
+  Arquivo envolvido: docs/RELATORIO_ENTREGA_DEVOPS.md + docs/evidencias/*.png.
+  Caminho do menu ou procedimento: preencher todos os [PREENCHER], inserir prints, exportar para PDF.
+  Passo a passo: 1. preencher; 2. exportar; 3. abrir o PDF e clicar em cada link; 4. enviar no portal.
+  Resultado esperado: PDF com links funcionando.
+  Como saber se deu certo: todos os links abrem; nenhum print mostra segredo.
+
+D13. Limpeza (SOMENTE depois da correção e da nota)
+  Ação necessária: remover os recursos Azure.
+  Programa ou site: PowerShell (Terraform/Azure CLI).
+  Arquivo envolvido: infra/azure/99_limpeza.ps1 / terraform destroy.
+  Caminho do menu ou procedimento: docs/PUBLICACAO_AZURE.md §10.
+  Passo a passo: 1. terraform destroy; 2. 99_limpeza.ps1; 3. AZURE_DEPLOY_ENABLED = false; 4. revogar tokens.
+  Resultado esperado: nenhum recurso do projeto na assinatura.
+  Como saber se deu certo: Portal → Resource groups sem rg-acessacidade-*; Cost Management sem novas cobranças.
+
+D14. (FAZER ANTES DO DEPLOY) Definir a política de retenção e o contato exibidos na tela #/sobre
+  [incluído na auditoria de 15/11/2026: são os únicos [PREENCHER] visíveis ao cidadão no site publicado]
+  Ação necessária: a equipe decide o prazo de guarda das denúncias/fotos, como pedir exclusão e o canal de contato.
+  Programa ou site: VS Code (ou outro editor de texto).
+  Arquivo envolvido: app/frontend/js/views/sobre.js (linhas com "Política de retenção" e "Contato da equipe");
+    manter coerente com 06-Secure-DevOps-Cloud/docs/LGPD_MAPEAMENTO_DADOS_PESSOAIS.md (seções de retenção e direitos).
+  Caminho do menu ou procedimento: VS Code > Ctrl+P > sobre.js > Ctrl+F "[PREENCHER".
+  Passo a passo:
+    1. Decidir o prazo (ex.: até o fim da avaliação acadêmica) e como a exclusão é feita (Área da equipe ou pedido por e-mail).
+    2. Substituir os dois [PREENCHER] em sobre.js por texto real (um canal da equipe que exista de fato).
+    3. Atualizar o mesmo prazo no LGPD_MAPEAMENTO_DADOS_PESSOAIS.md.
+    4. Rodar o E2E (README da raiz, seção "Testes") e publicar a nova imagem.
+  Resultado esperado: a tela "Sobre" mostra política de retenção e contato reais.
+  Como saber se deu certo: <URL>/#/sobre não exibe "[PREENCHER"; o E2E termina com 0 falha(s).
+
+======================================================================================
+E. EVIDÊNCIAS QUE O USUÁRIO PRECISA PRODUZIR
+======================================================================================
+  Lista completa com nomes de arquivo: docs/EVIDENCIAS_NECESSARIAS.md. Resumo:
+  - Prints: compose healthy; id uid=10001; Trivy image ok; terraform apply fase 1 e 2; Resource Group no portal;
+    ACI com porta 8000; container tfstate; .gitignore; Actions verde; Actions barrada; Actions corrigida;
+    nomes dos GitHub Secrets; federated credential; URL pública; /health; Grafana com 4 sinais; Prometheus targets;
+    alerta FIRING; Alertmanager; calculadora de custos; Cost Management.
+  - Links: repositório público; URL do MVP; execução verde; execução barrada; execução corrigida.
+  - Opcional: vídeo curto do alerta disparando.
+
+======================================================================================
+F. CHECKLIST DE ENTREGÁVEIS (PDF oficial — página da disciplina 06)
+======================================================================================
+  [ ] Repositório público com Dockerfile, workflow e Terraform
+  [ ] URL pública do MVP funcionando
+  [ ] Ficha Técnica do MVP no README (raiz) — resumo pronto em 06-Secure-DevOps-Cloud/README.md
+  [ ] PDF único com arquitetura, evidências (prints) e custo, com links clicáveis
+  [ ] Container e IaC: imagem enxuta, não root, sem segredo; stack sobe com docker compose (print)
+  [ ] Container e IaC: nuvem criada por Terraform; state e .tfvars fora do repo; sem porta admin aberta (prints)
+  [ ] Pipeline: build, Gitleaks, Semgrep e Trivy a cada push (print)
+  [ ] Pipeline: segredos em GitHub Secrets (print só dos nomes)
+  [ ] Pipeline: deploy automático (print do job deploy verde)
+  [ ] Pipeline: uma execução barrada e a corrigida (links + prints)
+  [ ] Observabilidade: dashboard com as 4 métricas de ouro (print)
+  [ ] Observabilidade: um alerta disparado (print)
+  [ ] Documentação: diagrama, responsabilidade compartilhada, LGPD, estimativa de custo, README reproduzível
+  [ ] Envio no portal até 19/11, 23h55 (um envio por equipe)
+  [ ] Após a nota: limpeza dos recursos Azure

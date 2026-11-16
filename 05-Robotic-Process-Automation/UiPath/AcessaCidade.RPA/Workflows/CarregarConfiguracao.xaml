@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AcessaCidade.RPA - Workflows/CarregarConfiguracao.xaml
+  Le Data/Config.xlsx (aba Settings, colunas Nome/Valor) e devolve um Dictionary(Of String, Object).
+  Estrutura escrita fora do UiPath Studio (ver docs/INSTRUCOES_UIPATH_STUDIO.md): ao abrir no Studio,
+  confira os avisos do painel "Error List" e salve o arquivo para o Studio completar o ViewState.
+-->
+<Activity mc:Ignorable="sap sap2010" x:Class="CarregarConfiguracao" mva:VisualBasic.Settings="{x:Null}"
+ sap2010:WorkflowViewState.IdRef="ActivityBuilder_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mva="clr-namespace:Microsoft.VisualBasic.Activities;assembly=System.Activities"
+ xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib"
+ xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common"
+ xmlns:ui="http://schemas.uipath.com/workflow/activities"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="in_CaminhoConfig" Type="InArgument(x:String)" />
+    <x:Property Name="out_Config" Type="OutArgument(scg:Dictionary(x:String, x:Object))" />
+  </x:Members>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text.RegularExpressions</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>UiPath.Excel</x:String>
+      <x:String>UiPath.Excel.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Runtime</AssemblyReference>
+      <AssemblyReference>System.Text.RegularExpressions</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Excel</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Carregar configuração (Data\Config.xlsx)" sap2010:WorkflowViewState.IdRef="Sequence_1"
+   sap2010:Annotation.AnnotationText="Lê a aba Settings do Config.xlsx (colunas Nome e Valor) e devolve um dicionário. Chaves obrigatórias: URL_ACESSACIDADE, CAMINHO_PLANILHA_ENTRADA, CAMINHO_PLANILHA_SAIDA, PASTA_IMAGENS, TIMEOUT_SEGUNDOS, NAVEGADOR. Nenhuma senha ou token deve ser colocado no Config.xlsx.">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataTable" Name="dtConfig" />
+      <Variable x:TypeArguments="x:String" Name="caminhoConfig" />
+      <Variable x:TypeArguments="s:String[]" Name="chavesFaltantes" />
+    </Sequence.Variables>
+    <Assign DisplayName="Definir caminho do Config.xlsx" sap2010:WorkflowViewState.IdRef="Assign_1"
+     sap2010:Annotation.AnnotationText="Se o argumento vier vazio, usa Data\Config.xlsx (relativo à pasta do projeto, que é o diretório de trabalho do robô).">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:String">[caminhoConfig]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:String">[If(String.IsNullOrWhiteSpace(in_CaminhoConfig), "Data\Config.xlsx", in_CaminhoConfig)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[Not File.Exists(caminhoConfig)]" DisplayName="Config.xlsx existe?" sap2010:WorkflowViewState.IdRef="If_1"
+     sap2010:Annotation.AnnotationText="Sem configuração o robô não pode continuar: lança exceção de sistema com o caminho completo procurado.">
+      <If.Then>
+        <Throw DisplayName="Throw - Config.xlsx não encontrado" sap2010:WorkflowViewState.IdRef="Throw_1">
+          <Throw.Exception>
+            <InArgument x:TypeArguments="s:Exception">[New FileNotFoundException("Arquivo de configuração não encontrado: " + Path.GetFullPath(caminhoConfig) + ". Gere-o com scripts\gerar_planilhas.py.")]</InArgument>
+          </Throw.Exception>
+        </Throw>
+      </If.Then>
+    </If>
+    <Assign DisplayName="Criar dicionário de configuração" sap2010:WorkflowViewState.IdRef="Assign_2"
+     sap2010:Annotation.AnnotationText="Dicionário sem diferenciar maiúsculas/minúsculas nas chaves.">
+      <Assign.To>
+        <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[out_Config]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[New Dictionary(Of String, Object)(StringComparer.OrdinalIgnoreCase)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:ReadRange AddHeaders="True" DataTable="[dtConfig]" DisplayName="Read Range Workbook - aba Settings" Range="A1" SheetName="Settings" WorkbookPath="[caminhoConfig]"
+     sap2010:WorkflowViewState.IdRef="ReadRange_1"
+     sap2010:Annotation.AnnotationText="Workbook Read Range (não exige o Microsoft Excel instalado). Lê a partir de A1 com cabeçalhos: Nome | Valor | Descricao." />
+    <ui:ForEachRow CurrentIndex="{x:Null}" DataTable="[dtConfig]" DisplayName="For Each Row - parâmetros" sap2010:WorkflowViewState.IdRef="ForEachRow_1"
+     sap2010:Annotation.AnnotationText="Para cada linha da aba Settings, grava Valor no dicionário usando Nome como chave (linhas sem Nome são ignoradas).">
+      <ui:ForEachRow.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="row" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Body" sap2010:WorkflowViewState.IdRef="Sequence_2">
+            <If Condition="[Not String.IsNullOrWhiteSpace(row(&quot;Nome&quot;).ToString)]" DisplayName="Linha tem Nome?" sap2010:WorkflowViewState.IdRef="If_2">
+              <If.Then>
+                <Assign DisplayName="Adicionar parâmetro ao dicionário" sap2010:WorkflowViewState.IdRef="Assign_3">
+                  <Assign.To>
+                    <OutArgument x:TypeArguments="x:Object">[out_Config(row("Nome").ToString.Trim)]</OutArgument>
+                  </Assign.To>
+                  <Assign.Value>
+                    <InArgument x:TypeArguments="x:Object">[row("Valor").ToString.Trim]</InArgument>
+                  </Assign.Value>
+                </Assign>
+              </If.Then>
+            </If>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEachRow.Body>
+    </ui:ForEachRow>
+    <Assign DisplayName="Verificar chaves obrigatórias" sap2010:WorkflowViewState.IdRef="Assign_4"
+     sap2010:Annotation.AnnotationText="Lista as chaves obrigatórias ausentes ou vazias.">
+      <Assign.To>
+        <OutArgument x:TypeArguments="s:String[]">[chavesFaltantes]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="s:String[]">[New String() {"URL_ACESSACIDADE", "CAMINHO_PLANILHA_ENTRADA", "CAMINHO_PLANILHA_SAIDA", "PASTA_IMAGENS", "TIMEOUT_SEGUNDOS", "NAVEGADOR"}.Where(Function(k) Not out_Config.ContainsKey(k) OrElse String.IsNullOrWhiteSpace(out_Config(k).ToString)).ToArray()]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[chavesFaltantes.Length &gt; 0]" DisplayName="Faltam chaves?" sap2010:WorkflowViewState.IdRef="If_3">
+      <If.Then>
+        <Throw DisplayName="Throw - configuração incompleta" sap2010:WorkflowViewState.IdRef="Throw_2">
+          <Throw.Exception>
+            <InArgument x:TypeArguments="s:Exception">[New Exception("Config.xlsx incompleto. Preencha na aba Settings: " + String.Join(", ", chavesFaltantes))]</InArgument>
+          </Throw.Exception>
+        </Throw>
+      </If.Then>
+    </If>
+    <ui:LogMessage DisplayName="Log - configuração carregada" Level="Info" sap2010:WorkflowViewState.IdRef="LogMessage_1"
+     Message="[&quot;Configuração carregada: &quot; + out_Config.Count.ToString + &quot; parâmetros. URL do AcessaCidade: &quot; + out_Config(&quot;URL_ACESSACIDADE&quot;).ToString + &quot; | Navegador: &quot; + out_Config(&quot;NAVEGADOR&quot;).ToString]" />
+  </Sequence>
+</Activity>

@@ -1,0 +1,219 @@
+AcessaCidade — Disciplina 01: Generative AI for Engineering (AcessaCidade Helper)
+PENDÊNCIAS E AÇÕES MANUAIS
+Atualizado em: 2026-11-15 | Prazo de entrega no portal: 19/11/2026, 23h55 (um envio por equipe)
+======================================================================================
+
+ATENÇÃO PRINCIPAL: no PDF oficial da GS, a atividade desta disciplina aparece como "TBD"
+(nome, papel no MVP, conceito, objetivo, entregáveis, formato e avaliação), com a orientação
+"entre em contato diretamente com o Reinaldo Augusto". Tudo abaixo foi feito pelo escopo definido
+pela equipe. A primeira ação manual (D1) é confirmar os requisitos com o professor.
+
+--------------------------------------------------------------------------------------
+A. O QUE FOI DESENVOLVIDO
+--------------------------------------------------------------------------------------
+Código (pacote importado pelo backend):
+  - src/acessacidade_helper/ — interface da seção 6 do contrato:
+      AssistantService.from_env(), .llm_enabled, .answer(AssistantRequest) -> AssistantResponse,
+      extract_protocol(texto).
+      config.py (variáveis OPENROUTER_*, ASSISTANT_*; chave nunca em repr/log),
+      prompts.py (carrega prompts/*.md; ASSISTANT_PROMPTS_DIR sobrescreve),
+      context.py (lista branca de campos da denúncia; blocos de DADOS delimitados),
+      llm_client.py (httpx -> {OPENROUTER_BASE_URL}/chat/completions; Bearer + X-Title "AcessaCidade";
+                     temperature 0.2; max_tokens 500; erros tipados),
+      guardrails.py (limites, controles, PII, delimitadores, verificação pós-resposta),
+      fallback.py (modo básico por regras em pt-BR), service.py, domain.py, __main__.py (CLI).
+Prompts: prompts/system_prompt.md, modo_geral.md, modo_descricao.md, modo_explicar_resultado.md,
+  guia_plataforma.md (marcadores {{INSTRUCOES_DO_MODO}}, {{ENUMERACOES}}, {{SIGNIFICADO_STATUS}},
+  {{GUIA_PLATAFORMA}}).
+Exemplos (gerados EXECUTANDO o código, sem invenção):
+  - examples/fallback/exemplos_fallback.json/.md — 20 casos do modo básico (gerado em 2026-11-15T01:50:37Z)
+  - examples/erros/exemplos_erros.json/.md — 10 cenários de erro (sem chave, 401, 429, 500, timeout,
+    resposta vazia, JSON inválido, protocolo inexistente, guardrail de protocolo inventado,
+    guardrail de rota acessível) simulados com httpx.MockTransport
+  - examples/llm_real/LEIAME.md — como gerar exemplos REAIS com o LLM (ainda não há nenhum)
+  - examples/gerar_exemplos_fallback.py, gerar_exemplos_erros.py, gerar_exemplos_llm.py,
+    perguntas_teste.json (20 casos), entradas/ (denúncias e indicadores SIMULADOS)
+Testes: tests/test_helper_*.py (7 arquivos, 145 testes).
+Documentação:
+  - README.md (objetivo, arquitetura com Mermaid, configuração, testes, integração, custos, riscos)
+  - docs/INTEGRACAO.md (fluxo, código de referência do backend, contrato 4.9, checklist)
+  - docs/ENGENHARIA_DE_PROMPTS.md (técnicas, decisões, contexto injetado, guardrails de saída)
+  - docs/RISCOS_E_LIMITES.md (12 riscos com mitigação implementada e risco residual; LGPD)
+  - docs/PLANO_DE_TESTES_E_EVIDENCIAS.md (estratégia, resultado real, 20 casos, evidências)
+  - docs/RELATORIO_ENTREGA_GENAI.md (fonte do PDF de entrega; links [PREENCHER])
+  - docs/links_entrega.yaml (onde preencher os links) e docs/gerar_pdf_relatorio.py (gera o PDF)
+
+--------------------------------------------------------------------------------------
+B. O QUE FOI TESTADO (comandos exatos e resultados reais)
+--------------------------------------------------------------------------------------
+B1. Testes automatizados (sem rede, API simulada com httpx.MockTransport)
+    Comando (PowerShell, na raiz C:\Users\masak\Desktop\GS7-4ESPR):
+      .\.venv\Scripts\python.exe -m pytest 01-Generative-AI-Engineering/tests -v
+    Resultado real (2026-11-15, Python 3.11.9): 145 passed in 1.99s
+      test_helper_cli_e_exemplos.py 7 | test_helper_fallback.py 32 | test_helper_guardrails.py 28 |
+      test_helper_llm_client.py 28 | test_helper_prompt_injection.py 5 | test_helper_prompts.py 11 |
+      test_helper_service.py 34
+B2. CLI sem chave, protocolo inexistente:
+      $env:PYTHONPATH = "01-Generative-AI-Engineering/src"
+      .\.venv\Scripts\python.exe -m acessacidade_helper "Qual o status?" --protocolo AC-2026-000999 --json
+    Resultado real: fonte "fallback", resposta começa com "Não encontrei nenhuma denúncia com o
+    protocolo AC-2026-000999.", aviso "Assistente em modo básico...", denuncia_referenciada null.
+B3. Geração do PDF de entrega (teste, fora do repositório):
+      .\.venv\Scripts\python.exe 01-Generative-AI-Engineering\docs\gerar_pdf_relatorio.py --saida <scratchpad>\teste_sem_links.pdf
+    Resultado real: PDF de 4 páginas, 0 links (links ainda vazios), aviso de 11 marcadores [PREENCHER].
+    Com um arquivo de links de TESTE (example.org): 4 páginas, 11 links clicáveis (repositório,
+    MVP/#/assistente, vídeo e 8 arquivos do repositório). Com --estrito: sai com código 2 enquanto
+    houver [PREENCHER] (comportamento esperado).
+    Observação: no terminal Git Bash com sandbox o Edge não abriu; no PowerShell funcionou.
+
+--------------------------------------------------------------------------------------
+C. O QUE NÃO FOI POSSÍVEL FAZER (e por quê)
+--------------------------------------------------------------------------------------
+C1. Confirmar os requisitos da disciplina: o PDF está "TBD"; só o professor pode definir.
+C2. Gerar exemplos com o LLM real: exige a chave OpenRouter da equipe (não existe no ambiente e
+    não pode ser inventada). O script está pronto (examples/gerar_exemplos_llm.py).
+C3. Medir custo real: depende de chamadas reais com a chave. Há apenas estimativa com premissas (README, seção 6).
+C4. [RESOLVIDO LOCALMENTE em 15/11/2026] Integração com o backend: POST /api/assistente implementado e
+    conferido localmente (testes da API, E2E 199/199 e checklist de docs/INTEGRACAO.md, seção 6).
+    Falta só a conferência na URL pública (depende do deploy da disciplina 06) e o modo LLM (chave).
+C5. Teste com usuários reais do helper: não realizado (não se pode inventar). Ver D6.
+C6. URL pública, repositório público e vídeo: dependem dos componentes 06 (deploy) e da equipe.
+
+--------------------------------------------------------------------------------------
+D. O QUE DEPENDE DO USUÁRIO
+--------------------------------------------------------------------------------------
+D1. Confirmar requisitos formais com o professor Reinaldo Ramos
+  Ação necessária: perguntar o que será exigido (entregáveis, formato, critérios, se há vídeo).
+  Programa ou site: portal FIAP (mensagens/fórum da disciplina), e-mail institucional ou Teams.
+  Arquivo envolvido: README.md (bloco "Atenção"), docs/RELATORIO_ENTREGA_GENAI.md (bloco "Requisitos a confirmar").
+  Caminho do menu ou procedimento: portal FIAP > disciplina Generative AI for Engineering > mensagens ao professor.
+  Passo a passo:
+    1. Enviar mensagem curta: produto (AcessaCidade), o que o helper faz (3 modos), o que já existe
+       (código, testes, relatório) e perguntar: entregáveis, formato (PDF? vídeo? repositório?), critérios.
+    2. Registrar a resposta (data e canal) no README e no relatório, no lugar do [PREENCHER].
+    3. Ajustar o relatório ao formato pedido (seções, vídeo, etc.).
+  Resultado esperado: requisitos claros e documentados.
+  Como saber se deu certo: não resta "TBD" sem resposta; o relatório cobre cada item pedido.
+
+D2. Criar conta OpenRouter, gerar chave e definir limite de gasto
+  Ação necessária: obter a chave que habilita o modo LLM.
+  Programa ou site: https://openrouter.ai
+  Arquivo envolvido: nenhum ainda (a chave NUNCA vai para arquivo versionado).
+  Caminho do menu ou procedimento: Sign in > Credits (adicionar crédito) > Keys > Create Key.
+  Passo a passo:
+    1. Entrar em https://openrouter.ai com a conta da equipe.
+    2. Em "Credits", adicionar um valor pequeno (os 20 casos de teste custam centavos — ver README, seção 6).
+    3. Em "Keys", clicar em "Create Key", dar o nome "AcessaCidade GS" e definir o limite de crédito
+       da chave (ex.: US$ 1).
+    4. Copiar a chave e guardar em local seguro (gerenciador de senhas). Não colar em chat, print ou Git.
+    5. Conferir na página do modelo openai/gpt-4o-mini o preço vigente e atualizar o [PREENCHER] do README (seção 6).
+  Resultado esperado: chave criada com limite de gasto.
+  Como saber se deu certo: a chave aparece em "Keys" com o limite definido.
+
+D3. Configurar a chave no .env local e testar
+  Ação necessária: ativar o modo LLM localmente.
+  Programa ou site: PowerShell + editor de texto (VS Code).
+  Arquivo envolvido: C:\Users\masak\Desktop\GS7-4ESPR\.env (criado a partir de .env.example; não versionado).
+  Caminho do menu ou procedimento: terminal na raiz do repositório.
+  Passo a passo:
+    1. Copy-Item .env.example .env   (se ainda não existir)
+    2. Abrir .env e preencher OPENROUTER_API_KEY=<sua chave>; manter OPENROUTER_MODEL=openai/gpt-4o-mini.
+    3. Conferir que .env está no .gitignore (git check-ignore .env deve imprimir ".env").
+    4. Rodar: .\.venv\Scripts\python.exe 01-Generative-AI-Engineering/examples/gerar_exemplos_llm.py --casos 01_como_registrar
+  Resultado esperado: arquivo examples/llm_real/respostas_llm_<data>.json/.md com fonte "llm".
+  Como saber se deu certo: o arquivo mostra fonte "llm" e o nome do modelo; o painel Activity do
+    OpenRouter mostra a chamada.
+
+D4. Gerar os exemplos reais com LLM (20 casos)
+  Ação necessária: produzir evidência real do LLM.
+  Programa ou site: PowerShell.
+  Arquivo envolvido: examples/gerar_exemplos_llm.py -> examples/llm_real/respostas_llm_*.json/.md
+  Caminho do menu ou procedimento: ver examples/llm_real/LEIAME.md.
+  Passo a passo:
+    1. .\.venv\Scripts\python.exe 01-Generative-AI-Engineering/examples/gerar_exemplos_llm.py
+    2. Ler o .md gerado; NÃO editar respostas (casos que caírem em "fallback" também são evidência).
+    3. Rodar os testes de novo (.\.venv\Scripts\python.exe -m pytest 01-Generative-AI-Engineering/tests).
+    4. Registrar data, modelo e custo (painel Activity) em docs/PLANO_DE_TESTES_E_EVIDENCIAS.md
+       (seção 5), no README (seção 6) e no relatório (seções 5 e 6).
+  Resultado esperado: 20 respostas reais salvas.
+  Como saber se deu certo: testes continuam passando (test_nenhum_exemplo_llm_inventado aprova os arquivos).
+
+D5. Configurar a chave na nuvem (GitHub Secret -> Azure secure environment variable)
+  Ação necessária: habilitar o LLM na URL pública sem expor a chave.
+  Programa ou site: GitHub (repositório) e pipeline/Terraform do componente 06.
+  Arquivo envolvido: .github/workflows/* e 06-Secure-DevOps-Cloud/terraform/* (área do componente 06).
+  Caminho do menu ou procedimento: GitHub > repositório > Settings > Secrets and variables > Actions > New repository secret.
+  Passo a passo:
+    1. Criar o secret OPENROUTER_API_KEY com a chave (D2).
+    2. Confirmar com o responsável pela disciplina 06 que o workflow passa esse secret como
+       secure environment variable do container (Azure Container Instances).
+    3. Após o deploy, abrir <URL pública>/health.
+  Resultado esperado: "componentes": {"assistente": "llm"}.
+  Como saber se deu certo: /health mostra "llm"; a tela #/assistente mostra respostas de IA; a chave
+    não aparece em logs nem no repositório (gitleaks no CI sem achados).
+  Dependência: URL pública e pipeline do componente 06 ainda não integrados nesta verificação.
+
+D6. (Opcional, recomendado) Teste rápido com 1–3 usuários reais
+  Ação necessária: observar pessoas usando a tela #/assistente (modo descrição e consulta).
+  Programa ou site: navegador na URL pública.
+  Arquivo envolvido: 03-Business-Intelligence-Startup/pitch/ROTEIRO_TESTE_USABILIDADE.md,
+    TERMO_CONSENTIMENTO_MODELO.md e registro_testes_usuarios_TEMPLATE.xlsx.
+  Caminho do menu ou procedimento: navegador > <URL pública>/#/assistente (testar a escrita de descrição e a consulta de protocolo).
+  Passo a passo:
+    1. Obter consentimento assinado (modelo da disciplina 03).
+    2. Pedir: "use o assistente para escrever a descrição de um buraco que você conhece".
+    3. Anotar dificuldades e tempo, sem nome real no repositório.
+  Resultado esperado: observações reais para citar no relatório.
+  Como saber se deu certo: planilha preenchida com dados reais e consentimentos guardados fora do repositório.
+
+D7. Preencher links e gerar o PDF de entrega
+  Ação necessária: produzir o PDF final (se o professor pedir PDF).
+  Programa ou site: editor de texto + PowerShell (requer Microsoft Edge instalado).
+  Arquivo envolvido: docs/links_entrega.yaml, docs/RELATORIO_ENTREGA_GENAI.md, docs/gerar_pdf_relatorio.py.
+  Caminho do menu ou procedimento: VS Code > File > Open File (links_entrega.yaml e relatório); PowerShell na raiz do repositório para gerar o PDF.
+  Passo a passo:
+    1. Preencher url_repositorio, url_mvp e url_video (https://) em docs/links_entrega.yaml.
+    2. Substituir todos os [PREENCHER] restantes do relatório (equipe, data, requisitos, exemplos, custo).
+    3. Rodar no PowerShell: .\.venv\Scripts\python.exe 01-Generative-AI-Engineering\docs\gerar_pdf_relatorio.py --estrito
+    4. Abrir 01-Generative-AI-Engineering\docs\entrega\AcessaCidade_GenAI_Relatorio.pdf e clicar em cada link.
+  Resultado esperado: PDF sem [PREENCHER] e com links clicáveis.
+  Como saber se deu certo: o script imprime "PDF gerado ... N link(s) clicável(is)" e todos abrem em aba anônima.
+
+D8. Enviar no portal
+  Ação necessária: um integrante envia a entrega da disciplina.
+  Programa ou site: portal FIAP > Generative AI for Engineering.
+  Arquivo envolvido: 01-Generative-AI-Engineering\docs\entrega\AcessaCidade_GenAI_Relatorio.pdf (ou o formato que o professor definir em D1).
+  Caminho do menu ou procedimento: portal FIAP > disciplina Generative AI for Engineering > atividade da Global Solution > anexar e enviar (o nome exato dos menus depende do portal; confira com o professor).
+  Passo a passo: 1. Anexar o que o professor pediu (D1). 2. Conferir links. 3. Enviar até 19/11/2026 23h55.
+  Resultado esperado: entrega registrada no portal antes de 19/11/2026 23h55.
+  Como saber se deu certo: comprovante/registro de envio no portal.
+
+--------------------------------------------------------------------------------------
+E. EVIDÊNCIAS QUE O USUÁRIO PRECISA PRODUZIR
+--------------------------------------------------------------------------------------
+  - Print da resposta/confirmação do professor sobre os requisitos (D1).
+  - Arquivos examples/llm_real/respostas_llm_*.json/.md (D4).
+  - Print do painel Activity do OpenRouter com o custo dos testes (SEM mostrar a chave).
+  - Print da tela #/assistente com fonte "IA" (llm) — um no modo descrição e um explicando resultado.
+  - Print da tela #/assistente em modo básico (sem chave), mostrando o aviso.
+  - Print de <URL pública>/health com "assistente".
+  - Print de /metrics com acessacidade_assistente_respostas_total (se publicado).
+  - (Se exigido) vídeo curto mostrando o helper funcionando na URL pública.
+  Salvar prints em C:\Users\masak\Desktop\GS7-4ESPR\evidencias\ sem dados pessoais nem chaves.
+
+--------------------------------------------------------------------------------------
+F. CHECKLIST DE ENTREGÁVEIS PENDENTES (a atividade está TBD no PDF oficial)
+--------------------------------------------------------------------------------------
+  [ ] Requisitos confirmados com o professor Reinaldo Ramos (data: ________)
+  [x] Código do helper com interface do contrato (seção 6) e testes passando (145)
+  [x] Prompts versionados e documentados
+  [x] Modo básico (sem chave) funcionando e documentado com saídas reais
+  [ ] Chave OpenRouter criada com limite de gasto
+  [ ] Exemplos reais com LLM gerados e citados no relatório
+  [ ] Custo real registrado
+  [ ] Integração com o backend (POST /api/assistente, /health, /metrics) verificada
+  [ ] Chave configurada como GitHub Secret / secure env var e /health = "llm" na URL pública
+  [ ] Links (repositório, MVP, vídeo se houver) preenchidos em docs/links_entrega.yaml
+  [ ] PDF gerado com --estrito e links testados em aba anônima
+  [ ] Prints de evidência salvos em evidencias/
+  [ ] Envio no portal até 19/11/2026 23h55

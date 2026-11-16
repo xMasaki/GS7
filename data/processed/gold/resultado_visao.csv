@@ -1,0 +1,5 @@
+classificacao,rotulo,total,percentual
+POSSIBLE_POTHOLE,Possível buraco identificado,40,19.0
+NOT_IDENTIFIED,Nenhum indício suficiente de buraco,44,20.9
+INCONCLUSIVE,Análise inconclusiva,37,17.5
+,Sem fotografia (não analisada),90,42.7

@@ -1,0 +1,51 @@
+BASE DE IMAGENS SINTÉTICAS — AcessaCidade (disciplina Applied Computer Vision)
+==============================================================================
+
+TODAS as imagens desta pasta são SINTÉTICAS: foram desenhadas por computador pelo
+script 04-Applied-Computer-Vision/scripts/gerar_imagens_sinteticas.py (semente fixa 2026).
+Nenhuma delas é fotografia real, nenhuma mostra pessoas, placas de veículos ou locais reais.
+
+Para que servem
+- Testar o fluxo de visão computacional de ponta a ponta (validação, filtragem,
+  limiarização, morfologia, contornos, medidas e regra de classificação).
+- Demonstrar casos que costumam confundir a triagem (sombras, manchas, rachaduras, poça)
+  e casos de foto inadequada (escura, estourada, borrada, baixo contraste).
+
+O que NÃO são
+- Não medem o desempenho do sistema no mundo real. Resultados obtidos com elas não
+  podem ser apresentados como acurácia em fotos reais de calçadas.
+
+Rótulos
+- O rótulo "manual" de cada imagem está em
+  04-Applied-Computer-Vision/samples/rotulos_manuais_sinteticas.csv e é o rótulo
+  ESPERADO POR CONSTRUÇÃO (quem gerou a cena sabe o que desenhou nela).
+
+Como regenerar (na raiz do repositório)
+  .venv\Scripts\python.exe 04-Applied-Computer-Vision\scripts\gerar_imagens_sinteticas.py
+
+Arquivos (25 imagens)
+- sintetica_buraco_01.jpg: Buraco médio no centro, calçada de concreto. (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_buraco_02.jpg: Buraco grande em asfalto de travessia. (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_buraco_03.jpg: Buraco em calçada de bloquetes. (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_buraco_04.jpg: Buraco pequeno fora do centro, concreto com juntas. (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_buraco_05.jpg: Buraco com sombra suave de árvore em outra parte da foto. (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_buraco_06.jpg: Buraco alongado pela perspectiva (foto oblíqua), asfalto, foto em pé. (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_buraco_07.jpg: Buraco com uma mancha escura próxima. (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_buraco_raso_01.jpg: Buraco raso, pouco mais escuro que o piso (caso difícil). (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_buraco_com_agua_01.jpg: Buraco cheio de água: fundo liso e escuro (caso difícil). (rótulo esperado: POSSIBLE_POTHOLE)
+- sintetica_calcada_lisa_01.jpg: Calçada de concreto sem defeitos, com juntas. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_calcada_lisa_02.jpg: Asfalto sem defeitos. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_calcada_lisa_03.jpg: Calçada de bloquetes sem defeitos. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_sombra_01.jpg: Sombra de edifício com borda nítida, encostada na lateral. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_sombra_02.jpg: Sombra de poste atravessando o asfalto. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_sombra_03.jpg: Sombra arredondada de copa de árvore no meio da calçada. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_mancha_01.jpg: Mancha de óleo escura (mais concentrada no centro). (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_mancha_02.jpg: Mancha de umidade grande e suave em bloquetes. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_rachadura_01.jpg: Rachadura fina atravessando o concreto. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_rachadura_02.jpg: Rede de rachaduras no asfalto. (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_tampa_bueiro_01.jpg: Tampa de bueiro escura com relevo em grade (não é buraco). (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_poca_01.jpg: Poça d'água rasa sobre asfalto (sem buraco desenhado). (rótulo esperado: NOT_IDENTIFIED)
+- sintetica_escura_01.jpg: Cena com buraco fotografada quase sem luz. (rótulo esperado: INCONCLUSIVE)
+- sintetica_clara_01.jpg: Cena com buraco superexposta (estourada). (rótulo esperado: INCONCLUSIVE)
+- sintetica_borrada_01.jpg: Cena com buraco fora de foco (borrada). (rótulo esperado: INCONCLUSIVE)
+- sintetica_baixo_contraste_01.jpg: Cena com buraco e contraste muito baixo (neblina/lente suja). (rótulo esperado: INCONCLUSIVE)

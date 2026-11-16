@@ -1,0 +1,131 @@
+# =====================================================================
+# AcessaCidade — stack local com Docker Compose (v2)
+#
+# Somente a aplicação (http://localhost:8000):
+#   docker compose up -d --build
+#
+# Aplicação + monitoramento (Prometheus 127.0.0.1:9090, Grafana 127.0.0.1:3000,
+# Alertmanager 127.0.0.1:9093). Exige GRAFANA_ADMIN_PASSWORD no arquivo .env:
+#   docker compose --profile monitoring up -d --build
+#
+# Monitorar o MVP publicado na Azure (sem subir a aplicação local):
+#   1) edite 06-Secure-DevOps-Cloud/monitoring/prometheus/prometheus.azure.yml
+#   2) no .env: PROMETHEUS_CONFIG=prometheus.azure.yml
+#   3) docker compose --profile monitoring up -d prometheus alertmanager grafana
+#
+# Parar tudo:  docker compose --profile monitoring down
+# (adicione -v para apagar também os volumes: banco SQLite, fotos e séries do Prometheus)
+#
+# Documentação: 06-Secure-DevOps-Cloud/README.md e docs/OBSERVABILIDADE.md
+# =====================================================================
+name: acessacidade
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: 06-Secure-DevOps-Cloud/docker/Dockerfile
+    image: acessacidade:local
+    # .env é opcional (Compose >= 2.24). Sem ele a aplicação sobe com os padrões
+    # seguros: tokens vazios = rotas protegidas desativadas; assistente em modo
+    # alternativo (sem OPENROUTER_API_KEY).
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Valores fixos do container (sobrescrevem o .env, que usa caminhos locais)
+      DATA_DIR: /app/data/runtime
+      FRONTEND_DIR: /app/app/frontend
+      APP_PORT: "8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      - app-runtime:/app/data/runtime
+    # Endurecimento do container
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: 1536m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: ["monitoring"]
+    command:
+      - "--config.file=/etc/prometheus/${PROMETHEUS_CONFIG:-prometheus.yml}"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+    volumes:
+      - ./06-Secure-DevOps-Cloud/monitoring/prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      # Somente na interface local: o painel do Prometheus não tem autenticação
+      - "127.0.0.1:9090:9090"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    profiles: ["monitoring"]
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ./06-Secure-DevOps-Cloud/monitoring/alertmanager:/etc/alertmanager:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana-oss:12.1.1
+    profiles: ["monitoring"]
+    # Sem senha padrão embutida: o container RECUSA iniciar se
+    # GRAFANA_ADMIN_PASSWORD não estiver definida no .env (ou no ambiente).
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        if [ -z "$${GF_SECURITY_ADMIN_PASSWORD}" ]; then
+        echo 'ERRO: defina GRAFANA_ADMIN_PASSWORD no arquivo .env (ver .env.example e 06-Secure-DevOps-Cloud/docs/OBSERVABILIDADE.md)';
+        exit 1; fi;
+        exec /run.sh
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/acessacidade-golden-signals.json
+    volumes:
+      - ./06-Secure-DevOps-Cloud/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./06-Secure-DevOps-Cloud/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  app-runtime:
+  prometheus-data:
+  alertmanager-data:
+  grafana-data:

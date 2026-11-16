@@ -1,0 +1,12 @@
+# Fonte de dados provisionada automaticamente no Grafana (docker compose, profile "monitoring")
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: prometheus-acessacidade
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 15s

@@ -1,0 +1,788 @@
+==========================================================================================================
+ ACESSACIDADE — PASSO A PASSO PARA CONCLUIR O PROJETO
+ FIAP Global Solution 2026.2 — CitizenTech — Engenharia de Software 4º ano
+ PRAZO DE TODAS AS ENTREGAS: 19/11/2026 às 23h55 (portal de cada disciplina; RPA via Teams)
+ Documento gerado em 15/11/2026. Raiz do repositório nesta máquina: C:\Users\masak\Desktop\GS7-4ESPR
+==========================================================================================================
+
+Este é o seu MANUAL PRINCIPAL. Ele reúne, em ordem de execução, tudo o que ainda depende de você.
+O detalhe completo de cada atividade está no arquivo PENDENCIAS_E_ACOES_MANUAIS.txt de cada pasta
+(seção D) — este guia cita a origem de cada bloco como [fonte: <pasta> Dn].
+
+Convenções usadas aqui
+  - "PowerShell na raiz" = abra o PowerShell, digite:  cd C:\Users\masak\Desktop\GS7-4ESPR
+  - Comandos começando com .\.venv\Scripts\python.exe usam o ambiente Python do projeto.
+  - [PREENCHER: ...] = informação que só a equipe tem (nomes, RMs, links, URLs, resultados reais).
+  - Na Parte 5, cada comando tem uma etiqueta:
+        [PREPARAÇÃO/SÓ LEITURA]                   não cria nada nem gera custo
+        [CRIA RECURSOS — GERA CUSTO]              cria recursos na Azure (consome crédito)
+        [REMOVE RECURSOS — SÓ APÓS A CORREÇÃO]    apaga recursos; NÃO execute antes da nota
+
+SUMÁRIO
+  0.  Resumo do estado atual e as 5 próximas ações
+  1.  Parte 1 — Visão geral
+  2.  Parte 2 — Preparação do ambiente
+  3.  Parte 3 — Executar o projeto localmente
+  4.  Parte 4 — Completar cada disciplina
+  5.  Parte 5 — Publicação na Azure
+  6.  Parte 6 — Finalizar UiPath
+  7.  Parte 7 — Finalizar Maker Lab
+  8.  Parte 8 — Produzir os vídeos
+  9.  Parte 9 — Conferência das entregas (checklist final)
+  10. Parte 10 — Envio
+
+==========================================================================================================
+ 0. RESUMO DO ESTADO ATUAL (15/11/2026) E AS 5 PRÓXIMAS AÇÕES
+==========================================================================================================
+
+O que JÁ ESTÁ PRONTO E FOI TESTADO NESTA MÁQUINA (resultados reais):
+  - MVP web completo (backend FastAPI + frontend acessível) rodando localmente:
+      * python -m pytest na raiz: 492 testes aprovados (API 56, helper 145, pipeline 107, BI 7, visão 45,
+        RPA 49, DevOps 38, Maker 45) — reconferido na auditoria de 15/11/2026.
+      * Teste ponta a ponta no Edge (app/frontend/tests_e2e/e2e_acessacidade.py): 201/201 verificações OK,
+        cobrindo registro com foto, triagem, consulta, assistente, painel, revisão, celular e desktop.
+        Capturas reais em evidencias\mvp_local\ (execução LOCAL com dados SIMULADOS).
+  - Visão computacional OpenCV (7 etapas, 3 classes explicáveis) com base de 25 imagens SINTÉTICAS.
+  - Helper de IA com OpenRouter + modo alternativo por regras (testado só no modo alternativo: sem chave).
+  - Pipeline Raw → Bronze → Silver → Gold (DuckDB) + DAG Airflow; executado pelo runner local e contra a API
+    real (publicou a Gold exibida no painel). Notebook adaptado executado.
+  - Docker, Docker Compose, Terraform (validate + 3 testes), GitHub Actions, Prometheus/Grafana/alertas
+    escritos e validados estaticamente. Gitleaks: nenhum vazamento. Semgrep: 0 achados. Trivy (dependências
+    e configuração): 0 HIGH/CRITICAL.
+  - Projeto UiPath (XAML), planilhas, BPMN As-Is/To-Be, assessment, business case.
+  - CAD paramétrico da placa acessível: STEP, STL, 3MF, DXF, SVG gerados.
+  - Lean Canvas, modelo de negócio, pitch, storyboard, Ficha Técnica, roteiros de vídeo.
+  - Os 7 PDFs de entrega já podem ser gerados (tools\gerar_todos_pdfs.ps1) — hoje saem como RASCUNHO
+    porque ainda têm [PREENCHER].
+
+O que NÃO foi feito (depende de você — não há ferramenta/credencial/ação física nesta máquina):
+  - Docker build/compose de verdade, Airflow rodando, publicação na Azure (URL pública), execuções do
+    GitHub Actions (verde, barrada, corrigida), Prometheus/Grafana rodando com alerta disparado.
+  - Abrir/rodar o robô no UiPath Studio; ajustar seletores.
+  - Ir ao ponto de ônibus, medir, fabricar no laser e na impressora 3D, publicar no MakerWorld.
+  - Testes com cidadãos reais, fotos reais de calçadas, exemplos com LLM real (chave OpenRouter).
+  - Gravar e publicar os vídeos; preencher nomes, RMs e links; gerar os PDFs finais; enviar nos portais.
+  - Confirmar com o prof. Reinaldo Ramos o que será exigido em Generative AI (atividade "TBD" no PDF).
+
+CAMINHO CRÍTICO (a URL pública destrava quase tudo):
+  publicar o repositório no GitHub → deploy na Azure → URL pública → (QR do Maker, UiPath contra a URL,
+  pipeline contra a URL, gravação dos vídeos) → preencher links → gerar PDFs → enviar.
+
+AS 5 PRÓXIMAS AÇÕES, EM ORDEM DE PRIORIDADE
+  1. HOJE: instalar Docker Desktop, Azure CLI e Terraform (Parte 2) e rodar localmente (Parte 3).
+  2. Publicar o repositório PÚBLICO no GitHub e confirmar o CI verde (Parte 5, passos 5.1–5.3).
+  3. Fazer o deploy na Azure e obter a URL pública (Parte 5, passos 5.4–5.9; ou, pelo navegador sem
+     instalar nada, 06-Secure-DevOps-Cloud\azurePassoAPasso.txt).
+  4. Em paralelo, dividir a equipe: (a) visita ao ponto de ônibus + fabricação (Parte 7);
+     (b) UiPath Studio (Parte 6); (c) Airflow + prints (Parte 4, disciplina 02);
+     (d) testes com usuários e Lean Canvas validado (Parte 4, disciplina 03); (e) e-mail ao prof. Reinaldo.
+  5. Gravar os vídeos (Parte 8), preencher links, gerar PDFs com -Estrito e enviar até 19/11 23h55 (Partes 9–10).
+
+==========================================================================================================
+ PARTE 1 — VISÃO GERAL
+==========================================================================================================
+
+1.1 O que foi construído
+  AcessaCidade é uma plataforma web (não oficial, não governamental) para registrar, triar por imagem e
+  acompanhar denúncias de problemas de acessibilidade em calçadas e espaços públicos. ODS 11 (principal),
+  10 e 9. Um único produto atravessa as 7 disciplinas:
+
+  Disciplina                         Componente no produto                        Pasta
+  01 Generative AI for Engineering   AcessaCidade Helper (assistente)             01-Generative-AI-Engineering\
+  02 Big Data & Data Integration     Pipeline Raw→Bronze→Silver→Gold + Airflow    02-Big-Data-Architecture\
+  03 BI & Startup Development        Lean Canvas, negócio, pitch, painel, Ficha   03-Business-Intelligence-Startup\
+  04 Applied Computer Vision         Triagem da foto com OpenCV                   04-Applied-Computer-Vision\
+  05 Robotic Process Automation      Robô UiPath que cadastra denúncias           05-Robotic-Process-Automation\
+  06 Secure DevOps & Cloud           Docker, Terraform/Azure, CI/CD, observab.    06-Secure-DevOps-Cloud\ e infra\
+  07 Project-Based Maker Lab         Placa acessível de ponto de ônibus c/ QR     07-Project-Based-Maker-Lab\
+  (produto)                          Backend FastAPI e frontend                   app\backend\ e app\frontend\
+
+1.2 Como as 7 disciplinas se conectam (detalhes e diagramas em docs\DIAGRAMA_INTEGRACAO.md)
+  - O cidadão usa o site (frontend) → a API (backend) grava a denúncia no SQLite.
+  - A foto passa pelo pacote de visão (04) → resultado e 7 imagens intermediárias ficam na denúncia.
+  - O assistente (01) explica status e resultado, usando dados que a API fornece.
+  - O pipeline (02) exporta as denúncias pela API, processa nas 4 camadas e publica a Gold de volta → o
+    painel do site (03) mostra os indicadores analíticos.
+  - O robô UiPath (05) preenche o MESMO formulário web (ids estáveis), marcando origem RPA.
+  - DevOps (06) empacota tudo num container, publica na Azure e monitora com Prometheus/Grafana.
+  - A placa física (07) leva um QR Code para a tela de registro do site publicado.
+  Contrato técnico entre os componentes: docs\CONTRATOS_DE_INTEGRACAO.md.
+
+1.3 Ferramentas que você vai usar
+  Python 3.11, VS Code, Git + GitHub, Docker Desktop (com WSL 2), Azure CLI, Terraform, conta Azure
+  (Azure for Students), UiPath Studio Community + extensão do Edge, Microsoft Excel, Onshape (conta
+  educacional), software do laser (LightBurn/RDWorks) e fatiador 3D do laboratório, MakerWorld, OBS Studio
+  (ou Xbox Game Bar/Clipchamp), YouTube (vídeos não listados ou públicos), conta OpenRouter (opcional,
+  para o assistente com IA), Microsoft Teams (entrega de RPA).
+
+1.4 Onde está cada coisa
+  README.md (raiz) .......................... visão geral, status, início rápido
+  docs\FICHA_TECNICA_MVP.md ................. Ficha Técnica (estrutura da pág. 20 do PDF)
+  docs\ARQUITETURA_GERAL.md, DIAGRAMA_INTEGRACAO.md, DICIONARIO_DE_DADOS.md, CONTRATOS_DE_INTEGRACAO.md
+  <pasta da disciplina>\PENDENCIAS_E_ACOES_MANUAIS.txt   (7 arquivos — detalhe de cada atividade)
+  <pasta da disciplina>\README.md e docs\RELATORIO_ENTREGA_*.md (fonte de cada PDF)
+  evidencias\ ............................... onde salvar prints (uma subpasta por disciplina)
+  tools\gerar_todos_pdfs.ps1 ................ gera os 7 PDFs de uma vez
+  tools\preencher_marcadores.py ............. troca os marcadores de equipe/links a partir de dados_entrega.yaml
+
+==========================================================================================================
+ PARTE 2 — PREPARAÇÃO DO AMBIENTE (não suponha que nada está instalado)
+==========================================================================================================
+
+Versões recomendadas (as testadas neste projeto):
+  Python 3.11.x (o projeto usa 3.11; NÃO use 3.14 — o Airflow 2.10.5 e algumas bibliotecas não suportam)
+  Git 2.4x · Docker Desktop 4.x com Compose ≥ 2.24 · Azure CLI 2.6x+ · Terraform 1.9.x (≥ 1.6)
+  VS Code atual · UiPath Studio 2023.10 ou 2024.10 (Community) · Microsoft Edge atual
+
+2.1 Python 3.11
+  1. Baixe em https://www.python.org/downloads/ a versão 3.11.x (instalador Windows 64-bit).
+  2. Na instalação marque "Add python.exe to PATH" e "py launcher".
+  3. PowerShell novo:  py -3.11 --version     → esperado: Python 3.11.x
+  Nesta máquina já existe Python 3.11 e o venv .venv já está criado. Em outra máquina, crie assim
+  (PowerShell na raiz):
+     py -3.11 -m venv .venv
+     .\.venv\Scripts\python.exe -m pip install --upgrade pip
+     .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+  Resultado esperado: termina sem erro (CadQuery é grande; pode levar 5–10 min).
+  Se o PowerShell bloquear scripts (.ps1):  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+2.2 VS Code
+  1. Instale de https://code.visualstudio.com
+  2. Extensões: Python (Microsoft), Pylance, Jupyter, Docker, HashiCorp Terraform, YAML, Markdown Preview
+     Mermaid Support, GitHub Actions.
+  3. File > Open Folder > C:\Users\masak\Desktop\GS7-4ESPR
+  4. Ctrl+Shift+P > "Python: Select Interpreter" > .venv\Scripts\python.exe
+  Como saber se deu certo: a barra inferior mostra 3.11.x ('.venv').
+
+2.3 Git e GitHub
+  1. Git: https://git-scm.com (opções padrão).  git --version
+  2. Configure:  git config --global user.name "Seu Nome"   e   git config --global user.email "seu@email"
+  3. Crie conta em https://github.com (se não tiver). O repositório será PÚBLICO (exigência da GS).
+  Observação: a pasta já foi inicializada com "git init" (sem nenhum commit).
+
+2.4 Docker Desktop (exige WSL 2)
+  1. Baixe em https://www.docker.com/products/docker-desktop/ e instale (aceite ativar WSL 2).
+  2. Reinicie o Windows se pedido. Abra o Docker Desktop e aguarde "Engine running".
+  3. PowerShell novo:  docker --version   e   docker compose version   (≥ 2.24)
+  Se o Docker reclamar de virtualização: ative "Virtualização" na BIOS e o recurso "Plataforma de
+  Máquina Virtual" do Windows.
+
+2.5 Azure
+  1. Ative o Azure for Students: https://azure.microsoft.com/free/students/ (e-mail institucional).
+  2. Instale a Azure CLI (MSI): https://learn.microsoft.com/cli/azure/install-azure-cli
+  3. Terraform: https://developer.hashicorp.com/terraform/install → baixe o zip 1.9.x para Windows, extraia
+     terraform.exe em C:\Ferramentas e inclua essa pasta no PATH (Configurações > Sistema > Sobre >
+     Configurações avançadas do sistema > Variáveis de Ambiente > Path > Novo).
+  4. PowerShell novo:  az --version   e   terraform version
+  5. No portal (https://portal.azure.com) > Cost Management > Budgets: crie um orçamento (ex.: US$ 10) com
+     alertas em 50% e 90%.  [fonte: 06 D1, D5]
+
+2.6 UiPath Studio  [fonte: 05 D.1, D.2]
+  1. Crie a conta Community no site da UiPath, baixe e instale o UiPath Studio.
+  2. Abra o Studio, faça login, perfil "UiPath Studio".
+  3. Home > Tools > UiPath Extensions > Edge → confirme. No Edge, edge://extensions → ative
+     "UiPath Browser Automation" → reinicie o Edge.
+  Como saber se deu certo: "Indicate" numa página mostra seletores <webctrl ... />.
+
+2.7 Onshape
+  1. Crie conta educacional em https://www.onshape.com/en/education (ou conta gratuita).
+  2. Tutorial do projeto: 07-Project-Based-Maker-Lab\docs\TUTORIAL_ONSHAPE.md.
+
+2.8 Variáveis de ambiente (arquivo .env — NUNCA vai para o Git)
+  PowerShell na raiz:
+     Copy-Item .env.example .env
+  Gere tokens aleatórios (rode 2 vezes, um para cada):
+     .\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"
+  Abra o .env no VS Code e preencha:
+     ADMIN_TOKEN=<token 1>             (área de revisão da equipe — tela #/revisao)
+     PIPELINE_TOKEN=<token 2>          (pipeline exporta e publica a Gold)
+     GRAFANA_ADMIN_PASSWORD=<senha forte>   (só se for subir o monitoramento)
+     OPENROUTER_API_KEY=<sua chave>    (opcional; sem ela o assistente usa o modo básico)
+  Os demais valores do .env.example já funcionam localmente. Significado de cada variável: comentários
+  dentro do próprio .env.example.
+  Confirme que o .env é ignorado:  git check-ignore .env    → deve imprimir ".env".
+
+==========================================================================================================
+ PARTE 3 — EXECUTAR O PROJETO LOCALMENTE
+==========================================================================================================
+
+O frontend NÃO precisa ser iniciado separadamente: o backend serve o site em http://localhost:8000.
+
+3.1 Instalar dependências (uma vez) — PowerShell na raiz
+  .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+  Resultado esperado: "Successfully installed ..." ou "Requirement already satisfied".
+
+3.2 Configurar variáveis — ver 2.8 (arquivo .env).
+
+3.3 Iniciar o backend + frontend (sem Docker) — PowerShell na raiz
+  Opção A (script):  .\scripts\run_local.ps1
+       (se bloquear: powershell -ExecutionPolicy Bypass -File .\scripts\run_local.ps1)
+  Opção B (comando direto):
+     .\.venv\Scripts\python.exe -m uvicorn acessacidade_api.main:app --app-dir app/backend --host 127.0.0.1 --port 8000
+  Resultado esperado: "Uvicorn running on http://127.0.0.1:8000". Deixe esta janela aberta.
+  Na primeira execução são criadas 28 denúncias de DEMONSTRAÇÃO (selo "SIMULADO"); para começar sem elas,
+  use SEED_DEMO_DATA=false no .env e apague a pasta data\runtime.
+  Para parar: Ctrl+C.
+
+3.4 Abrir o site — navegador
+  http://localhost:8000            → tela Início
+  http://localhost:8000/docs       → documentação interativa da API (Swagger)
+  http://localhost:8000/health     → {"status":"ok", ...}
+
+3.5 Testar as rotas — OUTRO PowerShell (o servidor continua rodando no primeiro)
+  Invoke-RestMethod http://localhost:8000/health
+  Invoke-RestMethod http://localhost:8000/api/meta/opcoes
+  Invoke-RestMethod "http://localhost:8000/api/denuncias?limite=3"
+  Invoke-RestMethod http://localhost:8000/api/indicadores
+  (Invoke-WebRequest http://localhost:8000/metrics).Content.Substring(0,600)
+  Resultado esperado: JSON com status ok; opções com 8 tipos de obstáculo; lista com "itens"; indicadores
+  com "total"; métricas começando por "# HELP".
+
+3.6 Testar o cadastro de denúncia — navegador
+  1. Clique em "Registrar denúncia" (ou abra http://localhost:8000/#/registrar).
+  2. Preencha logradouro, bairro, tipo, descrição (≥ 10 caracteres), impacto, marque o consentimento.
+  3. Em Fotografia escolha data\samples\fotos\sintetica_buraco_02.jpg.
+  4. Enviar. Resultado esperado: caixa de sucesso com protocolo AC-2026-NNNNNN e o resumo da triagem.
+  5. Clique no link do protocolo → página de detalhe com as 7 etapas da imagem e o histórico.
+
+3.7 Testar o processamento de imagens
+  - Pela tela: http://localhost:8000/#/analise → envie qualquer foto de data\samples\fotos → aparecem as
+    etapas (original, cinza, filtrada, contraste, bordas, máscara, contornos) e o resultado. Nada é salvo.
+  - Pela linha de comando (processa a pasta inteira e grava results\):
+       .\.venv\Scripts\python.exe 04-Applied-Computer-Vision\scripts\analisar_pasta.py
+       .\.venv\Scripts\python.exe 04-Applied-Computer-Vision\scripts\avaliar_comparacao.py
+    (opções: rode com --help). Resultado: 04-Applied-Computer-Vision\results\ atualizado.
+
+3.8 Testar o helper (assistente)
+  - Tela: http://localhost:8000/#/assistente → pergunte "O que significa aguardando revisão?" ou informe um
+    protocolo existente. Sem chave: a resposta mostra "modo básico". Com OPENROUTER_API_KEY no .env
+    (reinicie o servidor): mostra "IA".
+  - Linha de comando (sem servidor):
+       $env:PYTHONPATH="01-Generative-AI-Engineering/src"
+       .\.venv\Scripts\python.exe -m acessacidade_helper "Como registro uma denúncia?"
+
+3.9 Visualizar o dashboard
+  http://localhost:8000/#/painel → indicadores operacionais (tempo real). A seção "Indicadores analíticos"
+  aparece depois que o pipeline publicar a Gold (3.10).
+
+3.10 Rodar o pipeline de dados contra a API local (outro PowerShell, servidor rodando, PIPELINE_TOKEN no .env)
+  $env:PYTHONPATH="02-Big-Data-Architecture/src"
+  $env:ACESSACIDADE_API_URL="http://localhost:8000"
+  $env:PIPELINE_TOKEN="<o mesmo valor do .env>"
+  .\.venv\Scripts\python.exe -m acessacidade_pipeline --log-arquivo 02-Big-Data-Architecture/docs/evidencias/execucao_com_api.log
+  Resultado esperado: "Publicacao: OK"; atualize #/painel e veja a seção analítica preenchida.
+  Sem API (só fonte simulada):  .\.venv\Scripts\python.exe -m acessacidade_pipeline --sem-api
+
+3.11 Testes automatizados — PowerShell na raiz
+  .\.venv\Scripts\python.exe -m pytest
+  Resultado esperado: "492 passed" (o número pode crescer).
+  Teste ponta a ponta no navegador (servidor rodando com um ADMIN_TOKEN):
+     Terminal 1:  $env:ADMIN_TOKEN="<token>"; .\scripts\run_local.ps1
+     Terminal 2:  $env:ACESSACIDADE_E2E_ADMIN_TOKEN="<mesmo token>"
+                  .\.venv\Scripts\python.exe app\frontend\tests_e2e\e2e_acessacidade.py --url http://127.0.0.1:8000
+  Resultado esperado: "RESULTADO: N/N verificações OK; 0 falha(s)". Rode pelo PowerShell (no Git Bash o
+  Edge headless pode não abrir).
+
+3.12 Docker Compose (depois de instalar o Docker) — PowerShell na raiz  [fonte: 06 D4]
+  1. Pare o uvicorn do passo 3.3 (Ctrl+C) para liberar a porta 8000.
+  2. docker compose up -d --build
+  3. docker compose ps          → serviço app "healthy" em até ~1 min
+  4. docker compose exec app id → uid=10001 (usuário não root) → PRINT para o PDF de DevOps
+  5. Abra http://localhost:8000 e http://localhost:8000/health
+  6. docker image ls           → anote o tamanho da imagem (PDF de DevOps)
+  7. Para parar:  docker compose down   (os dados ficam no volume; "docker compose down -v" apaga)
+  Monitoramento local: docker compose --profile monitoring up -d   (exige GRAFANA_ADMIN_PASSWORD no .env)
+     Prometheus http://127.0.0.1:9090 · Grafana http://127.0.0.1:3000 · Alertmanager http://127.0.0.1:9093
+
+==========================================================================================================
+ PARTE 4 — COMPLETAR CADA DISCIPLINA
+==========================================================================================================
+Para cada item: O QUE · ONDE · COMO · ARQUIVO · RESULTADO ESPERADO · EVIDÊNCIA · COMO VERIFICAR.
+Evidências: salve em evidencias\<subpasta da disciplina>\ (ou na pasta indicada pelo documento da disciplina).
+
+----------------------------------------------------------------------------------------------------------
+ 4.1 DISCIPLINA 01 — GENERATIVE AI FOR ENGINEERING (prof. Reinaldo Ramos) — atividade "TBD" no PDF
+----------------------------------------------------------------------------------------------------------
+ 1) Confirmar os requisitos com o professor  [fonte: 01 D1]
+    Onde: e-mail/Teams. Como: envie a pergunta "o que será exigido na GS 2026.2?" com o resumo do helper
+    (01-Generative-AI-Engineering\README.md). Resultado: lista de entregáveis/formato/data.
+    Evidência: print da resposta. Verificar: ajuste o RELATORIO_ENTREGA_GENAI.md ao que ele pedir.
+ 2) Criar conta OpenRouter, gerar chave e limite de gasto  [fonte: 01 D2]
+    Onde: https://openrouter.ai → Keys → Create Key (defina limite de crédito baixo).
+    Arquivo: .env (OPENROUTER_API_KEY; modelo em OPENROUTER_MODEL, padrão openai/gpt-4o-mini).
+    Verificar: http://localhost:8000/health mostra "assistente": "llm" após reiniciar o servidor.
+ 3) Gerar os exemplos reais com LLM  [fonte: 01 D4]
+    Como: PowerShell na raiz, com a chave no .env ou na sessão:
+       $env:PYTHONPATH="01-Generative-AI-Engineering/src"
+       .\.venv\Scripts\python.exe 01-Generative-AI-Engineering\examples\gerar_exemplos_llm.py
+    Resultado: arquivos em 01-Generative-AI-Engineering\examples\llm_real\ com respostas REAIS.
+    Evidência: prints do chat (#/assistente) mostrando "IA".
+ 4) Configurar a chave na nuvem  [fonte: 01 D5] → GitHub Secret OPENROUTER_API_KEY (Parte 5.6); o deploy a
+    passa ao container como variável segura.
+ 5) (Recomendado) teste rápido com 1–3 usuários reais  [fonte: 01 D6] — use o roteiro e o termo de
+    consentimento de 03-Business-Intelligence-Startup\pitch\.
+ 6) Preencher links e gerar o PDF  [fonte: 01 D7]
+    Arquivo: 01-Generative-AI-Engineering\docs\links_entrega.yaml (URLs reais) e RELATORIO_ENTREGA_GENAI.md.
+    Como: Parte 9.2 (gerar PDFs). Verificar: nenhum [PREENCHER] no PDF; links abrem.
+ 7) Enviar no portal  [fonte: 01 D8] (Parte 10).
+
+----------------------------------------------------------------------------------------------------------
+ 4.2 DISCIPLINA 02 — BIG DATA ARCHITECTURE & DATA INTEGRATION (profa. Ana Machado)
+----------------------------------------------------------------------------------------------------------
+ 1) Instalar Docker Desktop  [fonte: 02 D1] — Parte 2.4.
+ 2) Subir o Airflow e executar a DAG  [fonte: 02 D2]
+    Onde: PowerShell + navegador.  Arquivo: 02-Big-Data-Architecture\airflow\docker-compose.airflow.yml
+    Como:
+       cd C:\Users\masak\Desktop\GS7-4ESPR\02-Big-Data-Architecture\airflow
+       docker compose -f docker-compose.airflow.yml up -d                      (sem API)
+       docker compose --env-file ..\..\.env -f docker-compose.airflow.yml up -d (com API + PIPELINE_TOKEN)
+       docker compose -f docker-compose.airflow.yml logs -f airflow            (aguarde ficar pronto; Ctrl+C)
+       docker compose -f docker-compose.airflow.yml exec airflow cat /opt/airflow/standalone_admin_password.txt
+    Navegador: http://127.0.0.1:8080 → usuário admin + senha acima → DAG acessacidade_elt_pipeline →
+    ativar (unpause) → Trigger DAG → aba Graph.
+    Resultado: 6 tarefas verdes (extract_and_load_raw → transform_bronze → curate_silver → build_gold →
+    quality_report → publish_gold); log de quality_report com "APROVADO".
+    Evidência: prints 01–09 listados em 02-Big-Data-Architecture\docs\EVIDENCIAS_NECESSARIAS.md
+    (lista de DAGs, Graph verde, Grid, logs, XCom, consulta Gold). Vídeo curto opcional (1–3 min).
+    Verificar: data\processed\gold\gold_snapshot.json com "execucao_id" igual ao run_id do Airflow.
+    Feche o notebook antes (o DuckDB não aceita dois processos escrevendo).
+ 3) Executar com a API real e PIPELINE_TOKEN  [fonte: 02 D3] — comandos da Parte 3.10; depois do deploy,
+    repita com ACESSACIDADE_API_URL=<URL pública>. Evidência: execucao_com_api.log + print de
+    <URL>/api/indicadores/analiticos.
+ 4) Gerar o PDF único (diagrama de arquitetura + dicionário de dados + links)  [fonte: 02 D5]
+    Arquivo: 02-Big-Data-Architecture\docs\RELATORIO_ENTREGA_BIGDATA.md (preencha equipe e links).
+    Como: Parte 9.2. Verificar: diagramas desenhados e dicionário presente no PDF.
+ 5) Conferir os critérios no README da disciplina da professora e enviar  [fonte: 02 D6] (Parte 10).
+
+----------------------------------------------------------------------------------------------------------
+ 4.3 DISCIPLINA 03 — BUSINESS INTELLIGENCE & STARTUP DEVELOPMENT (prof. Henio Scheidt)
+----------------------------------------------------------------------------------------------------------
+ 1) Validar o Lean Canvas com os dados do CP1/entrevistas (2,0 pts)  [fonte: 03 D1]
+    Arquivos: 03-Business-Intelligence-Startup\business-model\lean_canvas.json (fonte) → regenere com
+       .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\scripts\gerar_lean_canvas.py
+    Como: em cada bloco troque "HIPÓTESE" pelo que foi validado e o que mudou desde o CP1. Não invente.
+    Resultado: LEAN_CANVAS.md/.html/.xlsx atualizados. Evidência: print do canvas (HTML impresso em A4).
+ 2) Preencher nomes, RMs e papéis do time  [fonte: 03 D2] — README.md da raiz (seção Equipe), ROTEIRO_PITCH.md,
+    DOCUMENTO_DE_ENTREGA_BI.md.
+ 3) Teste com usuários reais + métrica antes/depois (Valor entregue, 3,5 pts)  [fonte: 03 D3]
+    Arquivos: pitch\ROTEIRO_TESTE_USABILIDADE.md, pitch\TERMO_CONSENTIMENTO_MODELO.md,
+    pitch\registro_testes_usuarios_TEMPLATE.xlsx. Como: 3–5 pessoas (de preferência do público-alvo), termo
+    assinado, cronometrar "registrar um problema hoje" × "com o AcessaCidade". Resultado: planilha preenchida
+    com dados REAIS. Evidência: planilha + prints (sem rostos sem autorização).
+ 4) Gravar o vídeo-pitch (Parte 8.1)  [fonte: 03 D4].
+ 5) Prints do MVP e do painel na URL pública  [fonte: 03 D5] → evidencias\03_bi_startup\.
+ 6) (Opcional) dados públicos de contexto com fonte  [fonte: 03 D6].
+ 7) Preencher URL do MVP, repositório e vídeo e gerar o PDF único  [fonte: 03 D7]
+    Arquivos: 03-Business-Intelligence-Startup\docs\links_entrega.yaml e DOCUMENTO_DE_ENTREGA_BI.md;
+    docs\FICHA_TECNICA_MVP.md (URL e repositório). Como: Parte 9.2.
+ 8) Exportar o painel para Excel (opcional, BI): .\.venv\Scripts\python.exe 03-Business-Intelligence-Startup\dashboard\exportar_gold_para_excel.py
+ 9) Enviar no portal  [fonte: 03 D8].
+
+----------------------------------------------------------------------------------------------------------
+ 4.4 DISCIPLINA 04 — APPLIED COMPUTER VISION (prof. Claudiney Sanches)
+----------------------------------------------------------------------------------------------------------
+ 1) Coletar fotos reais de calçadas  [fonte: 04 D1]
+    Instruções: 04-Applied-Computer-Vision\samples\real\LEIAME_COLETA_REAL.txt (sem pessoas/placas, local
+    público, autorização). Salve em 04-Applied-Computer-Vision\samples\real\.
+ 2) Rotular manualmente  [fonte: 04 D2] — copie rotulos_manuais_reais_TEMPLATE.csv e preencha a classe
+    que a equipe enxerga em cada foto (POSSIBLE_POTHOLE / NOT_IDENTIFIED / INCONCLUSIVE).
+ 3) Reexecutar análise e comparação na base real  [fonte: 04 D3] — scripts analisar_pasta.py e
+    avaliar_comparacao.py apontando para a pasta real (use --help para ver as opções). Resultado: matriz de
+    confusão REAL; atualize o RELATORIO_ENTREGA_VISAO.md com esses números (sem arredondar a favor).
+ 4) Confirmar a automação na URL pública (8 pontos)  [fonte: 04 D4] — registre denúncia com foto real em
+    <URL>/#/registrar e abra o detalhe; prints das etapas.
+ 5) Gravar o vídeo (Parte 8.2)  [fonte: 04 D5].
+ 6) Repositório público + links (04-Applied-Computer-Vision\docs\links_entrega.yaml)  [fonte: 04 D6].
+ 7) Gerar o PDF (Parte 9.2) e enviar  [fonte: 04 D7, D8].
+
+----------------------------------------------------------------------------------------------------------
+ 4.5 DISCIPLINA 05 — ROBOTIC PROCESS AUTOMATION (profa. Cibele Ribeiro) — ver Parte 6 (detalhada)
+----------------------------------------------------------------------------------------------------------
+ Ordem: instalar Studio (2.6) → abrir projeto → seletores → rodar local → rodar na URL pública → revisar
+ assessment → imagens dos BPMN → vídeo (8.3) → relatório PDF → ZIP → Teams.  [fonte: 05 D.1–D.11]
+
+----------------------------------------------------------------------------------------------------------
+ 4.6 DISCIPLINA 06 — SECURE DEVOPS TOOLS & CLOUD COMPUTING (prof. Cleórbete Santos) — ver Parte 5
+----------------------------------------------------------------------------------------------------------
+ 1) Ferramentas (2.4, 2.5)  [06 D1]. Dependências vulneráveis e achado Semgrep: JÁ RESOLVIDOS  [06 D2, D3].
+ 2) Docker Compose local + prints (3.12)  [06 D4].
+ 3) Assinatura Azure + orçamento  [06 D5].
+ 4) Repositório público + CI  [06 D6] (Parte 5.1–5.3).
+ 5) State remoto, OIDC, GitHub Secrets  [06 D7] (Parte 5.5–5.6).
+ 6) Primeira publicação  [06 D8] (Parte 5.7–5.9).
+ 7) Execução barrada e corrigida  [06 D9]
+    Arquivo: 06-Secure-DevOps-Cloud\docs\DEMONSTRACAO_EXECUCAO_BARRADA.md. Resumo seguro:
+       git checkout -b demo/execucao-barrada
+       gere um token FICTÍCIO no formato da regra da equipe (comando no documento) e grave num arquivo
+       temporário demo_segredo_vazado.py → commit → git push -u origin demo/execucao-barrada
+       → no Actions o job Gitleaks fica VERMELHO (print + link)
+       → remova o arquivo (crie branch nova limpa a partir da main, como o documento explica) → push
+       → execução VERDE (print + link) → apague a branch de demonstração.
+    NUNCA use uma credencial real. Alternativas seguras no documento (Semgrep com eval, Trivy com imagem antiga).
+ 8) Monitoramento e alerta disparado  [06 D10]
+    Arquivos: 06-Secure-DevOps-Cloud\monitoring\prometheus\prometheus.azure.yml, .env, scripts\gerar_trafego_demo.py
+       a) Em prometheus.azure.yml troque o [PREENCHER] por <fqdn>:8000 (terraform output -raw container_fqdn).
+       b) No .env: PROMETHEUS_CONFIG=prometheus.azure.yml e GRAFANA_ADMIN_PASSWORD=<senha>
+       c) docker compose --profile monitoring up -d prometheus alertmanager grafana
+       d) http://127.0.0.1:9090/targets → alvo acessacidade-azure "UP"
+       e) Tráfego normal:
+          .\.venv\Scripts\python.exe scripts\gerar_trafego_demo.py --url http://<fqdn>:8000 --duracao 300 --modo normal --com-visao
+       f) Grafana http://127.0.0.1:3000 (admin + sua senha) → dashboard "AcessaCidade — Sinais de Ouro" → PRINT
+          (latência, tráfego, erros, saturação).
+       g) Alerta: mesmo comando com --modo erros404 --duracao 240 → http://127.0.0.1:9090/alerts mostra
+          AcessaCidadeMuitas4xx em FIRING → PRINT (e do Alertmanager em http://127.0.0.1:9093).
+    Alternativa sem nuvem: a mesma demonstração com a app no compose local (PROMETHEUS_CONFIG=prometheus.yml).
+ 9) Custos  [06 D11] — calculadora https://azure.microsoft.com/pricing/calculator/ (Container Instances 1 vCPU,
+    1,5 GB, 730 h + Container Registry Basic) → print → preencher docs\ESTIMATIVA_DE_CUSTOS.md.
+ 10) PDF único (arquitetura, evidências, custo, links)  [06 D12] — Parte 9.2.
+ 11) Limpeza SÓ depois da nota  [06 D13] — Parte 5.12.
+
+----------------------------------------------------------------------------------------------------------
+ 4.7 DISCIPLINA 07 — PROJECT-BASED MAKER LAB (profa. Thais Kabuchi) — ver Parte 7 (detalhada)
+----------------------------------------------------------------------------------------------------------
+ Ordem: visita ao ponto de ônibus → atualizar parametros.py e regenerar → (Onshape) → QR com URL real →
+ laser → 3D → montagem e fotos → peça de terceiros (bônus) → MakerWorld → vídeo (bônus) → PDF.
+ [fonte: 07 D1–D12]
+
+==========================================================================================================
+ PARTE 5 — PUBLICAÇÃO NA AZURE  (documento completo: 06-Secure-DevOps-Cloud\docs\PUBLICACAO_AZURE.md)
+==========================================================================================================
+Arquitetura: GitHub Actions → Azure Container Registry (imagem) → Azure Container Instances (app, porta
+8000, IP público com nome DNS). Nenhuma porta administrativa (SSH/RDP) é aberta. Limitações conhecidas:
+o ACI não tem HTTPS nativo (a URL é http://<nome>.<região>.azurecontainer.io:8000) e o armazenamento é
+efêmero (recriar o container apaga as denúncias e fotos — não recrie durante a semana de correção).
+
+>>> CAMINHO ALTERNATIVO, PELO NAVEGADOR (sem instalar Docker/Azure CLI/Terraform):
+    06-Secure-DevOps-Cloud\azurePassoAPasso.txt — no mesmo estilo do Checkpoint 2 (Calango TI): portal.azure.com
+    + Cloud Shell (Bash), ACR, template acessacidade.yaml e "az container create". Exige só o passo 5.1–5.2
+    (repositório PÚBLICO no GitHub). Ao usá-lo, siga ELE no lugar de 5.4–5.10 (não use os dois caminhos para
+    o mesmo ambiente). A URL pública sai como http://<IP>:8000 e os prints vão para evidencias\06_devops\.
+    Os passos 5.11–5.12 (logs e limpeza) continuam valendo conceitualmente, mas a limpeza desse caminho é a
+    Tarefa 5 do azurePassoAPasso.txt (apagar o grupo rg-acessacidade).
+
+5.1 Revisar o que vai para o Git  [PREPARAÇÃO/SÓ LEITURA] — PowerShell na raiz
+    git add .
+    git status
+    CONFIRA que NÃO aparecem: .env, .venv\, *.tfstate, *.tfvars, data\runtime\, terraform\.terraform\.
+    (O PDF do desafio e o notebook original da aula estão no .gitignore por serem material da disciplina.)
+    Opcional (scanner local de segredos): gitleaks dir . --config .gitleaks.toml --redact
+
+5.2 Primeiro commit e repositório público  [PREPARAÇÃO]
+    git commit -m "AcessaCidade: versão inicial"
+    Crie o repositório PÚBLICO em https://github.com/new (sem README, sem .gitignore) e então:
+    git branch -M main
+    git remote add origin https://github.com/<sua-conta>/<seu-repositorio>.git
+    git push -u origin main
+
+5.3 Conferir o CI  [PREPARAÇÃO/SÓ LEITURA]
+    GitHub → aba Actions → "CI DevSecOps". Jobs esperados: testes, gitleaks, semgrep, iac, imagem (build +
+    Trivy image + smoke test) — verdes. O job "deploy" aparece como PULADO até a variável
+    AZURE_DEPLOY_ENABLED existir. PRINT da execução verde.
+    Se o job "imagem" acusar CVE da imagem base com correção disponível: rode o workflow de novo (a base
+    python:3.11-slim é atualizada com frequência).
+
+5.4 Login, assinatura e registro de provedores — PowerShell na raiz
+    az login                                                         [PREPARAÇÃO/SÓ LEITURA]
+    az account list --output table                                   [PREPARAÇÃO/SÓ LEITURA]
+    az account set --subscription "<id da assinatura>"               [PREPARAÇÃO/SÓ LEITURA]
+    .\infra\azure\01_login_e_providers.ps1 -SubscriptionId "<id>"    [PREPARAÇÃO] registra
+        Microsoft.ContainerInstance, Microsoft.ContainerRegistry, Microsoft.ManagedIdentity,
+        Microsoft.OperationalInsights (sem custo)
+    Como saber: az provider show -n Microsoft.ContainerInstance --query registrationState  → "Registered"
+
+5.5 State remoto do Terraform (uma vez)
+    .\infra\azure\02_state_remoto.ps1 -StorageAccount "acessacidadetf<sufixo>" -Location brazilsouth
+                                                                     [CRIA RECURSOS — GERA CUSTO] (centavos/mês)
+    Anote os valores TFSTATE_* que o script imprime. Copie
+    06-Secure-DevOps-Cloud\terraform\backend.hcl.example para backend.hcl e preencha (backend.hcl é ignorado
+    pelo Git). O nome da storage account precisa ser GLOBALMENTE único (só minúsculas e números).
+
+5.6 OIDC (deploy sem senha) e GitHub Secrets
+    .\infra\azure\03_oidc_github.ps1 -Repositorio "<conta>/<repositorio>" -StorageAccount "<mesmo nome>"
+                                                                     [PREPARAÇÃO] (cria App Registration; sem custo)
+    GitHub → Settings → Environments → New environment → production
+    GitHub → Settings → Secrets and variables → Actions → New repository secret (um por vez):
+       AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID,
+       TFSTATE_RESOURCE_GROUP, TFSTATE_STORAGE_ACCOUNT, TFSTATE_CONTAINER, TFSTATE_KEY,
+       ADMIN_TOKEN, PIPELINE_TOKEN, OPENROUTER_API_KEY (opcional)
+    Aba Variables → New variable: AZURE_DEPLOY_ENABLED = true  (opcionais: AZURE_LOCATION, AZURE_NAME_SUFFIX)
+    PRINT: lista de secrets (só os nomes aparecem). Detalhes: 06-Secure-DevOps-Cloud\docs\CI_CD_DEVSECOPS.md.
+    Como saber: Entra ID → App registrations → gh-acessacidade-deploy → Federated credentials mostra
+    "repo:<conta>/<repositorio>:environment:production".
+
+5.7 Opção A — Deploy automático (recomendado)
+    GitHub → Actions → CI DevSecOps → Run workflow (branch main)          [CRIA RECURSOS — GERA CUSTO]
+    O job "Deploy na Azure" faz: Terraform fase 1 (Resource Group + ACR Basic + identidade + AcrPull) →
+    push da imagem testada com tag = SHA do commit → Terraform fase 2 (Container Instance) → smoke test /health.
+    Copie a URL do resumo da execução (app_url). PRINT do job verde.
+
+5.8 Opção B — Deploy manual pelo Terraform (mesmo resultado) — PowerShell
+    cd 06-Secure-DevOps-Cloud\terraform
+    Copy-Item terraform.tfvars.example terraform.tfvars   (preencha; terraform.tfvars é ignorado pelo Git)
+    terraform init -backend-config=backend.hcl                         [PREPARAÇÃO/SÓ LEITURA]
+    terraform fmt -check -recursive; terraform validate                [PREPARAÇÃO/SÓ LEITURA]
+    terraform plan -var="deploy_container=false"                       [PREPARAÇÃO/SÓ LEITURA]
+    terraform apply -var="deploy_container=false"                      [CRIA RECURSOS — GERA CUSTO] fase 1
+    $acr = terraform output -raw acr_name                              [PREPARAÇÃO/SÓ LEITURA]
+    cd ..\..
+    .\infra\azure\04_build_push_imagem.ps1 -AcrName $acr -Tag "v1"     [CRIA RECURSOS — GERA CUSTO]
+        (usa "az acr build", NÃO precisa de Docker local; com Docker: acrescente -Modo Docker)
+    cd 06-Secure-DevOps-Cloud\terraform
+    terraform apply -var="deploy_container=true" -var="image_tag=v1"  [CRIA RECURSOS — GERA CUSTO] fase 2
+    terraform output app_url                                           [PREPARAÇÃO/SÓ LEITURA]
+    Segredos (ADMIN_TOKEN etc.) vão por variáveis TF_VAR_... ou terraform.tfvars — nunca em arquivo versionado.
+    Alternativa sem Terraform (template YAML, como no exercício Calango TI): infra\aci-deployment.template.yaml
+    + .\infra\azure\05_deploy_aci_yaml.ps1 [CRIA RECURSOS — GERA CUSTO]. Não misture os dois no mesmo
+    Resource Group.
+
+5.9 Testar a URL pública  [PREPARAÇÃO/SÓ LEITURA]
+    Navegador: http://<fqdn>:8000  e  http://<fqdn>:8000/health  → "ok"
+    Celular (4G, fora do Wi-Fi): abra a mesma URL — teste o registro com foto.
+    PRINTS: Resource Group no portal, Container Instance com porta 8000, URL aberta, /health.
+    Anote a URL em: docs\FICHA_TECNICA_MVP.md, README.md, links_entrega.yaml de 01/03/04, relatórios 02/05/06/07.
+
+5.10 Variáveis e portas (referência)
+    Porta exposta: SOMENTE 8000/TCP. Variáveis não sensíveis no Terraform (APP_ENV, MAX_UPLOAD_MB,
+    SEED_DEMO_DATA, ...); sensíveis como "secure environment variables" (ADMIN_TOKEN, PIPELINE_TOKEN,
+    OPENROUTER_API_KEY). Lista em 06-Secure-DevOps-Cloud\terraform\variables.tf.
+
+5.11 Logs e diagnóstico  [PREPARAÇÃO/SÓ LEITURA]
+    .\infra\azure\06_status_logs.ps1 -ResourceGroup "rg-acessacidade-prod" -AciName "aci-acessacidade-prod"
+    .\infra\azure\06_status_logs.ps1 -ResourceGroup "rg-acessacidade-prod" -AciName "aci-acessacidade-prod" -Acompanhar
+    (Ajuste os nomes conforme "terraform output resource_group_name" e "terraform output container_group_name".)
+    Problemas comuns e soluções: PUBLICACAO_AZURE.md §7.
+
+5.12 Apagar recursos — SOMENTE depois do fim da correção e da divulgação da nota
+    cd 06-Secure-DevOps-Cloud\terraform
+    terraform destroy -var="deploy_container=true" -var="image_tag=<tag>"   [REMOVE RECURSOS — SÓ APÓS A CORREÇÃO]
+    .\infra\azure\99_limpeza.ps1 -ResourceGroupApp "rg-acessacidade-prod" -ResourceGroupState rg-acessacidade-tfstate -AppRegistration gh-acessacidade-deploy
+                                                                         [REMOVE RECURSOS — SÓ APÓS A CORREÇÃO]
+    Depois: GitHub → Variables → AZURE_DEPLOY_ENABLED = false; revogue a chave OpenRouter e gere novos tokens.
+    Os links públicos precisam funcionar durante a correção (até uma semana após 19/11/2026).
+
+==========================================================================================================
+ PARTE 6 — FINALIZAR UIPATH  (detalhe: 05-Robotic-Process-Automation\PENDENCIAS_E_ACOES_MANUAIS.txt, seção D)
+==========================================================================================================
+IMPORTANTE: os arquivos .xaml foram gerados fora do Studio e validados apenas como XML. Só declare a
+automação concluída depois de rodá-la no Studio.
+
+6.1 Abrir o projeto  [05 D.3]
+    UiPath Studio → Home → Open → 05-Robotic-Process-Automation\UiPath\AcessaCidade.RPA\project.json
+    (mantenha a estrutura de pastas do repositório; aceite a conversão/atualização se oferecida).
+6.2 Pacotes  [05 D.3] — Design → Manage Packages → Project Dependencies: UiPath.System.Activities,
+    UiPath.UIAutomation.Activities, UiPath.Excel.Activities → escolha a versão estável disponível → Save.
+6.3 Importar/abrir os XAML e corrigir avisos  [05 D.3] — abra Main.xaml, Workflows\CarregarConfiguracao.xaml,
+    ProcessarDenuncia.xaml, RegistrarResultado.xaml; View → Error List; correções comuns em
+    docs\INSTRUCOES_UIPATH_STUDIO.md seção 6. Design → Analyze Project sem erros. PRINT (E10).
+6.4 Configurar a planilha  [05 D.5] — Data\Config.xlsx (aba Settings): URL_ACESSACIDADE =
+    http://localhost:8000 (teste) ou a URL pública (sem barra final), CAMINHO_PLANILHA_ENTRADA,
+    CAMINHO_PLANILHA_SAIDA, PASTA_IMAGENS (data\samples\fotos), TIMEOUT_SEGUNDOS, NAVEGADOR, MODO_UPLOAD_FOTO.
+    Entrada: spreadsheet\denuncias_para_cadastro_SIMULADAS.xlsx (12 linhas; 2 inválidas de propósito).
+    Feche o Excel antes de rodar.
+6.5 Configurar o navegador — extensão do Edge ativa (2.6).
+6.6 Ajustar seletores  [05 D.4] — com o site rodando, abra http://localhost:8000/#/registrar?canal=rpa;
+    em cada atividade: menu ≡ → Edit Selector → Validate; se vermelho: Indicate Element e mantenha só id e
+    tag. Tabela de seletores: docs\CONFIGURACAO_SELETORES.md. Upload da foto: diálogo do Windows (seletor
+    do campo "Nome:") ou MODO_UPLOAD_FOTO = IGNORAR (registre no relatório se usar).
+6.7 Executar  [05 D.5] — Main.xaml → Run File (Ctrl+F6); não use mouse/teclado durante a execução.
+    Resultado esperado: linhas 1–10 = SUCESSO com protocolo AC-AAAA-NNNNNN; linhas 11–12 = FALHA_NEGOCIO.
+6.8 Verificar os registros — spreadsheet\denuncias_resultado_RPA.xlsx (aba Resultado) → PRINT (E8);
+    no site #/consultar → abra um protocolo → origem "RPA" → PRINT (E9).
+6.9 Rodar contra a URL pública  [05 D.6] — troque URL_ACESSACIDADE e TIMEOUT_SEGUNDOS=60; rode de novo.
+6.10 Revisar o assessment  [05 D.7] — spreadsheet\assessment_rpa_AcessaCidade.xlsx (hoje: 79,4% "Alta
+    aptidão", avaliação PRELIMINAR) → revise notas com a equipe → PRINTS E1/E2.
+6.11 Imagens dos BPMN  [05 D.8] — https://demo.bpmn.io → arraste process-mapping\AS-IS_cadastro_denuncias.bpmn
+    e TO-BE_... → exporte PNG (ou use os .svg já gerados).
+6.12 Salvar evidências — lista completa em 05-Robotic-Process-Automation\docs\EVIDENCIAS_NECESSARIAS.md
+    (prints do assessment, do workflow no Studio, da execução, planilha de saída, registros com origem RPA).
+6.13 Vídeo ≤ 3 min — Parte 8.3. Grave o link em 05-Robotic-Process-Automation\entrega\link_video.txt.
+6.14 Relatório PDF  [05 D.10] — preencha docs\RELATORIO_RPA.md, insira os prints e rode:
+       .\.venv\Scripts\python.exe 05-Robotic-Process-Automation\scripts\gerar_pdf_relatorio.py
+6.15 Compactar o ZIP  [05 D.11] — PowerShell na raiz:
+       powershell -ExecutionPolicy Bypass -File .\05-Robotic-Process-Automation\scripts\gerar_zip_entrega.ps1
+    O script recusa gerar o ZIP enquanto faltar o PDF ou o link do vídeo (código 2) e lista o que falta.
+    Resultado: 05-Robotic-Process-Automation\entrega\AcessaCidade_RPA_entrega.zip. Abra o ZIP numa pasta
+    temporária e confira que o project.json abre no Studio.
+
+==========================================================================================================
+ PARTE 7 — FINALIZAR MAKER LAB  (detalhe: 07-Project-Based-Maker-Lab\PENDENCIAS_E_ACOES_MANUAIS.txt, seção D)
+==========================================================================================================
+NÃO declare nada como fabricado, medido ou publicado antes de fazê-lo.
+
+7.1 Fotografar o objeto original  [07 D1] — guia: docs\GUIA_FOTOGRAFAR_E_MEDIR.md. Ponto de ônibus público,
+    sem pessoas e sem placas de veículos; fotos local_01 a local_08 em 07-Project-Based-Maker-Lab\docs\fotos\.
+7.2 Medir  [07 D1] — trena/paquímetro; imprima docs\imagens\croqui_original_A_PREENCHER.svg (navegador >
+    Ctrl+P > tamanho real); medidas A–L, cada uma 2 vezes; fotografe o croqui preenchido. Preencha
+    DIAGNOSTICO_OBJETO_ORIGINAL.md e CROQUI_MEDIDAS.md (apague falhas não confirmadas no local).
+7.3 Ajustar o CAD com as medidas reais  [07 D2] — edite cad\parametros.py (bloco "1. OBJETO ORIGINAL"),
+    ORIGINAL_MEDIDO_EM_CAMPO = True, diâmetro real do tubo; depois, PowerShell na raiz:
+       .\.venv\Scripts\python.exe 07-Project-Based-Maker-Lab\cad\gerar_todos.py
+       .\.venv\Scripts\python.exe -m pytest 07-Project-Based-Maker-Lab\tests
+    Resultado: STEP/STL/3MF/DXF/SVG e imagens lado a lado regenerados; testes passando (leva 2–4 min).
+7.4 Onshape  [07 D3] — https://cad.onshape.com → Create → Document → Import: cad\*.step e
+    laser-cut\placa_principal_laser.dxf; monte original e redesign lado a lado; crie um Drawing com cotas;
+    compartilhe o link público. Passo a passo: docs\TUTORIAL_ONSHAPE.md (seção 4 se a professora exigir
+    modelagem nativa por sketch + extrude). Exportar DXF/SVG/STL/3MF também pelo Onshape: mesmo tutorial.
+7.5 Gerar o QR com a URL pública REAL  [07 D4] — só depois da Parte 5:
+       .\.venv\Scripts\python.exe 07-Project-Based-Maker-Lab\laser-cut\gerar_qrcode.py --url http://<fqdn>:8000
+    Teste o QR com 2 celulares (deve abrir #/registrar).
+7.6 Fabricar no laser  [07 D5] — LightBurn > File > Import > laser-cut\placa_principal_laser_com_qr.svg;
+    confira 200×150 mm; desligue as camadas AREA_QR e TEXTO_REFERENCIA; preto = raster, azul = vetorial,
+    vermelho = corte (parâmetros de partida em docs\FABRICACAO.md §2); teste 20×20 mm antes; NUNCA PVC.
+    Fotos fab_01–fab_03; anote os parâmetros reais.
+7.7 Imprimir em 3D  [07 D6] — fatiador do lab: 3d-print\modulo_tatil.3mf (PLA/PETG, camada 0,12) e
+    3d-print\suporte_tubo.3mf (PETG, camada 0,2) — já orientados; prints do fatiador (fab_04, fab_05);
+    confira os 18 pontos Braille com o dedo.
+7.8 Montar e fotografar antes/depois  [07 D7] — FABRICACAO.md §4; FOTOS_A_REALIZAR.md seções D e E;
+    testes de impacto de IMPACTO_E_ODS.md §1 com resultados REAIS.
+7.9 Bônus: peça de terceiros creditada  [07 D8] — docs\BONUS_PECA_TERCEIROS.md (ex.: abraçadeira para tubo
+    25 mm no MakerWorld; confira licença; preencha autor/link/licença).
+7.10 Publicar no MakerWorld (obrigatório)  [07 D9] — https://makerworld.com → Upload; textos prontos em
+    docs\MAKERWORLD_PUBLICACAO.md (título, descrição, tags, licença, arquivos, crédito); fotos REAIS do
+    protótipo. Teste o link numa janela anônima.
+
+==========================================================================================================
+ PARTE 8 — PRODUZIR OS VÍDEOS (nunca invente links; teste cada link numa janela anônima)
+==========================================================================================================
+Ferramentas: OBS Studio (tela + microfone), Xbox Game Bar (Win+G) ou Clipchamp; edição no Clipchamp/CapCut;
+publicação no YouTube como "Não listado" ou "Público" (o PDF exige link público acessível sem login).
+Grave a demonstração NA URL PÚBLICA (não em localhost) sempre que possível.
+
+8.1 BI & Startup — vídeo-pitch, até 5:00, TODOS os integrantes aparecem/falam
+    Arquivos: 03-Business-Intelligence-Startup\pitch\ROTEIRO_PITCH.md (texto cronometrado),
+    STORYBOARD.md, LISTA_DE_CENAS.md, ROTEIRO_DE_GRAVACAO.md (OBS, ordem de gravação, publicação).
+    Blocos: Problema e cidadão 0:45 · Solução 0:45 · Demo REAL 1:30 · Modelo de negócio 1:00 ·
+    Impacto e ODS 0:30 · Time e próximos passos 0:30.
+    Telas da demo: URL pública → registrar com foto → resultado da triagem (etapas) → consultar protocolo →
+    perguntar ao assistente → painel atualizado.
+
+8.2 Computer Vision — até 5:00, todos os integrantes
+    Arquivo: 04-Applied-Computer-Vision\docs\ROTEIRO_VIDEO_VISAO.md.
+    Mostrar: problema; envio de foto na URL pública; cada transformação (cinza, filtro, contraste, bordas,
+    máscara, contornos/bounding boxes); dados extraídos; regra de classificação; comparação com rotulagem
+    manual (deixar claro o que é base sintética e o que é real); limites e revisão humana.
+
+8.3 RPA — até 3:00, uma pessoa explicando (rosto opcional) com o robô rodando
+    Arquivo: 05-Robotic-Process-Automation\docs\ROTEIRO_VIDEO_RPA.md.
+    Mostrar: o gargalo do processo; planilha de entrada; robô preenchendo o formulário; protocolo capturado;
+    planilha de saída; registros com origem RPA no site; tratamento de erro (linha inválida).
+
+8.4 Maker Lab — até 2:00 (bônus +0,5)
+    Arquivo: 07-Project-Based-Maker-Lab\docs\ROTEIRO_VIDEO_MAKER.md.
+    Mostrar: objeto original no local, protótipo fabricado, como resolve o problema (tato, contraste, QR).
+
+Depois de publicar cada vídeo, cole o link em: links_entrega.yaml (01/03/04), relatórios de entrega
+(02, 05, 06, 07) e 05-Robotic-Process-Automation\entrega\link_video.txt.
+
+==========================================================================================================
+ PARTE 9 — CONFERÊNCIA DAS ENTREGAS
+==========================================================================================================
+
+9.1 Preencher links e equipe — procure os marcadores restantes (PowerShell na raiz):
+       Get-ChildItem -Recurse -Include *.md,*.yaml,*.txt -Exclude PENDENCIAS* | Select-String "\[PREENCHER" | Group-Object Path | Select-Object Count, Name
+    Preencha os que são de ENTREGA (equipe, URLs, vídeos, resultados reais). Não troque [PREENCHER] por
+    informação inventada.
+
+9.2 Gerar os PDFs — PowerShell na raiz:
+    Rascunho (fora do repositório):
+       powershell -ExecutionPolicy Bypass -File .\tools\gerar_todos_pdfs.ps1 -Saida $env:TEMP\acessacidade_pdfs
+    Versão final (falha se faltar link ou restar [PREENCHER]):
+       powershell -ExecutionPolicy Bypass -File .\tools\gerar_todos_pdfs.ps1 -RepoUrl https://github.com/<conta>/<repositorio> -Estrito
+    Saída padrão: entregas\pdf\AcessaCidade_0N_<disciplina>.pdf. Exige o Edge instalado e internet (para
+    desenhar os diagramas Mermaid). Em 15/11/2026 os 7 rascunhos foram gerados com sucesso nesta máquina.
+    Abra cada PDF e CLIQUE em todos os links.
+
+9.3 Checklist final por disciplina (marque [x])
+
+  01 GENERATIVE AI (entregáveis a confirmar com o professor — atividade TBD)
+   [ ] Requisitos confirmados com o prof. Reinaldo
+   [ ] Helper funcionando na URL pública (modo IA com chave OU modo básico declarado)
+   [ ] Exemplos reais com LLM gerados (se houver chave)
+   [ ] PDF/relatório com links clicáveis (repositório, URL, vídeo se exigido)
+   [ ] Envio no portal
+
+  02 BIG DATA — "Link do repositório + PDF único com diagrama de arquitetura e dicionário de dados"
+   [ ] Repositório público com pipeline (scripts, notebook, DAG) e instruções
+   [ ] DAG executada no Airflow com prints (Graph, logs, dados carregados) ou vídeo curto
+   [ ] Execução com a API real (publicação da Gold) registrada
+   [ ] PDF único: diagrama de arquitetura + dicionário de dados + links clicáveis
+   [ ] Envio no portal (um por equipe)
+
+  03 BI & STARTUP — "PDF único: Lean Canvas + modelo de negócio + links clicáveis (vídeo, MVP, repositório)"
+   [ ] Lean Canvas 9 blocos com o que foi validado e o que mudou
+   [ ] Modelo de negócio (proposta de valor, receita e preço, canais, métricas)
+   [ ] Evidência de valor entregue (teste com usuários reais / métrica antes-depois)
+   [ ] Vídeo-pitch ≤ 5 min, todos os integrantes, link público
+   [ ] MVP em URL pública + repositório + Ficha Técnica
+   [ ] PDF único com links clicáveis; envio no portal
+
+  04 COMPUTER VISION — "PDF único: transformações + links clicáveis (vídeo, repositório, imagens intermediárias, dados)"
+   [ ] URL pública com a triagem funcionando
+   [ ] Repositório público + documentação técnica das transformações
+   [ ] Imagens intermediárias e dados extraídos acessíveis por link (pastas results\ no GitHub)
+   [ ] (Recomendado) base real fotografada e comparada com rotulagem manual
+   [ ] Vídeo ≤ 5 min com todos os integrantes, link público
+   [ ] PDF único; envio no portal
+
+  05 RPA — "ZIP com PDF + arquivos da automação + link do vídeo, via Teams"
+   [ ] Projeto aberto, corrigido e executado no UiPath Studio (print da solução + .xaml)
+   [ ] Execução contra a URL pública registrada
+   [ ] PDF: processo escolhido + print do resultado do assessment + As-Is/To-Be + RPA vs API + Business Case
+   [ ] Vídeo ≤ 3 min com a automação rodando e uma pessoa explicando
+   [ ] ZIP gerado por gerar_zip_entrega.ps1 e conferido
+   [ ] Entregue no Teams (comprovante)
+
+  06 SECURE DEVOPS — "PDF único com links clicáveis"
+   [ ] Repositório público com Dockerfile, workflow e Terraform; Ficha Técnica no README
+   [ ] Stack sobe com docker compose (print); container não root (print)
+   [ ] Nuvem criada por Terraform; state e .tfvars fora do repositório; nenhuma porta admin aberta
+   [ ] Actions com build, Gitleaks, Semgrep e Trivy a cada push; segredos em GitHub Secrets; deploy automático
+   [ ] Uma execução barrada e a corrigida (links + prints)
+   [ ] Dashboard com as 4 métricas de ouro + um alerta disparado (prints)
+   [ ] URL pública do MVP funcionando
+   [ ] PDF: arquitetura, responsabilidade compartilhada, LGPD, custo, evidências, links; envio no portal
+
+  07 MAKER LAB — "PDF único com links clicáveis (MakerWorld e pasta/repositório dos arquivos)"
+   [ ] Diagnóstico: fotos no local, medidas em croqui, quem é afetado
+   [ ] CAD do original (com medidas reais) e do redesign, lado a lado
+   [ ] ≥ 1 peça a laser e ≥ 1 peça impressa em 3D fabricadas, com arquivos (DXF/SVG e STL/3MF) e fotos
+   [ ] Antes e depois com ODS
+   [ ] Publicação no MakerWorld (obrigatória) com fotos reais, arquivos e crédito da peça baixada
+   [ ] (Bônus) peça de terceiros integrada e creditada; vídeo ≤ 2 min
+   [ ] PDF único; envio no portal
+
+  GERAL
+   [ ] Repositório PÚBLICO e acessível sem login
+   [ ] URL pública funcionando (testar no celular, fora da rede da equipe)
+   [ ] Todos os vídeos com link público testado em janela anônima
+   [ ] Nenhum [PREENCHER] nos PDFs finais; todos os links clicáveis abrindo
+   [ ] Evidências salvas em evidencias\ (sem tokens, senhas ou dados pessoais nos prints)
+   [ ] Recursos Azure MANTIDOS no ar durante a semana de correção
+
+==========================================================================================================
+ PARTE 10 — ENVIO
+==========================================================================================================
+Regras do PDF oficial: prazo 19/11/2026 às 23h55; SOMENTE UM integrante envia cada disciplina, pelo
+portal da disciplina no ambiente virtual da FIAP; mesma equipe e mesmo produto em todas; repositórios,
+aplicações e vídeos públicos e funcionando durante a correção (até uma semana após o encerramento).
+
+  Disciplina                    Formato exigido                                            Onde
+  01 Generative AI              A CONFIRMAR com o prof. Reinaldo (atividade TBD)           Portal da disciplina
+  02 Big Data                   Link do repositório + PDF único (arquitetura + dicionário) Portal da disciplina
+  03 BI & Startup               PDF único (Lean Canvas + negócio + links vídeo/MVP/repo)   Portal da disciplina
+  04 Computer Vision            PDF único (transformações + links)                          Portal da disciplina
+  05 RPA                        Pasta .ZIP (PDF + arquivos da automação + link do vídeo)   Atividade no Teams
+  06 Secure DevOps              PDF único com links clicáveis                               Portal da disciplina
+  07 Maker Lab                  PDF único com links (MakerWorld + arquivos)                 Portal da disciplina
+
+Procedimento sugerido
+  1. Defina na equipe QUEM envia cada disciplina (um por disciplina).
+  2. Até 18/11: PDFs finais gerados com -Estrito e revisados por outra pessoa (clicar em todos os links).
+  3. Envie com antecedência (não deixe para 23h). Após cada envio, faça print do comprovante e salve em
+     evidencias\<disciplina>\comprovante_envio.png.
+  4. Confirme no portal/Teams que o arquivo aparece como entregue.
+  Este guia NÃO considera nenhum envio como realizado — marque você mesmo no checklist da Parte 9.
+
+==========================================================================================================
+ FIM — dúvidas sobre um item específico: veja o PENDENCIAS_E_ACOES_MANUAIS.txt da pasta correspondente.
+==========================================================================================================

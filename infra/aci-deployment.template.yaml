@@ -1,0 +1,87 @@
+# =====================================================================
+# AcessaCidade — template YAML do Azure Container Instances (ALTERNATIVA ao
+# Terraform, para "az container create --file"). O caminho oficial do projeto é
+# 06-Secure-DevOps-Cloud/terraform (IaC + CI). Use este template apenas se
+# precisar publicar manualmente (ex.: reproduzir o exercício Calango TI).
+#
+# NÃO edite segredos aqui. Os ${VARIAVEIS} são substituídos por
+# infra/azure/render_aci_template.py a partir de variáveis de AMBIENTE da sessão;
+# o arquivo renderizado vai para uma pasta temporária FORA do repositório e é
+# apagado após o deploy (scripts 05_deploy_aci_yaml.*).
+# Itens com secureValue vazio são removidos (funcionalidade desativada).
+#
+# Variáveis obrigatórias: AZ_LOCATION, ACI_NAME, IDENTITY_ID, ACR_LOGIN_SERVER,
+#   IMAGE_NAME, IMAGE_TAG, DNS_LABEL
+# Variáveis opcionais (segredos, secureValue): ADMIN_TOKEN, PIPELINE_TOKEN, OPENROUTER_API_KEY
+# Porta: somente 8000/TCP (não há porta administrativa).
+# =====================================================================
+apiVersion: '2023-05-01'
+type: Microsoft.ContainerInstance/containerGroups
+location: ${AZ_LOCATION}
+name: ${ACI_NAME}
+identity:
+  type: UserAssigned
+  userAssignedIdentities:
+    ${IDENTITY_ID}: {}
+tags:
+  projeto: AcessaCidade
+  disciplina: 06-Secure-DevOps-Cloud
+  gerenciado: az-cli-template
+properties:
+  osType: Linux
+  restartPolicy: Always
+  imageRegistryCredentials:
+    - server: ${ACR_LOGIN_SERVER}
+      identity: ${IDENTITY_ID}
+  ipAddress:
+    type: Public
+    dnsNameLabel: ${DNS_LABEL}
+    ports:
+      - protocol: TCP
+        port: 8000
+  containers:
+    - name: acessacidade
+      properties:
+        image: ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
+        resources:
+          requests:
+            cpu: 1.0
+            memoryInGB: 1.5
+        ports:
+          - protocol: TCP
+            port: 8000
+        environmentVariables:
+          - name: APP_ENV
+            value: production
+          - name: APP_PORT
+            value: '8000'
+          - name: LOG_LEVEL
+            value: INFO
+          - name: DATA_DIR
+            value: /app/data/runtime
+          - name: SEED_DEMO_DATA
+            value: 'true'
+          - name: ADMIN_TOKEN
+            secureValue: ${ADMIN_TOKEN}
+          - name: PIPELINE_TOKEN
+            secureValue: ${PIPELINE_TOKEN}
+          - name: OPENROUTER_API_KEY
+            secureValue: ${OPENROUTER_API_KEY}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: http
+          initialDelaySeconds: 40
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3

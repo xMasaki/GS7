@@ -1,0 +1,398 @@
+# =====================================================================
+# AcessaCidade — Pipeline DevSecOps (Disciplina 06 — Deploy Blindado)
+#
+# A cada push (qualquer branch) e pull request:
+#   testes  -> pytest (app, visão, helper, pipeline, BI, RPA, DevOps, Maker sem cadquery)
+#   gitleaks -> segredos no HISTÓRICO completo do Git (regras padrão + .gitleaks.toml)
+#   semgrep -> SAST (p/python, p/javascript, p/secrets, p/dockerfile + .semgrep/)
+#   iac     -> terraform fmt/validate/test (sem nuvem) + Trivy config (Dockerfile e Terraform)
+#   imagem  -> docker build + Trivy image (CRITICAL/HIGH corrigíveis barram) + smoke test /health
+# Somente push na main, com a Variable AZURE_DEPLOY_ENABLED == 'true':
+#   deploy  -> Azure (OIDC) -> Terraform fase 1 -> push da imagem no ACR -> Terraform fase 2 (ACI)
+#              -> smoke test na URL pública
+#
+# Secrets e Variables necessários: 06-Secure-DevOps-Cloud/docs/CI_CD_DEVSECOPS.md
+# As versões das ferramentas são FIXAS (mesmas validadas localmente — ver
+# 06-Secure-DevOps-Cloud/docs/evidencias/validacoes_locais.md).
+# =====================================================================
+name: CI DevSecOps
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# Menor privilégio: o token do GitHub só lê o repositório. O job de deploy
+# acrescenta id-token: write (OIDC) apenas para ele.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  IMAGE_NAME: acessacidade
+  PYTHON_VERSION: "3.11"
+  GITLEAKS_VERSION: "8.21.2"
+  SEMGREP_VERSION: "1.185.0"
+  TRIVY_IMAGE: "aquasec/trivy:0.76.2"
+  TERRAFORM_VERSION: "1.9.8"
+  TF_DIR: 06-Secure-DevOps-Cloud/terraform
+  DOCKERFILE: 06-Secure-DevOps-Cloud/docker/Dockerfile
+
+jobs:
+  # -------------------------------------------------------------------
+  testes:
+    name: Testes automatizados (pytest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            06-Secure-DevOps-Cloud/github-actions/requirements-ci.txt
+
+      - name: Instalar dependências de teste (sem cadquery/playwright)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r 06-Secure-DevOps-Cloud/github-actions/requirements-ci.txt
+
+      - name: Executar pytest
+        env:
+          ACESSACIDADE_CI: "true"
+          APP_ENV: test
+          OPENROUTER_API_KEY: ""
+        run: python -m pytest -q -rs --junitxml=pytest-report.xml
+
+      - name: Publicar relatório do pytest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report
+          path: pytest-report.xml
+          retention-days: 14
+
+  # -------------------------------------------------------------------
+  gitleaks:
+    name: Segredos (Gitleaks)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # histórico completo: um segredo removido depois continua no Git
+
+      # CLI oficial (release do GitHub) com verificação de checksum — não depende
+      # de licença da gitleaks-action para organizações.
+      - name: Instalar Gitleaks ${{ env.GITLEAKS_VERSION }}
+        run: |
+          set -euo pipefail
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          arquivo="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$RUNNER_TEMP/$arquivo" "$base/$arquivo"
+          curl -sSfL -o "$RUNNER_TEMP/checksums.txt" "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          (cd "$RUNNER_TEMP" && grep " ${arquivo}\$" checksums.txt | sha256sum -c -)
+          tar -xzf "$RUNNER_TEMP/$arquivo" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" version
+
+      - name: Varredura do histórico Git
+        run: |
+          "$RUNNER_TEMP/gitleaks" git . \
+            --config .gitleaks.toml \
+            --redact \
+            --verbose \
+            --exit-code 1 \
+            --report-format sarif \
+            --report-path gitleaks-report.sarif
+
+      - name: Publicar relatório do Gitleaks (valores mascarados)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.sarif
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # -------------------------------------------------------------------
+  semgrep:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Instalar Semgrep ${{ env.SEMGREP_VERSION }}
+        run: python -m pip install "semgrep==${SEMGREP_VERSION}"
+
+      - name: Testar as regras customizadas da equipe
+        run: python 06-Secure-DevOps-Cloud/tools/testar_regras_semgrep.py --semgrep semgrep
+
+      - name: Varredura SAST (falha com achados de severidade ERROR/WARNING)
+        env:
+          SEMGREP_SEND_METRICS: "off"
+        run: |
+          semgrep scan \
+            --config p/python \
+            --config p/javascript \
+            --config p/secrets \
+            --config p/dockerfile \
+            --config .semgrep/ \
+            --exclude .semgrep/tests \
+            --exclude .venv \
+            --metrics=off \
+            --error \
+            --sarif-output=semgrep-report.sarif \
+            --text
+
+      - name: Publicar relatório do Semgrep
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: semgrep-report.sarif
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # -------------------------------------------------------------------
+  iac:
+    name: IaC (Terraform validate/test + Trivy config)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt / init (sem backend) / validate / test (provider simulado)
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform fmt -check -recursive
+          terraform init -backend=false -input=false
+          terraform validate
+          terraform test
+
+      - name: Trivy config — Dockerfile e Terraform (CRITICAL/HIGH barram)
+        run: |
+          docker run --rm -v "$PWD:/src:ro" "$TRIVY_IMAGE" config \
+            --severity CRITICAL,HIGH --exit-code 1 \
+            /src/06-Secure-DevOps-Cloud/docker
+          docker run --rm -v "$PWD:/src:ro" "$TRIVY_IMAGE" config \
+            --severity CRITICAL,HIGH --exit-code 1 \
+            --skip-dirs /src/06-Secure-DevOps-Cloud/terraform/.terraform \
+            /src/06-Secure-DevOps-Cloud/terraform
+
+  # -------------------------------------------------------------------
+  imagem:
+    name: Build da imagem + Trivy image + smoke test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: docker build
+        run: |
+          docker build \
+            -f "$DOCKERFILE" \
+            --build-arg VCS_REF="${GITHUB_SHA}" \
+            --build-arg SOURCE_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            -t "${IMAGE_NAME}:${GITHUB_SHA}" \
+            .
+          docker image ls "${IMAGE_NAME}"
+          docker save "${IMAGE_NAME}:${GITHUB_SHA}" -o "$RUNNER_TEMP/imagem.tar"
+
+      - name: Conferir usuário não root e ausência de segredos no ambiente da imagem
+        run: |
+          set -euo pipefail
+          usuario="$(docker image inspect -f '{{.Config.User}}' "${IMAGE_NAME}:${GITHUB_SHA}")"
+          echo "USER da imagem: ${usuario}"
+          case "$usuario" in ""|root|0|0:0) echo "ERRO: imagem roda como root"; exit 1;; esac
+          if docker image inspect -f '{{range .Config.Env}}{{println .}}{{end}}' "${IMAGE_NAME}:${GITHUB_SHA}" \
+             | grep -Ei '^(ADMIN_TOKEN|PIPELINE_TOKEN|OPENROUTER_API_KEY|[A-Z_]*SECRET[A-Z_]*)='; then
+            echo "ERRO: variável sensível definida na imagem"; exit 1
+          fi
+
+      - name: Trivy image — vulnerabilidades CRITICAL/HIGH com correção disponível barram
+        run: |
+          # .trivyignore (opcional, na raiz) só deve existir com justificativa por CVE.
+          docker run --rm \
+            -v "$RUNNER_TEMP:/scan:ro" \
+            -v "$PWD:/src:ro" \
+            "$TRIVY_IMAGE" image \
+            --input /scan/imagem.tar \
+            --severity CRITICAL,HIGH \
+            --ignore-unfixed \
+            --ignorefile /src/.trivyignore \
+            --scanners vuln,secret \
+            --exit-code 1 \
+            --format table
+
+      - name: Smoke test do container (GET /health)
+        run: |
+          set -euo pipefail
+          docker run -d --name smoke -p 8000:8000 \
+            --read-only --tmpfs /tmp \
+            --tmpfs /app/data/runtime:rw,uid=10001,gid=10001,mode=0750 \
+            --cap-drop ALL --security-opt no-new-privileges:true \
+            -e SEED_DEMO_DATA=true \
+            "${IMAGE_NAME}:${GITHUB_SHA}"
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/health; then echo; echo "OK na tentativa $i"; break; fi
+            if [ "$i" = 30 ]; then echo "ERRO: /health não respondeu"; docker logs smoke; exit 1; fi
+            sleep 3
+          done
+          curl -fsS -o /dev/null -w "GET / -> %{http_code}\n" http://127.0.0.1:8000/
+          curl -fsS -o "$RUNNER_TEMP/metrics.txt" http://127.0.0.1:8000/metrics
+          grep -m1 acessacidade_http_requests_total "$RUNNER_TEMP/metrics.txt"
+          docker exec smoke id
+          docker rm -f smoke
+
+      - name: Guardar a imagem testada para o deploy
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AZURE_DEPLOY_ENABLED == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: imagem-acessacidade
+          path: ${{ runner.temp }}/imagem.tar
+          retention-days: 1
+          compression-level: 6
+
+  # -------------------------------------------------------------------
+  deploy:
+    name: Deploy na Azure (ACR + ACI via Terraform)
+    needs: [testes, gitleaks, semgrep, iac, imagem]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AZURE_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment:
+      name: production
+      url: ${{ steps.saidas.outputs.app_url }}
+    permissions:
+      contents: read
+      id-token: write   # OIDC (federated credential) — nenhum segredo de longa duração
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      TF_VAR_location: ${{ vars.AZURE_LOCATION || 'brazilsouth' }}
+      TF_VAR_name_suffix: ${{ vars.AZURE_NAME_SUFFIX }}
+      # Segredos da aplicação: chegam ao ACI como secure_environment_variables
+      TF_VAR_openrouter_api_key: ${{ secrets.OPENROUTER_API_KEY }}
+      TF_VAR_admin_token: ${{ secrets.ADMIN_TOKEN }}
+      TF_VAR_pipeline_token: ${{ secrets.PIPELINE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login na Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        # Alternativa (menos segura, segredo de longa duração):
+        #   with:
+        #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+        # e, para o Terraform, ARM_CLIENT_SECRET no lugar de ARM_USE_OIDC.
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform init (state remoto no Azure Storage)
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ secrets.TFSTATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ secrets.TFSTATE_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=${{ secrets.TFSTATE_CONTAINER }}" \
+            -backend-config="key=${{ secrets.TFSTATE_KEY }}" \
+            -backend-config="use_oidc=true" \
+            -backend-config="use_azuread_auth=true"
+
+      - name: Terraform fase 1 — Resource Group, ACR e identidade (somente na primeira vez)
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          # Se o container já existe no state, a fase 1 já foi concluída em uma
+          # execução anterior; aplicar deploy_container=false agora DESTRUIRIA o ACI.
+          if terraform state list | grep -q '^azurerm_container_group\.app'; then
+            echo "Fase 1 já concluída anteriormente (ACI presente no state)."
+          else
+            terraform apply -auto-approve -var="deploy_container=false"
+          fi
+
+      - name: Push da imagem testada para o ACR (tag = commit)
+        id: push
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          set -euo pipefail
+          ACR_NAME="$(terraform output -raw acr_name)"
+          LOGIN_SERVER="$(terraform output -raw acr_login_server)"
+          echo "login_server=${LOGIN_SERVER}" >> "$GITHUB_OUTPUT"
+          az acr login --name "$ACR_NAME"
+          echo "Imagem: ${LOGIN_SERVER}/${IMAGE_NAME}:${GITHUB_SHA}"
+        # o docker push acontece no passo seguinte, depois de carregar a imagem testada
+
+      - name: Baixar a imagem que passou no Trivy e no smoke test
+        uses: actions/download-artifact@v4
+        with:
+          name: imagem-acessacidade
+          path: ${{ runner.temp }}/imagem
+
+      - name: docker load + push
+        run: |
+          set -euo pipefail
+          docker load -i "$RUNNER_TEMP/imagem/imagem.tar"
+          destino="${{ steps.push.outputs.login_server }}/${IMAGE_NAME}:${GITHUB_SHA}"
+          docker tag "${IMAGE_NAME}:${GITHUB_SHA}" "$destino"
+          docker push "$destino"
+
+      - name: Terraform fase 2 — Azure Container Instances com a nova imagem
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform apply -auto-approve \
+            -var="deploy_container=true" \
+            -var="image_tag=${GITHUB_SHA}"
+
+      - name: Saídas do Terraform
+        id: saidas
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          set -euo pipefail
+          APP_URL="$(terraform output -raw app_url)"
+          echo "app_url=${APP_URL}" >> "$GITHUB_OUTPUT"
+          echo "health_url=$(terraform output -raw health_url)" >> "$GITHUB_OUTPUT"
+          echo "### AcessaCidade publicado" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: ${APP_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Imagem: \`${IMAGE_NAME}:${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Smoke test na URL pública (com novas tentativas)
+        run: |
+          set -euo pipefail
+          url="${{ steps.saidas.outputs.health_url }}"
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 10 "$url"; then echo; echo "OK na tentativa $i"; exit 0; fi
+            echo "Tentativa $i falhou; aguardando 10 s..."
+            sleep 10
+          done
+          echo "ERRO: ${url} não respondeu após 30 tentativas"
+          exit 1

@@ -1,0 +1,50 @@
+# =====================================================================
+# Modelo de variáveis — copie para terraform.tfvars (NÃO versionado: *.tfvars
+# está no .gitignore) e ajuste. NUNCA coloque segredos neste arquivo de exemplo.
+#   Copy-Item terraform.tfvars.example terraform.tfvars   (PowerShell)
+#   cp terraform.tfvars.example terraform.tfvars          (bash)
+#
+# SEGREDOS: não escreva no terraform.tfvars; prefira variáveis de ambiente
+# na sessão (somem ao fechar o terminal):
+#   $env:TF_VAR_admin_token = "<gerado com python -c 'import secrets; print(secrets.token_urlsafe(32))'>"
+#   $env:TF_VAR_pipeline_token = "<idem>"
+#   $env:TF_VAR_openrouter_api_key = "<sua chave OpenRouter, se houver>"
+# No GitHub Actions eles vêm de GitHub Secrets (ver docs/CI_CD_DEVSECOPS.md).
+# =====================================================================
+
+# Assinatura: deixe comentado para usar ARM_SUBSCRIPTION_ID / az account set
+# subscription_id = "[PREENCHER: ID da assinatura Azure]"
+
+project_prefix = "acessacidade"
+environment    = "prod"
+
+# brazilsouth (padrão) ou eastus (geralmente mais barato / mais disponível para Azure for Students)
+location = "brazilsouth"
+
+# Vazio = sufixo aleatório gerado pelo Terraform (guardado no state)
+name_suffix = ""
+
+# Vazio = "<project_prefix>-<sufixo>"  ->  <label>.<região>.azurecontainer.io
+dns_name_label = ""
+
+acr_sku    = "Basic"
+image_name = "acessacidade"
+image_tag  = "[PREENCHER: tag da imagem enviada ao ACR, ex.: SHA do commit]"
+
+# Fase 1: false (RG + ACR + identidade). Fase 2 (depois do push da imagem): true
+deploy_container = false
+
+container_cpu    = 1
+container_memory = 1.5
+
+app_env        = "production"
+log_level      = "INFO"
+seed_demo_data = true
+cidade_padrao  = ""
+
+# Logs na nuvem com custo por GB (padrão desligado)
+enable_log_analytics = false
+
+tags = {
+  equipe = "[PREENCHER: nome da equipe]"
+}

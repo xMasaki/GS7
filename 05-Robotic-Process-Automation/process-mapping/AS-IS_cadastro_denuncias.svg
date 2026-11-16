@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2300" height="740" viewBox="0 0 2300 740" font-family="Segoe UI, Arial, sans-serif" font-size="11">
+<defs><marker id="seta" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker></defs>
+<rect x="0" y="0" width="2300" height="740" fill="#FFFFFF"/>
+<text x="150" y="50" font-size="16" font-weight="bold" fill="#1F4E79">AS-IS — Cadastro manual de denúncias recebidas de parceiros</text>
+<text x="150" y="68" font-size="11" fill="#555">Renderização simplificada gerada por scripts/gerar_bpmn.py a partir do mesmo layout do arquivo .bpmn (abra o .bpmn no bpmn.io para a versão oficial).</text>
+<rect x="150" y="80" width="2110" height="600" fill="none" stroke="#333" stroke-width="1.5"/>
+<text transform="translate(169,380) rotate(-90)" text-anchor="middle" font-weight="bold">AS-IS — Cadastro manual de denúncias recebidas de parceiros</text>
+<rect x="180" y="80" width="2080" height="200" fill="none" stroke="#333"/>
+<line x1="210" y1="80" x2="210" y2="280" stroke="#333"/>
+<text transform="translate(199,180) rotate(-90)" text-anchor="middle">Cidadão / Associação</text>
+<rect x="180" y="280" width="2080" height="200" fill="none" stroke="#333"/>
+<line x1="210" y1="280" x2="210" y2="480" stroke="#333"/>
+<text transform="translate(199,380) rotate(-90)" text-anchor="middle">Operador AcessaCidade</text>
+<rect x="180" y="480" width="2080" height="200" fill="none" stroke="#333"/>
+<line x1="210" y1="480" x2="210" y2="680" stroke="#333"/>
+<text transform="translate(199,580) rotate(-90)" text-anchor="middle">AcessaCidade (web)</text>
+<path d="M815,286 L803,286 L803,348 L815,348" fill="none" stroke="#C00000"/>
+<line x1="813" y1="348" x2="815" y2="360" stroke="#C00000" stroke-dasharray="4,3"/>
+<text x="808" y="299" fill="#C00000" font-size="10">GARGALO: planilhas acumulam na</text>
+<text x="808" y="312" fill="#C00000" font-size="10">caixa de e-mail; depende da</text>
+<text x="808" y="325" fill="#C00000" font-size="10">agenda do operador.</text>
+<path d="M1310,286 L1298,286 L1298,348 L1310,348" fill="none" stroke="#C00000"/>
+<line x1="1308" y1="348" x2="1310" y2="360" stroke="#C00000" stroke-dasharray="4,3"/>
+<text x="1303" y="299" fill="#C00000" font-size="10">GARGALO: ~10 campos digitados</text>
+<text x="1303" y="312" fill="#C00000" font-size="10">por denúncia; erros de digitação</text>
+<text x="1303" y="325" fill="#C00000" font-size="10">e de categoria.</text>
+<path d="M1640,286 L1628,286 L1628,348 L1640,348" fill="none" stroke="#C00000"/>
+<line x1="1638" y1="348" x2="1640" y2="360" stroke="#C00000" stroke-dasharray="4,3"/>
+<text x="1633" y="299" fill="#C00000" font-size="10">GARGALO: cópia manual do</text>
+<text x="1633" y="312" fill="#C00000" font-size="10">protocolo; risco de enviar o</text>
+<text x="1633" y="325" fill="#C00000" font-size="10">protocolo errado.</text>
+<polyline points="318,200 405,200" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="525,200 570,200" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="690,200 712,200 712,400 735,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="855,400 900,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1020,400 1100,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1125,375 1125,240" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<text x="1129" y="302" font-size="10" fill="#1F4E79">Não</text>
+<polyline points="1065,200 795,200 795,360" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1150,400 1230,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<text x="1194" y="395" font-size="10" fill="#1F4E79">Sim</text>
+<polyline points="1350,400 1372,400 1372,600 1395,600" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1515,600 1538,600 1538,400 1560,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1680,400 1725,400" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="1845,400 1868,400 1868,200 1890,200" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<polyline points="2010,200 2097,200" fill="none" stroke="#333" stroke-width="1.3" marker-end="url(#seta)"/>
+<circle cx="300" cy="200" r="18" fill="#FFF" stroke="#333" stroke-width="1.5"/>
+<text x="300" y="234" text-anchor="middle">Problema de</text>
+<text x="300" y="247" text-anchor="middle">acessibilidade</text>
+<text x="300" y="260" text-anchor="middle">identificado</text>
+<rect x="405" y="160" width="120" height="80" rx="10" fill="#FFF2CC" stroke="#333" stroke-width="1.3"/>
+<text x="410" y="171" font-size="8" fill="#666">Manual</text>
+<text x="465" y="191" text-anchor="middle">Registrar denúncia</text>
+<text x="465" y="204" text-anchor="middle">em papel, planilha</text>
+<text x="465" y="217" text-anchor="middle">ou e-mail</text>
+<rect x="570" y="160" width="120" height="80" rx="10" fill="#FFFFFF" stroke="#333" stroke-width="1.3"/>
+<text x="630" y="198" text-anchor="middle">Enviar planilha ou</text>
+<text x="630" y="210" text-anchor="middle">e-mail ao operador</text>
+<rect x="735" y="360" width="120" height="80" rx="10" fill="#DDEBF7" stroke="#333" stroke-width="1.3"/>
+<text x="740" y="371" font-size="8" fill="#666">Usuário</text>
+<text x="795" y="398" text-anchor="middle">Abrir planilha ou</text>
+<text x="795" y="410" text-anchor="middle">e-mail recebido</text>
+<rect x="900" y="360" width="120" height="80" rx="10" fill="#DDEBF7" stroke="#333" stroke-width="1.3"/>
+<text x="905" y="371" font-size="8" fill="#666">Usuário</text>
+<text x="960" y="391" text-anchor="middle">Interpretar e</text>
+<text x="960" y="404" text-anchor="middle">padronizar endereço,</text>
+<text x="960" y="417" text-anchor="middle">tipo e impacto</text>
+<polygon points="1125,375 1150,400 1125,425 1100,400" fill="#FFF" stroke="#333" stroke-width="1.3"/>
+<text x="1125" y="406" text-anchor="middle" font-size="18" font-weight="bold">×</text>
+<text x="1125" y="367" text-anchor="middle">Dados completos?</text>
+<rect x="1065" y="160" width="120" height="80" rx="10" fill="#FFF2CC" stroke="#333" stroke-width="1.3"/>
+<text x="1070" y="171" font-size="8" fill="#666">Manual</text>
+<text x="1125" y="191" text-anchor="middle">Complementar</text>
+<text x="1125" y="204" text-anchor="middle">informações</text>
+<text x="1125" y="217" text-anchor="middle">solicitadas</text>
+<rect x="1230" y="360" width="120" height="80" rx="10" fill="#DDEBF7" stroke="#333" stroke-width="1.3"/>
+<text x="1235" y="371" font-size="8" fill="#666">Usuário</text>
+<text x="1290" y="391" text-anchor="middle">Digitar a denúncia</text>
+<text x="1290" y="404" text-anchor="middle">campo a campo no</text>
+<text x="1290" y="417" text-anchor="middle">formulário web</text>
+<rect x="1395" y="560" width="120" height="80" rx="10" fill="#E2EFDA" stroke="#333" stroke-width="1.3"/>
+<text x="1400" y="571" font-size="8" fill="#666">Automática</text>
+<text x="1455" y="598" text-anchor="middle">Validar, registrar e</text>
+<text x="1455" y="610" text-anchor="middle">gerar protocolo</text>
+<rect x="1560" y="360" width="120" height="80" rx="10" fill="#DDEBF7" stroke="#333" stroke-width="1.3"/>
+<text x="1565" y="371" font-size="8" fill="#666">Usuário</text>
+<text x="1620" y="391" text-anchor="middle">Conferir cadastro e</text>
+<text x="1620" y="404" text-anchor="middle">copiar protocolo</text>
+<text x="1620" y="417" text-anchor="middle">manualmente</text>
+<rect x="1725" y="360" width="120" height="80" rx="10" fill="#FFFFFF" stroke="#333" stroke-width="1.3"/>
+<text x="1785" y="391" text-anchor="middle">Informar protocolo à</text>
+<text x="1785" y="404" text-anchor="middle">associação por</text>
+<text x="1785" y="417" text-anchor="middle">e-mail</text>
+<rect x="1890" y="160" width="120" height="80" rx="10" fill="#FFFFFF" stroke="#333" stroke-width="1.3"/>
+<text x="1950" y="198" text-anchor="middle">Receber protocolo</text>
+<text x="1950" y="210" text-anchor="middle">para acompanhamento</text>
+<circle cx="2115" cy="200" r="18" fill="#FFF" stroke="#333" stroke-width="3.5"/>
+<text x="2115" y="234" text-anchor="middle">Denúncia registrada e</text>
+<text x="2115" y="247" text-anchor="middle">protocolo entregue</text>
+</svg>

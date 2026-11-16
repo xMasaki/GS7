@@ -1,0 +1,22 @@
+Relatório gerado automaticamente por cad/gerar_todos.py (valores lidos dos arquivos gerados).
+Data/hora local: 2026-11-15 03:28:56
+Escala do protótipo: 1:3 (placa e suporte) · 1:1 (módulo tátil)
+ATENÇÃO: o objeto ORIGINAL usa dimensões ESTIMADAS até a medição em campo (ORIGINAL_MEDIDO_EM_CAMPO = False).
+
+Laser: placa_principal_laser.dxf e placa_principal_laser.svg — placa 200 x 150 mm, área do QR 46 mm SEM QR (rodar laser-cut/gerar_qrcode.py --url <URL_PUBLICA>)
+Original (ESTIMADO): placa 450.0 x 300.0 x 2.0 mm; borda inferior a 2200 mm do piso; medido em campo = False
+Placa principal (laser): 200.00 x 150.00 x 3.00 mm -> redesign_placa_principal_laser.step
+Módulo tátil (3D): 76.00 x 70.00 x 5.50 mm -> redesign_modulo_tatil_3d.step
+Suporte para tubo (3D): 36.00 x 88.00 x 24.90 mm -> redesign_suporte_tubo_3d.step
+modulo_tatil.stl: 76.00 x 70.00 x 5.50 mm, 70422 triângulos, estanque=True, volume=21.88 cm3; 3MF via cadquery
+suporte_tubo.stl: 36.00 x 88.00 x 24.90 mm, 1900 triângulos, estanque=True, volume=32.69 cm3; 3MF via cadquery
+Imagem: docs/imagens/comparacao_lado_a_lado_3d.png
+Imagem: docs/imagens/comparacao_vistas_frontais.png
+Imagem: docs/imagens/comparacao_instalacao_escala_real.png
+Imagem: docs/imagens/previa_arquivo_laser.png
+Imagem: docs/imagens/detalhe_braille_seta.png
+Imagem: docs/imagens/peca_modulo_tatil.png
+Imagem: docs/imagens/peca_suporte_tubo.png
+Imagem: docs/imagens/peca_placa_laser.png
+Imagem: docs/imagens/croqui_redesign.svg
+Imagem: docs/imagens/croqui_original_A_PREENCHER.svg
