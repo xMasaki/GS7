@@ -1,7 +1,7 @@
 # Relatório de qualidade — pipeline AcessaCidade
 
-- Execução: `manual__2026-11-15T06:27:02`
-- Gerado em (UTC): 2026-11-15T06:27:02Z
+- Execução: `scheduled__2026-11-18T03:00:00+00:00`
+- Gerado em (UTC): 2026-11-19T19:58:32Z
 - Situação: **APROVADO**
 - Dados: fonte SIMULADA (Cidade Exemplo, fictícia); exportação da API não carregada nesta execução
 

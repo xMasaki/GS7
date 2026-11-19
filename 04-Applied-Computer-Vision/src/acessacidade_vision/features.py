@@ -16,7 +16,9 @@ Para cada contorno são medidos:
   (borda "quebrada" e abrupta de buraco → alta; borda suave de mancha/sombra → baixa);
 - ``gradiente_profundidade``: quanto o miolo da região é mais escuro que a faixa
   interna próxima à borda (buracos costumam escurecer em direção ao fundo);
-- ``fracao_toca_borda_imagem``: fração do contorno encostada na moldura da foto.
+- ``fracao_toca_borda_imagem``: fração do contorno encostada na moldura da foto;
+- ``centro_y_relativo``: posição vertical do centro da caixa (0 = topo, 1 = base). Em foto
+  oblíqua o quinto superior costuma ser fachada, horizonte ou céu, não o piso.
 """
 
 from __future__ import annotations
@@ -150,4 +152,5 @@ def contour_features(contour: np.ndarray, ctx: dict) -> dict:
         "nitidez_borda": round(edge_sharp, 4),
         "gradiente_profundidade": round(depth, 4),
         "fracao_toca_borda_imagem": round(touch_frac, 4),
+        "centro_y_relativo": round((y + bh / 2.0) / float(h), 4),
     }

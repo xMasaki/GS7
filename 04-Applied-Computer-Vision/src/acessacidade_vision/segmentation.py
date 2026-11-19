@@ -68,9 +68,121 @@ def dark_region_threshold(gray: np.ndarray) -> dict:
     }
 
 
+def multi_otsu_dark_threshold(gray: np.ndarray) -> float:
+    """Menor limiar do Otsu de 3 classes (escuro / médio / claro), calculado no histograma.
+
+    O Otsu clássico divide o histograma em 2 populações; em fotos reais (buraco escuro +
+    piso médio + céu/faixa/pedras claras) o corte de 2 classes cai no meio do piso. Com 3
+    classes o primeiro limiar t1 isola a população mais escura — onde fica o fundo do
+    buraco. Maximiza a variância entre classes σ²_B = Σ w_k (μ_k − μ_T)² para (t1, t2),
+    por varredura vetorizada de todos os pares sobre o histograma de 256 faixas.
+    """
+    hist = np.bincount(gray.ravel(), minlength=256).astype(np.float64)
+    p = hist / max(1.0, hist.sum())
+    levels = np.arange(256, dtype=np.float64)
+    cum_p = np.cumsum(p)
+    cum_m = np.cumsum(p * levels)
+    mt = cum_m[-1]
+    t1 = np.arange(256)[:, None]
+    t2 = np.arange(256)[None, :]
+    w0 = cum_p[t1]
+    w1 = cum_p[t2] - cum_p[t1]
+    w2 = 1.0 - cum_p[t2]
+    valid = (t2 > t1) & (w0 > 1e-6) & (w1 > 1e-6) & (w2 > 1e-6)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m0 = cum_m[t1] / w0
+        m1 = (cum_m[t2] - cum_m[t1]) / w1
+        m2 = (mt - cum_m[t2]) / w2
+        between = w0 * (m0 - mt) ** 2 + w1 * (m1 - mt) ** 2 + w2 * (m2 - mt) ** 2
+    between = np.where(valid, between, -1.0)
+    i, _ = np.unravel_index(int(np.argmax(between)), between.shape)
+    return float(i)
+
+
+def threshold_levels(gray: np.ndarray) -> tuple[dict, list[dict]]:
+    """Vários níveis de limiarização (multi-limiar) + estatísticas do histograma.
+
+    Um único limiar global não serve para fotos de cenas diferentes: com fundo variado
+    (calçada, meio-fio, pessoas, céu) o desvio-padrão da foto é grande e o limiar
+    estatístico cai para perto de zero; já o Otsu de 2 classes sobe demais quando há
+    piso claro e escuro. Em vez de apostar num valor, a análise testa uma pequena
+    família de limiares derivados do histograma e deixa a **regra de classificação**
+    (forma, contraste, bordas, textura) escolher a região mais parecida com buraco:
+
+    - ``legado``  : min(Otsu, mediana − max(Δ, k·σ_robusto)) — regra original;
+    - ``otsu``    : Otsu de 2 classes;
+    - ``multiotsu``: 1º limiar do Otsu de 3 classes (população mais escura);
+    - ``robusto`` : mediana − min(max(Δ, k·σ_robusto), 55% da mediana) — o teto impede
+      que cenas muito heterogêneas empurrem o limiar para ~0;
+    - ``relativo``: 70% da mediana (regiões ≥ 30% mais escuras que o piso típico).
+
+    Retorna ``(estatisticas, niveis)``; ``estatisticas`` mantém as chaves históricas
+    (``limiar_otsu``, ``limiar_robusto`` ...). Níveis com valores quase iguais são fundidos.
+    """
+    med, sig = robust_sigma(gray)
+    t_otsu, eta = otsu_threshold(gray)
+    t_multi = multi_otsu_dark_threshold(gray)
+    delta = max(SEGMENTATION["delta_minimo"], SEGMENTATION["k_robusto"] * sig)
+    t_rob = med - delta
+    dark_frac = float(np.count_nonzero(gray <= t_otsu)) / float(gray.size)
+    bimodal = eta >= SEGMENTATION["eta_bimodal"] and dark_frac >= SEGMENTATION["fracao_escura_bimodal"]
+    t_legacy = t_otsu if bimodal else min(t_otsu, t_rob)
+    t_capped = med - min(delta, SEGMENTATION["teto_delta_rel"] * med)
+
+    raw = [
+        ("legado", t_legacy),
+        ("otsu", t_otsu),
+        ("multiotsu", t_multi),
+        ("robusto", t_capped),
+        ("relativo", SEGMENTATION["fracao_relativa"] * med),
+    ]
+    levels: list[dict] = []
+    for name, value in raw:
+        value = float(max(0.0, min(254.0, value)))
+        if value < SEGMENTATION["limiar_minimo"]:
+            continue  # quase preto: nada é "mais escuro" que isto
+        if any(abs(value - lv["valor"]) <= SEGMENTATION["fusao_limiares"] for lv in levels):
+            continue
+        levels.append({"nome": name, "valor": round(value, 2)})
+    if not levels:  # foto praticamente preta: mantém um nível para a regra de qualidade/decisão
+        levels.append({"nome": "legado", "valor": round(max(0.0, t_legacy), 2)})
+
+    stats = {
+        "histograma_bimodal_extenso": bool(bimodal),
+        "fracao_escura_otsu": round(dark_frac, 4),
+        "mediana_cinza": round(med, 2),
+        "sigma_robusto": round(sig, 2),
+        "limiar_otsu": round(t_otsu, 2),
+        "limiar_multiotsu": round(t_multi, 2),
+        "efetividade_otsu": round(eta, 4),
+        "limiar_robusto": round(t_rob, 2),
+        "limiar_aplicado": levels[0]["valor"],
+    }
+    return stats, levels
+
+
 def threshold_dark(gray: np.ndarray, threshold: float) -> np.ndarray:
     """Máscara binária: 255 onde o pixel é mais escuro que o limiar (limiarização inversa)."""
     return np.where(gray <= threshold, 255, 0).astype(np.uint8)
+
+
+def canny_thresholds(smooth: np.ndarray) -> tuple[float, float]:
+    """Limiares de histerese adaptativos ao "nível de ocupação" da foto.
+
+    Limiares fixos (40/110) funcionam em imagens limpas, mas numa foto real de calçada
+    (pedras, folhas, juntas) 7–15% dos pixels viram "borda" e o contorno do buraco some no
+    meio do emaranhado. O limiar alto passa a ser ``max(110, percentil 94 do módulo do
+    gradiente de Sobel)``: em imagens limpas permanece 110; em cenas carregadas sobe e
+    mantém só as transições realmente fortes. O limiar baixo é ≈ 0,36 × o alto (razão
+    clássica de 1:2,5 a 1:3 entre os dois).
+    """
+    f = smooth.astype(np.float32)
+    gx = cv2.Sobel(f, cv2.CV_32F, 1, 0, ksize=3)
+    gy = cv2.Sobel(f, cv2.CV_32F, 0, 1, ksize=3)
+    mag = cv2.magnitude(gx, gy)
+    high = max(float(SEGMENTATION["canny_alto"]), float(np.percentile(mag, SEGMENTATION["canny_percentil"])))
+    low = max(float(SEGMENTATION["canny_baixo"]), SEGMENTATION["canny_razao_baixo"] * high)
+    return low, high
 
 
 def detect_edges(gray: np.ndarray) -> np.ndarray:
@@ -79,10 +191,12 @@ def detect_edges(gray: np.ndarray) -> np.ndarray:
     Antes do Canny aplica-se uma suavização gaussiana extra (σ = 1,5) porque o CLAHE
     também realça a granulação do piso; sem ela o asfalto vira um "tapete" de bordas.
     O Canny calcula o gradiente (Sobel 3x3, norma L2), afina as bordas por supressão
-    de não-máximos e liga os trechos por histerese com limiares 40 (fraco) e 110 (forte).
+    de não-máximos e liga os trechos por histerese com limiares adaptativos
+    (ver :func:`canny_thresholds`; mínimos 40 e 110).
     """
     smooth = cv2.GaussianBlur(gray, (0, 0), SEGMENTATION["canny_sigma_pre"])
-    return cv2.Canny(smooth, SEGMENTATION["canny_baixo"], SEGMENTATION["canny_alto"], L2gradient=True)
+    low, high = canny_thresholds(smooth)
+    return cv2.Canny(smooth, low, high, L2gradient=True)
 
 
 def morphology(mask: np.ndarray) -> np.ndarray:

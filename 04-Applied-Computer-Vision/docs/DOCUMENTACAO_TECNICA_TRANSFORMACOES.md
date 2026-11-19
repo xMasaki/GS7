@@ -150,7 +150,10 @@ cinza de regiões grandes (o fundo de um buraco grande seria "clareado"), por is
 
 **Operação:** suavização gaussiana extra (σ = 1,5) sobre o CLAHE (que também realça a granulação) → Canny:
 gradiente de Sobel 3×3 (norma L2 `√(Gx²+Gy²)`), supressão de não-máximos (afina as bordas para 1 px) e histerese
-com limiar fraco **40** e forte **110** (bordas fracas só sobrevivem se ligadas a uma forte).
+com limiares **adaptativos**: forte = `max(110, percentil 94 do gradiente)` e fraco = `max(40, 0,36 · forte)`
+(bordas fracas só sobrevivem se ligadas a uma forte). Em imagens limpas (sintéticas, piso liso) os limiares ficam em
+40/110; em fotos reais de calçada (pedras, folhas, juntas) 7–15% dos pixels viravam "borda" com limiares fixos e o
+contorno do buraco se perdia no emaranhado — o limiar forte sobe e mantém só as transições realmente fortes.
 
 **Dados:** `densidade_bordas_global` (fração de pixels de borda na foto; exemplo: 0,0093) e, por candidata,
 `densidade_bordas_contorno` e `razao_bordas` (seção 11).
@@ -159,20 +162,34 @@ com limiar fraco **40** e forte **110** (bordas fracas só sobrevivem se ligadas
 
 ## 10. `mascara` — limiarização das regiões escuras + morfologia
 
-### 10.1 Limiar
+### 10.1 Limiar (multi-limiar)
 
-Sobre a imagem **filtrada**:
+Sobre a imagem em cinza **suavizada com σ = 3** (`SEGMENTATION_SIGMA`): a suavização maior apaga a granulação do
+piso (que fragmentaria a máscara) e preserva formas de dezenas de pixels. As medidas de textura/contraste continuam
+usando a imagem filtrada com σ = 1,1.
 
-- **Otsu:** escolhe `t` que maximiza a variância entre classes `σ²_B(t) = ω₀(t)·ω₁(t)·(μ₀(t) − μ₁(t))²`.
-  A **efetividade** `η = σ²_B / σ²_total` (0–1) mede o quanto o histograma é bimodal (`efetividade_otsu`).
-- **Limiar robusto:** `mediana − max(28, 2,5·σ_rob)`, com `σ_rob = 1,4826 · MAD` (desvio absoluto mediano),
-  que representa o piso predominante e quase não é afetado pela própria região escura.
-- **Limiar aplicado:** `min(Otsu, robusto)` — só marca pixels **claramente** mais escuros que o piso.
-  Exceção: se `η ≥ 0,85` e a classe escura de Otsu ocupa ≥ 30% da foto (sombra extensa), usa-se o Otsu, para que a
-  região escura apareça e seja avaliada/explicada pela regra (`histograma_bimodal_extenso=true`).
-- Máscara binária inversa: 255 onde `pixel ≤ limiar`.
+Um único limiar global não serve para fotos de cenas diferentes: com fundo heterogêneo (calçada, meio-fio, pessoas,
+céu) o desvio-padrão da foto é grande e o limiar estatístico cai para perto de zero (nas fotos reais testadas:
+8, 0 e 43), enquanto o Otsu de 2 classes sobe demais. Por isso a análise testa uma pequena família de limiares
+derivados do histograma e deixa a **regra de classificação** escolher a região mais parecida com buraco:
 
-Exemplo real (`sintetica_buraco_01`): mediana 170, σ_rob 11,86, Otsu 125 (η = 0,794), robusto 140,35 → **aplicado 125**.
+| Nível | Definição |
+|---|---|
+| `legado` | `min(Otsu, mediana − max(28, 2,5·σ_rob))` (regra original; usa o Otsu se o histograma é bimodal extenso) |
+| `otsu` | Otsu de 2 classes: maximiza `σ²_B(t) = ω₀·ω₁·(μ₀ − μ₁)²`; `η = σ²_B/σ²_total` mede a bimodalidade |
+| `multiotsu` | 1º limiar do **Otsu de 3 classes** (escuro / médio / claro), por varredura vetorizada do histograma de 256 faixas |
+| `robusto` | `mediana − min(max(28, 2,5·σ_rob), 55% · mediana)`, com `σ_rob = 1,4826·MAD`; o teto impede ~0 em cenas heterogêneas |
+| `relativo` | 70% da mediana (regiões ≥ 30% mais escuras que o piso típico) |
+
+Níveis a menos de 4 tons de cinza um do outro são fundidos e níveis quase pretos (< 12) são descartados. Cada nível
+gera uma máscara binária inversa (255 onde `pixel ≤ limiar`) → morfologia (10.2) → contornos. As candidatas de todos
+os níveis são medidas e pontuadas pela **mesma** regra; candidatas com IoU de caixa ≥ 0,6 entre níveis são a mesma
+região e ficam com a melhor representante (`niveis_confirmam` / `estabilidade` registram em quantos níveis ela
+apareceu). A máscara exibida é a do nível da melhor candidata (`nivel_limiar` e `limiar` em cada candidata;
+`limiar_aplicado` = limiar do nível escolhido; `percentual_mascara` também é calculado nesse nível).
+
+Exemplo (`b4.jpg`, foto real): mediana 164, Otsu 111, multi-Otsu 88, robusto 86 → o buraco aparece nos três níveis
+com IoU ≥ 0,94 contra a caixa marcada à mão.
 
 ### 10.2 Morfologia matemática
 
@@ -269,15 +286,18 @@ com a mesma cor do piso podem não ser detectados."*
 | Análise | maior lado da cópia de trabalho | 800 px |
 | Filtro | Gauss | 5×5, σ = 1,1 |
 | CLAHE | clipLimit / blocos | 2,0 / 4×4 |
-| Canny | σ prévio / fraco / forte | 1,5 / 40 / 110 |
+| Canny | σ prévio / fraco / forte (mínimos) | 1,5 / 40 / 110; forte = máx(110, P94 do gradiente), fraco = máx(40, 0,36·forte) |
 | Qualidade | brilho mín./máx.; escuros máx.; saturados máx. | 45 / 215; 60%; 35% |
 | Qualidade | contraste RMS mín.; nitidez (Laplaciano) mín. | 7; 30 |
-| Limiar | k robusto; delta mínimo | 2,5; 28 níveis |
+| Limiar | k robusto; delta mínimo; teto do delta | 2,5; 28 níveis; 55% da mediana |
+| Limiar | σ da suavização de segmentação; nível relativo; fusão de níveis; mínimo | 3,0; 70% da mediana; 4 tons; 12 |
+| Candidatas | IoU para fundir níveis | 0,6 |
 | Limiar | sombra extensa (η; fração escura) | ≥ 0,85; ≥ 30% |
 | Morfologia | abertura; fechamento | elipse 5×5 ×2; elipse 11×11 |
 | Contornos | área mínima; máx. candidatas; faixa de borda | 0,4%; 8; 5 px |
 | Portões | área; solidez; alongamento; contraste | 0,6–45%; ≥ 0,60; ≤ 4,0; ≥ 0,18 |
 | Decisão | possível buraco; inconclusivo; máscara ambígua | ≥ 0,60; ≥ 0,42; > 50% |
+| Pontuação | penalidade de topo do quadro (centro_y_relativo 0,15 → 0,35) | até −40% (suave; não é critério eliminatório) |
 
 ### 12.5 Exemplo completo (resultado real de `sintetica_buraco_01.jpg`)
 
@@ -364,6 +384,12 @@ estas mesmas imagens. Avaliação com fotos reais: [PREENCHER: resultado da base
 - **Detector de rostos (Haar):** desempenho conhecido como desigual (perfil, iluminação, idade, tom de pele). O filtro de
   croma assume que pele de qualquer tom tem cor detectável — **hipótese ainda não validada** com fotos reais. Mitigação:
   orientação para não fotografar pessoas e revisão humana antes de qualquer publicação.
+- **Buraco que não é escuro:** o método procura *regiões mais escuras que o piso*. Calçada portuguesa/mosaico com pedras
+  faltando (leito claro de terra/areia exposto) não forma região escura e cai em INCONCLUSIVE ou NOT_IDENTIFIED. Em 6
+  fotos reais de conveniência (pasta `buraco/`), 4 buracos escuros foram localizados (IoU 0,67–0,94 contra caixa marcada
+  à mão) e os 2 de mosaico claro não (INCONCLUSIVE → revisão humana). Amostra minúscula: **não é acurácia**.
+- **Sem noção de cena:** a regra não sabe o que é piso e o que é fachada; a penalidade de topo do quadro é só uma
+  premissa de enquadramento (foto apontada para o chão), não uma segmentação semântica.
 - **Viés de confirmação da base sintética:** quem escreveu o gerador também escreveu a regra.
 
 ## 19. Revisão humana (pessoa no circuito)

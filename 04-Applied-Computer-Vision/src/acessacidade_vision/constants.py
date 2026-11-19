@@ -39,6 +39,10 @@ GAUSSIAN_KSIZE = 5           # kernel 5x5
 GAUSSIAN_SIGMA = 1.1         # desvio-padrão do kernel gaussiano
 CLAHE_CLIP_LIMIT = 2.0
 CLAHE_TILE_GRID = (4, 4)
+# Suavização gaussiana MAIS forte usada só para segmentar (limiarizar): σ = 3 px apaga a
+# granulação de pedras/asfalto/folhas (escala ~ 2-5 px) mantendo a forma de regiões de
+# dezenas de pixels. As medidas de textura/contraste continuam usando a imagem σ = 1,1.
+SEGMENTATION_SIGMA = 3.0
 
 # ---------------------------------------------------------------------------
 # Portões de qualidade (imagem inadequada -> INCONCLUSIVE)
@@ -63,12 +67,20 @@ SEGMENTATION = {
     "canny_sigma_pre": 1.5,    # suavização extra antes do Canny (o CLAHE realça a granulação)
     "canny_baixo": 40,
     "canny_alto": 110,
+    "canny_percentil": 94.0,   # limiar alto do Canny = max(110, percentil 94 do gradiente)
+    "canny_razao_baixo": 0.36, # limiar baixo = max(40, 0,36 · alto)
     "abertura_kernel": 5,      # elipse 5x5 — remove pontos e rachaduras finas
     "abertura_iteracoes": 2,
     "fechamento_kernel": 11,   # elipse 11x11 — une fragmentos da mesma região
     "area_minima_rel": 0.004,  # 0,4% da imagem — abaixo disto o contorno é ignorado
     "max_candidatas": 8,
     "banda_borda_px": 5,       # espessura da faixa usada para medir bordas no contorno
+    # --- multi-limiar (ver segmentation.threshold_levels) ---
+    "teto_delta_rel": 0.55,    # limiar "robusto" nunca fica abaixo de (1 - 0,55) · mediana
+    "fracao_relativa": 0.70,   # nível "relativo": 70% da mediana
+    "limiar_minimo": 12.0,     # níveis abaixo disto (quase preto) são descartados
+    "fusao_limiares": 4.0,     # níveis a menos de 4 tons de cinza um do outro são fundidos
+    "iou_fusao": 0.60,         # candidatas de níveis diferentes com IoU >= 0,6 são a mesma região
 }
 
 # ---------------------------------------------------------------------------
@@ -94,6 +106,11 @@ CLASSIFIER = {
     },
     # penalidade quando o contorno encosta na borda da imagem (sombras costumam encostar)
     "penalidade_borda_imagem": 0.5,
+    # penalidade suave para regiões no topo do quadro (fachada/horizonte, não o piso):
+    # fator = 1 - penalidade · (1 - rampa(centro_y_relativo, inicio, fim))
+    "penalidade_topo": 0.4,
+    "topo_inicio": 0.15,
+    "topo_fim": 0.35,
     # máscara escura cobrindo grande parte da imagem -> ambiguidade
     "mascara_ambigua_pct": 50.0,
 }

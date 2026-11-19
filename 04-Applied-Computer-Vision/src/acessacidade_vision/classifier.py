@@ -15,7 +15,7 @@ Decisão:
 
 from __future__ import annotations
 
-from .constants import CLASSIFIER, INCONCLUSIVE, NOT_IDENTIFIED, POSSIBLE_POTHOLE
+from .constants import CLASSIFIER, INCONCLUSIVE, NOT_IDENTIFIED, POSSIBLE_POTHOLE, SEGMENTATION
 
 
 def _clip01(v: float) -> float:
@@ -78,6 +78,13 @@ def score_candidate(f: dict) -> tuple[float, dict]:
     penal = 1.0 - CLASSIFIER["penalidade_borda_imagem"] * _ramp(f["fracao_toca_borda_imagem"], 0.10, 0.50)
     score *= penal
     subs["fator_borda_imagem"] = round(penal, 4)
+    # penalidade suave para regiões no topo do quadro (provável fachada, não o chão)
+    c = CLASSIFIER
+    horizonte = 1.0 - c["penalidade_topo"] * (
+        1.0 - _ramp(f.get("centro_y_relativo", 0.5), c["topo_inicio"], c["topo_fim"])
+    )
+    score *= horizonte
+    subs["fator_topo_imagem"] = round(horizonte, 4)
     return round(_clip01(score), 4), subs
 
 
@@ -117,6 +124,65 @@ def describe_candidate(f: dict, subs: dict) -> list[str]:
             "comportamento comum de sombras; a pontuação foi reduzida."
         )
     return frases
+
+
+# ---------------------------------------------------------------------------
+# Multi-limiar: fusão das candidatas de níveis diferentes e escolha do nível
+# ---------------------------------------------------------------------------
+def _bbox_iou(a: dict, b: dict) -> float:
+    ax0, ay0, ax1, ay1 = a["x"], a["y"], a["x"] + a["largura"], a["y"] + a["altura"]
+    bx0, by0, bx1, by1 = b["x"], b["y"], b["x"] + b["largura"], b["y"] + b["altura"]
+    iw, ih = max(0, min(ax1, bx1) - max(ax0, bx0)), max(0, min(ay1, by1) - max(ay0, by0))
+    inter = iw * ih
+    union = a["largura"] * a["altura"] + b["largura"] * b["altura"] - inter
+    return inter / union if union > 0 else 0.0
+
+
+def merge_candidates(cands: list[dict]) -> list[dict]:
+    """Funde candidatas de níveis de limiar diferentes que são a mesma região (IoU ≥ 0,6).
+
+    Em cada grupo fica a melhor representante: preferem-se as que passam nos critérios
+    mínimos e, entre elas, a de maior pontuação. ``niveis_confirmam`` registra em quantos
+    níveis a região apareceu (uma região real tende a persistir em vários limiares;
+    sombras e gradientes de iluminação mudam de tamanho). Resultado ordenado por área
+    decrescente e limitado a ``max_candidatas``.
+    """
+    thr = SEGMENTATION["iou_fusao"]
+    order = sorted(
+        cands,
+        key=lambda c: (bool(c["criterios_nao_atendidos"]), -c["pontuacao"], -c["area_px"], c["_nivel_idx"]),
+    )
+    groups: list[list[dict]] = []
+    for c in order:
+        for g in groups:
+            if _bbox_iou(g[0], c) >= thr:
+                g.append(c)
+                break
+        else:
+            groups.append([c])
+    merged = []
+    for g in groups:
+        rep = g[0]
+        rep["niveis_confirmam"] = len({m["_nivel_idx"] for m in g})
+        merged.append(rep)
+    merged.sort(key=lambda c: (-c["area_px"], c["x"], c["y"]))
+    return merged[: SEGMENTATION["max_candidatas"]]
+
+
+def annotate_stability(cands: list[dict], n_levels: int) -> None:
+    for c in cands:
+        c["estabilidade"] = round(c["niveis_confirmam"] / max(1, n_levels), 3)
+
+
+def pick_level(cands: list[dict]) -> int:
+    """Índice do nível de limiar cuja máscara é exibida: o da melhor candidata válida
+    (ou, se nenhuma é válida, o da maior candidata). Sem candidatas: o primeiro nível."""
+    valid = [c for c in cands if not c["criterios_nao_atendidos"]]
+    if valid:
+        return max(valid, key=lambda c: c["pontuacao"])["_nivel_idx"]
+    if cands:
+        return cands[0]["_nivel_idx"]
+    return 0
 
 
 LIMITACOES = (

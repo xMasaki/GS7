@@ -33,8 +33,8 @@ equipe:
       papel: ""
 
 links:
-  mvp: ""             # URL pública do MVP (saída app_url do Terraform, disciplina 06)
-  repositorio: ""     # URL do repositório público no GitHub (sem barra no final)
+  mvp: "http://4.253.196.202:8000"             # URL pública do MVP (saída app_url do Terraform, disciplina 06)
+  repositorio: "https://github.com/xMasaki/GS7.git"     # URL do repositório público no GitHub (sem barra no final)
   video_pitch: ""     # vídeo-pitch da entrega geral e da disciplina 03 (README, Ficha Técnica, pasta 03)
   videos:             # vídeos ESPECÍFICOS de cada disciplina (cada professor pede o seu)
     "01": ""          # vídeo de demonstração do helper de GenAI (se o professor exigir)

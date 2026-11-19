@@ -31,6 +31,7 @@ from .constants import (
     INCONCLUSIVE,
     POSSIBLE_POTHOLE,
     SEGMENTATION,
+    SEGMENTATION_SIGMA,
     STAGE_ORDER,
     WORK_MAX_SIDE,
 )
@@ -111,25 +112,45 @@ def analyze_array(img_bgr: np.ndarray, *, original_size: tuple[int, int] | None 
     contrast = preprocessing.enhance_contrast(filtered)
 
     edges = segmentation.detect_edges(contrast)
-    # A limiarização usa a imagem filtrada (intensidades globais preservadas); o CLAHE
-    # alteraria o nível de cinza de regiões grandes e é usado para as bordas (Canny).
-    thr = segmentation.dark_region_threshold(filtered)
-    raw_mask = segmentation.threshold_dark(filtered, thr["limiar_aplicado"])
-    mask = segmentation.morphology(raw_mask)
-    contours = segmentation.find_candidate_contours(mask)
+    # A limiarização usa uma versão mais suavizada (σ = 3) da imagem em cinza: apaga a
+    # granulação do piso (que fragmentaria a máscara) e preserva as formas grandes. O CLAHE
+    # altera o nível de cinza de regiões grandes e é usado só para as bordas (Canny).
+    seg_gray = cv2.GaussianBlur(gray, (0, 0), SEGMENTATION_SIGMA)
+    thr, levels = segmentation.threshold_levels(seg_gray)
 
     ctx = features.prepare_context(gray, filtered, edges)
     global_edges = ctx["global_edge_density"]
-    mask_pct = 100.0 * float(np.count_nonzero(mask)) / float(mask.size)
 
+    # Multi-limiar: cada nível gera uma máscara (limiar → morfologia → contornos); as
+    # candidatas de todos os níveis são medidas e pontuadas pela mesma regra.
     candidates: list[dict] = []
-    for cnt in contours:
-        f = features.contour_features(cnt, ctx)
-        score, subs = classifier.score_candidate(f)
-        f["pontuacao"] = score
-        f["subpontuacoes"] = subs
-        f["criterios_nao_atendidos"] = classifier.gate_failures(f)
-        candidates.append(f)
+    level_masks: list[np.ndarray] = []
+    level_contours: list[list[np.ndarray]] = []
+    for li, lv in enumerate(levels):
+        lmask = segmentation.morphology(segmentation.threshold_dark(seg_gray, lv["valor"]))
+        level_masks.append(lmask)
+        level_contours.append(segmentation.find_candidate_contours(lmask))
+        for cnt in level_contours[-1]:
+            f = features.contour_features(cnt, ctx)
+            score, subs = classifier.score_candidate(f)
+            f["pontuacao"] = score
+            f["subpontuacoes"] = subs
+            f["criterios_nao_atendidos"] = classifier.gate_failures(f)
+            f["nivel_limiar"] = lv["nome"]
+            f["limiar"] = lv["valor"]
+            f["_nivel_idx"] = li
+            f["_contorno"] = cnt
+            candidates.append(f)
+    candidates = classifier.merge_candidates(candidates)
+    classifier.annotate_stability(candidates, len(levels))
+
+    chosen = classifier.pick_level(candidates)
+    mask = level_masks[chosen]
+    thr["limiar_aplicado"] = levels[chosen]["valor"]
+    mask_pct = 100.0 * float(np.count_nonzero(mask)) / float(mask.size)
+    contours = [cd.pop("_contorno") for cd in candidates]
+    for cd in candidates:
+        cd.pop("_nivel_idx", None)
 
     decision = classifier.classify(problems, candidates, mask_pct)
     cls = decision["classification"]
